@@ -7,7 +7,7 @@ Detects a Native Instruments keyboard controller USB device. Listens on the "Loo
 Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia
 protocol.
 
-The entire approach and implementation is closely following a neat little Python project called [SynthesiaKontrol](https://github.com/ojacques/SynthesiaKontrol). 
+The entire approach and implementation is closely following a neat little Python project called [SynthesiaKontrol](https://github.com/ojacques/SynthesiaKontrol).
 
 Kudos and many thanks to Olivier Jacques [@ojacques] for sharing!
 
