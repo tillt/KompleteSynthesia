@@ -6,6 +6,7 @@
 //
 
 #import "MIDI2HIDController.h"
+#import <CoreFoundation/CoreFoundation.h>
 #import <CoreMIDI/CoreMIDI.h>
 #import "hid.h"
 #import "LogViewController.h"
@@ -51,8 +52,6 @@ NSString* kMIDIInputInterface = @"LoopBe";
 ///
 /// TODO: Hot swap / re-detection of HID devices.
 ///
-/// TODO: Graceful failure for MIDI communication and detection issues.
-///
 @implementation MIDI2HIDController {
     LogViewController* logViewController;
     MIDIClientRef client;
@@ -91,10 +90,22 @@ NSString* kMIDIInputInterface = @"LoopBe";
         }
 
         [self lightsOff];
-        [self lightsSwoop];
 
-        [self initMIDI];
-        [self rescanMIDI];
+        if ([self initMIDI:error] == NO) {
+            return nil;
+        }
+
+        if ([self rescanMIDI] == NO) {
+            NSLog(@"MIDI interface port not found");
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: Interface port \'%@\' not found", kMIDIInputInterface],
+                NSLocalizedRecoverySuggestionErrorKey : @"Make sure you setup the interface port as documented."
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
+           return nil;
+        }
+
+        [self lightsSwoop];
     }
     return self;
 }
@@ -159,11 +170,10 @@ NSString* kMIDIInputInterface = @"LoopBe";
 
                     IOReturn ret = IOHIDDeviceOpen(devices[i], kIOHIDOptionsTypeNone);
                     if (ret != kIOReturnSuccess) {
+                        NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
                         NSDictionary *userInfo = @{
-                            NSLocalizedDescriptionKey : @"Keyboard Communication Error",
-                            NSLocalizedFailureReasonErrorKey : [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy],
-                            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?",
-                            NSLocalizedRecoveryOptionsErrorKey : @[@"OK"]
+                            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
+                            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
                         };
                         *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
                         return NULL;
@@ -177,10 +187,8 @@ NSString* kMIDIInputInterface = @"LoopBe";
 
     NSLog(@"no Native Instruments keyboard controller detected");
     NSDictionary *userInfo = @{
-        NSLocalizedDescriptionKey : @"Keyboard Detection Error",
-        NSLocalizedFailureReasonErrorKey : @"No Native Instruments keyboard controller detected.",
-        NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on.",
-        NSLocalizedRecoveryOptionsErrorKey : @[@"OK"]
+        NSLocalizedDescriptionKey : @"Keyboard Error: No Native Instruments controller detected",
+        NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
     };
     *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
 
@@ -193,11 +201,10 @@ NSString* kMIDIInputInterface = @"LoopBe";
     IOReturn ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, 0xA0, initBlob, sizeof(initBlob));
     if (ret != kIOReturnSuccess) {
         NSLog(@"couldnt send init");
+        NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
         NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : @"Keyboard Initializing Error",
-            NSLocalizedFailureReasonErrorKey : [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy],
-            NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again.",
-            NSLocalizedRecoveryOptionsErrorKey : @[@"OK"]
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
+            NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
         };
         *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
         return NO;
@@ -317,7 +324,7 @@ NSString* kMIDIInputInterface = @"LoopBe";
     }
 }
 
-- (void)rescanMIDI
+- (BOOL)rescanMIDI
 {
     NSLog(@"midi configuration changed");
     
@@ -345,23 +352,50 @@ NSString* kMIDIInputInterface = @"LoopBe";
             if ([name compare:kMIDIInputInterface] == NSOrderedSame) {
                 NSLog(@"found our input port");
                 MIDIPortConnectSource(port, source, NULL);
+                return YES;
             }
         }
     }
+    return NO;
 }
 
-- (void)initMIDI
+- (NSString*)OSStatusString:(int)status
+{
+    char fourcc[8];
+    NSString* message;
+    // See if it appears to be a 4-char-code.
+    *(UInt32 *)(fourcc + 1) = CFSwapInt32HostToBig(status);
+    if (isprint(fourcc[1]) && isprint(fourcc[2]) && isprint(fourcc[3]) && isprint(fourcc[4])) {
+        fourcc[0] = fourcc[5] = '\'';
+        fourcc[6] = '\0';
+        message = [NSString stringWithCString:(const char*)fourcc encoding:NSStringEncodingConversionAllowLossy];
+    } else {
+        // Otherwise try to get a human readable string from the NSError constructor.
+        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+        message = error.localizedFailureReason;
+    }
+    return message;
+}
+
+- (BOOL)initMIDI:(NSError**)error
 {
     OSStatus status = MIDIClientCreateWithBlock((CFStringRef)@"KompleteSynthesia",
                                                 &client,
                                                 ^(const MIDINotification * _Nonnull message) {
                                                     if (message->messageID == kMIDIMsgSetupChanged) {
-                                                        [self rescanMIDI];
+                                                        if (![self rescanMIDI]) {
+                                                            NSLog(@"failed to locate MIDI interface port %@", kMIDIInputInterface);
+                                                        }
                                                     }
                                                 });
     if (status != 0) {
         NSLog(@"MIDIClientCreate: %d", status);
-        return;
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: %@", [self OSStatusString:status]],
+            NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+        return NO;
     }
 
     MIDIReceiveBlock receiveBlock = ^void (const MIDIEventList *evtlist, void *srcConRef) {
@@ -375,8 +409,15 @@ NSString* kMIDIInputInterface = @"LoopBe";
                                              receiveBlock);
     if (status != 0) {
         NSLog(@"MIDIInputPortCreate: %d", status);
-        return;
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: %@", [self OSStatusString:status]],
+            NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+        return NO;
     }
+
+    return YES;
 }
 
 - (void)lightsSwoop
