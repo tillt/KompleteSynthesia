@@ -36,6 +36,14 @@ const float kLightsSwoopDelay = 0.01;
 
 NSString* kMIDIInputInterface = @"LoopBe";
 
+
+@interface MIDI2HIDController ()
+
+@property (assign, nonatomic) unsigned char* keys;
+@property (assign, nonatomic) unsigned int keyCount;
+
+@end
+
 ///
 /// Detects a Native Instruments keyboard controller USB device. Listens on the "LoopBe" MIDI input interface port.
 /// Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia
@@ -57,14 +65,12 @@ NSString* kMIDIInputInterface = @"LoopBe";
     MIDIClientRef client;
     MIDIPortRef port;
 
-    unsigned char* keys;
     unsigned char blob[250];
     
     NSString* deviceName;
 
     IOHIDDeviceRef device;
 
-    unsigned int keyCount;
     BOOL mk2Controller;
     int keyOffset;
 
@@ -82,8 +88,8 @@ NSString* kMIDIInputInterface = @"LoopBe";
             return nil;
         }
         
-        keys = &blob[1];
-        memset(keys, 0, 249);
+        _keys = &blob[1];
+        memset(_keys, 0, 249);
 
         if ([self initKeyboardController:error] == NO) {
             return nil;
@@ -97,11 +103,13 @@ NSString* kMIDIInputInterface = @"LoopBe";
 
         if ([self rescanMIDI] == NO) {
             NSLog(@"MIDI interface port not found");
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: Interface port \'%@\' not found", kMIDIInputInterface],
-                NSLocalizedRecoverySuggestionErrorKey : @"Make sure you setup the interface port as documented."
-            };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
+            if (error != nil) {
+                NSDictionary *userInfo = @{
+                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: Interface port \'%@\' not found", kMIDIInputInterface],
+                    NSLocalizedRecoverySuggestionErrorKey : @"Make sure you setup the interface port as documented."
+                };
+                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
+            }
            return nil;
         }
 
@@ -127,6 +135,8 @@ NSString* kMIDIInputInterface = @"LoopBe";
         device = 0;
     }
 }
+
+#pragma mark USB HID
 
 - (IOHIDDeviceRef)detectKeyboardController:(NSError**)error
 {
@@ -157,26 +167,30 @@ NSString* kMIDIInputInterface = @"LoopBe";
         uint32_t vendor = getVendorID(devices[i]);
 
         if (vendor == kVendorID) {
+            NSLog(@"vendor match");
+            NSLog(@"key is 0x%X", product);
             for (NSNumber* key in [supportedDevices allKeys]) {
                 if (product == key.intValue) {
-                    keyCount = [supportedDevices[key][@"keys"] intValue];
+                    _keyCount = [supportedDevices[key][@"keys"] intValue];
                     mk2Controller = [supportedDevices[key][@"mk2"] boolValue];
                     keyOffset = [supportedDevices[key][@"offset"] intValue];
                     blob[0] = mk2Controller ? kCMD_LightsMapMK2 : kCMD_LightsMapMK1;
 
-                    deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", keyCount, mk2Controller ? 2 : 1];
+                    deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, mk2Controller ? 2 : 1];
                     // FIXME(tillt): For some reason that line never shows - race of some sort?
                     [logViewController dispatchLogLine:[NSString stringWithFormat:@"detected Native Instruments %@\n", deviceName]];
 
                     IOReturn ret = IOHIDDeviceOpen(devices[i], kIOHIDOptionsTypeNone);
                     if (ret != kIOReturnSuccess) {
-                        NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
-                        NSDictionary *userInfo = @{
-                            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
-                            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-                        };
-                        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-                        return NULL;
+                        if (error != nil) {
+                            NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
+                            NSDictionary *userInfo = @{
+                                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
+                                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+                            };
+                            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+                        }
+                        break;
                     }
 
                     return devices[i];
@@ -186,13 +200,19 @@ NSString* kMIDIInputInterface = @"LoopBe";
     }
 
     NSLog(@"no Native Instruments keyboard controller detected");
-    NSDictionary *userInfo = @{
-        NSLocalizedDescriptionKey : @"Keyboard Error: No Native Instruments controller detected",
-        NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
-    };
-    *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
+    if (error != nil) {
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : @"Keyboard Error: No Native Instruments controller detected",
+            NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
+    }
 
-    return 0;
+    free(devices);
+    CFRelease(mgr);
+    CFRelease(deviceSet);
+
+    return NULL;
 }
 
 - (BOOL)initKeyboardController:(NSError**)error
@@ -201,12 +221,14 @@ NSString* kMIDIInputInterface = @"LoopBe";
     IOReturn ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, 0xA0, initBlob, sizeof(initBlob));
     if (ret != kIOReturnSuccess) {
         NSLog(@"couldnt send init");
-        NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
-        NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
-            NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
-        };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        if (error != nil) {
+            NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
+                NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
         return NO;
     }
     return YES;
@@ -221,7 +243,7 @@ NSString* kMIDIInputInterface = @"LoopBe";
 {
     int key = note + keyOffset;
 
-    if (key < 0 || key > keyCount) {
+    if (key < 0 || key > _keyCount) {
         NSLog(@"unexpected note lighting requested for key %d", key);
         return;
     }
@@ -264,13 +286,58 @@ NSString* kMIDIInputInterface = @"LoopBe";
     }
     
     if (type == kMIDICVStatusNoteOn && velocity != 0) {
-        keys[key] = color;
+        _keys[key] = color;
     }
     if (type == kMIDICVStatusNoteOff || velocity == 0) {
-        keys[key] = 0x00;
+        _keys[key] = 0x00;
     }
 
     [self updateLightMap];
+}
+
+- (void)lightsOff
+{
+    memset(blob, 0, sizeof(blob));
+    blob[0] = kCMD_LightsMapMK2;
+    [self updateLightMap];
+}
+
+- (void)lightsSwoop
+{
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        unsigned char colors[4] = { 0x04, 0x08, 0x0e, 0x12 };
+        for (int key = 0;key < self.keyCount - 3;key++) {
+            self.keys[key]   = colors[0];
+            self.keys[key+1] = colors[1];
+            self.keys[key+2] = colors[2];
+            self.keys[key+3] = colors[3];
+            [self updateLightMap];
+
+            [NSThread sleepForTimeInterval:kLightsSwoopDelay];
+
+            self.keys[key] = 0x0;
+            self.keys[key+1] = 0x0;
+            self.keys[key+2] = 0x0;
+            self.keys[key+3] = 0x0;
+            [self updateLightMap];
+        }
+
+        for (int key = self.keyCount - 3;key > 0;key--) {
+            self.keys[key]   = colors[3];
+            self.keys[key+1] = colors[2];
+            self.keys[key+2] = colors[1];
+            self.keys[key+3] = colors[0];
+            [self updateLightMap];
+
+            [NSThread sleepForTimeInterval:kLightsSwoopDelay];
+
+            self.keys[key] = 0x0;
+            self.keys[key+1] = 0x0;
+            self.keys[key+2] = 0x0;
+            self.keys[key+3] = 0x0;
+            [self updateLightMap];
+        }
+    });
 }
 
 - (void)updateLightMap
@@ -280,6 +347,8 @@ NSString* kMIDIInputInterface = @"LoopBe";
         NSLog(@"couldnt send light map");
     }
 }
+
+#pragma mark MIDI Input
 
 - (void)receivedMIDIEvents:(const MIDIEventList*)eventList {
 
@@ -362,7 +431,7 @@ NSString* kMIDIInputInterface = @"LoopBe";
 - (NSString*)OSStatusString:(int)status
 {
     char fourcc[8];
-    NSString* message;
+    NSString* message = @"";
     // See if it appears to be a 4-char-code.
     *(UInt32 *)(fourcc + 1) = CFSwapInt32HostToBig(status);
     if (isprint(fourcc[1]) && isprint(fourcc[2]) && isprint(fourcc[3]) && isprint(fourcc[4])) {
@@ -390,11 +459,13 @@ NSString* kMIDIInputInterface = @"LoopBe";
                                                 });
     if (status != 0) {
         NSLog(@"MIDIClientCreate: %d", status);
-        NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: %@", [self OSStatusString:status]],
-            NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
-        };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+        if (error != nil) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: %@", [self OSStatusString:status]],
+                NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+        }
         return NO;
     }
 
@@ -409,65 +480,17 @@ NSString* kMIDIInputInterface = @"LoopBe";
                                              receiveBlock);
     if (status != 0) {
         NSLog(@"MIDIInputPortCreate: %d", status);
-        NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: %@", [self OSStatusString:status]],
-            NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
-        };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+        if (error != nil) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: %@", [self OSStatusString:status]],
+                NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+        }
         return NO;
     }
 
     return YES;
-}
-
-- (void)lightsSwoop
-{
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        unsigned char colors[1][4] = {{ 0x04, 0x08, 0x0e, 0x12 } };
-        for (int round = 0;round < 1;round++) {
-            for (int key = 0;key < keyCount - 3;key++) {
-                keys[key]   = colors[0][0];
-                keys[key+1] = colors[0][1];
-                keys[key+2] = colors[0][2];
-                keys[key+3] = colors[0][3];
-                [self updateLightMap];
-
-                [NSThread sleepForTimeInterval:kLightsSwoopDelay];
-
-                keys[key] = 0x0;
-                keys[key+1] = 0x0;
-                keys[key+2] = 0x0;
-                keys[key+3] = 0x0;
-                [self updateLightMap];
-            }
-
-            for (int key = keyCount - 3;key > 0;key--) {
-                keys[key]   = colors[0][3];
-                keys[key+1] = colors[0][2];
-                keys[key+2] = colors[0][1];
-                keys[key+3] = colors[0][0];
-                [self updateLightMap];
-
-                [NSThread sleepForTimeInterval:kLightsSwoopDelay];
-
-                keys[key] = 0x0;
-                keys[key+1] = 0x0;
-                keys[key+2] = 0x0;
-                keys[key+3] = 0x0;
-                [self updateLightMap];
-            }
-        }
-    });
-}
-
-- (void)lightsOff
-{
-    memset(blob, 0, sizeof(blob));
-    blob[0] = kCMD_LightsMapMK2;
-    IOReturn ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, kCMD_LightsMapMK2, blob, sizeof(blob));
-    if (ret != kIOReturnSuccess) {
-        NSLog(@"lights off: failed to set report");
-    }
 }
 
 @end
