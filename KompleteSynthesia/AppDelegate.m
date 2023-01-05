@@ -57,6 +57,7 @@
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController error:&error];
     if (_midi2hidController == nil) {
         [[NSAlert alertWithError:error] runModal];
+        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;
     }
 
@@ -101,7 +102,6 @@
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
     // Insert code here to tear down your application
 }
-
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app {
     return YES;

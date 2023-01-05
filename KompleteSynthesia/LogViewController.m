@@ -28,6 +28,10 @@
 
 - (void)logLine:(NSString*)l
 {
+    // Assert the view is loaded.
+    NSView* view = self.view;
+    view = nil;
+
     NSDate* date = [NSDate dateWithTimeIntervalSinceNow:startTime];
     
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];

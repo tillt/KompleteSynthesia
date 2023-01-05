@@ -64,17 +64,15 @@ NSString* kMIDIInputInterface = @"LoopBe";
     LogViewController* logViewController;
     MIDIClientRef client;
     MIDIPortRef port;
-
+    
     unsigned char blob[250];
     
     NSString* deviceName;
-
+    
     IOHIDDeviceRef device;
-
+    
     BOOL mk2Controller;
     int keyOffset;
-
-    NSTimeInterval startTime;
 }
 
 - (id)initWithLogController:(LogViewController*)lc error:(NSError**)error
@@ -151,9 +149,7 @@ NSString* kMIDIInputInterface = @"LoopBe";
         @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES, @"offset": @(-21) },
     };
     
-    IOHIDManagerRef mgr;
-    
-    mgr = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
+    IOHIDManagerRef mgr = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
     IOHIDManagerSetDeviceMatching(mgr, NULL);
     IOHIDManagerOpen(mgr, kIOHIDOptionsTypeNone);
    
@@ -163,39 +159,41 @@ NSString* kMIDIInputInterface = @"LoopBe";
     CFSetGetValues(deviceSet, (const void **)devices);
 
     for (CFIndex i = 0; i < deviceCount; i++) {
-        uint32_t product = getProductID(devices[i]);
         uint32_t vendor = getVendorID(devices[i]);
 
-        if (vendor == kVendorID) {
-            NSLog(@"vendor match");
-            NSLog(@"key is 0x%X", product);
-            for (NSNumber* key in [supportedDevices allKeys]) {
-                if (product == key.intValue) {
-                    _keyCount = [supportedDevices[key][@"keys"] intValue];
-                    mk2Controller = [supportedDevices[key][@"mk2"] boolValue];
-                    keyOffset = [supportedDevices[key][@"offset"] intValue];
-                    blob[0] = mk2Controller ? kCMD_LightsMapMK2 : kCMD_LightsMapMK1;
+        if (vendor != kVendorID) {
+            continue;
+        }
 
-                    deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, mk2Controller ? 2 : 1];
-                    // FIXME(tillt): For some reason that line never shows - race of some sort?
-                    [logViewController dispatchLogLine:[NSString stringWithFormat:@"detected Native Instruments %@\n", deviceName]];
+        uint32_t product = getProductID(devices[i]);
 
-                    IOReturn ret = IOHIDDeviceOpen(devices[i], kIOHIDOptionsTypeNone);
-                    if (ret != kIOReturnSuccess) {
-                        if (error != nil) {
-                            NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
-                            NSDictionary *userInfo = @{
-                                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
-                                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-                            };
-                            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-                        }
-                        break;
-                    }
-
-                    return devices[i];
-                }
+        for (NSNumber* key in [supportedDevices allKeys]) {
+            if (product != key.intValue) {
+                continue;
             }
+
+            _keyCount = [supportedDevices[key][@"keys"] intValue];
+            mk2Controller = [supportedDevices[key][@"mk2"] boolValue];
+            keyOffset = [supportedDevices[key][@"offset"] intValue];
+            blob[0] = mk2Controller ? kCMD_LightsMapMK2 : kCMD_LightsMapMK1;
+
+            deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, mk2Controller ? 2 : 1];
+
+            IOReturn ret = IOHIDDeviceOpen(devices[i], kIOHIDOptionsTypeNone);
+            if (ret == kIOReturnSuccess) {
+                [logViewController dispatchLogLine:[NSString stringWithFormat:@"detected Native Instruments %@\n", deviceName]];
+                return devices[i];
+            }
+
+            if (error != nil) {
+                NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
+                NSDictionary *userInfo = @{
+                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
+                    NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+                };
+                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+            }
+            break;
         }
     }
 
@@ -217,21 +215,23 @@ NSString* kMIDIInputInterface = @"LoopBe";
 
 - (BOOL)initKeyboardController:(NSError**)error
 {
-    uint8_t initBlob[] = { 0xA0 };
-    IOReturn ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, 0xA0, initBlob, sizeof(initBlob));
-    if (ret != kIOReturnSuccess) {
-        NSLog(@"couldnt send init");
-        if (error != nil) {
-            NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
-                NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
-            };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-        }
-        return NO;
+    const uint8_t initBlob[] = { 0xA0 };
+
+    IOReturn ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, initBlob[0], initBlob, sizeof(initBlob));
+    if (ret == kIOReturnSuccess) {
+        return YES;
     }
-    return YES;
+
+    NSLog(@"couldnt send init");
+    if (error != nil) {
+        NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
+            NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+    }
+    return NO;
 }
 
 - (NSString*)status
@@ -305,6 +305,7 @@ NSString* kMIDIInputInterface = @"LoopBe";
 - (void)lightsSwoop
 {
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        // Some funky colors.
         unsigned char colors[4] = { 0x04, 0x08, 0x0e, 0x12 };
         for (int key = 0;key < self.keyCount - 3;key++) {
             self.keys[key]   = colors[0];
@@ -386,6 +387,7 @@ NSString* kMIDIInputInterface = @"LoopBe";
                     [self lightsOff];
                 }
             } else {
+                // Ignored MIDI command values.
                 [logViewController dispatchLogLine:[NSString stringWithFormat:@"%08X (%d)\n", packet->words[w], packet->wordCount]];
             }
         }
@@ -398,6 +400,9 @@ NSString* kMIDIInputInterface = @"LoopBe";
     NSLog(@"midi configuration changed");
     
     // Try to locate the input endpoint we are configured for and connect.
+    // FIXME(tillt): This seems not entirely correct - the MIDI input scanning and
+    // connection setup seems weirdly redundant the way this is now implemented.
+    // But hey, it works for me!
     MIDIEndpointRef source = 0;
     for (ItemCount i = 0; i < MIDIGetNumberOfSources(); ++i) {
         source = MIDIGetSource(i);
@@ -409,13 +414,14 @@ NSString* kMIDIInputInterface = @"LoopBe";
                 continue;
             }
 
-            NSDictionary* dictionary = nil;
-            status = MIDIObjectGetProperties(entity, (CFPropertyListRef)&dictionary, true);
+            CFPropertyListRef pl = NULL;
+            status = MIDIObjectGetProperties(entity, &pl, true);
             if (status != 0) {
                 NSLog(@"MIDIObjectGetProperties: %d", status);
                 continue;
             }
-            
+
+            NSDictionary* dictionary = (__bridge NSDictionary*)pl;
             NSString* name = [dictionary valueForKey:@"name"];
             NSLog(@"input name:  %@", name);
             if ([name compare:kMIDIInputInterface] == NSOrderedSame) {
@@ -431,7 +437,8 @@ NSString* kMIDIInputInterface = @"LoopBe";
 - (NSString*)OSStatusString:(int)status
 {
     char fourcc[8];
-    NSString* message = @"";
+    NSString* message;
+
     // See if it appears to be a 4-char-code.
     *(UInt32 *)(fourcc + 1) = CFSwapInt32HostToBig(status);
     if (isprint(fourcc[1]) && isprint(fourcc[2]) && isprint(fourcc[3]) && isprint(fourcc[4])) {
@@ -443,6 +450,7 @@ NSString* kMIDIInputInterface = @"LoopBe";
         NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         message = error.localizedFailureReason;
     }
+
     return message;
 }
 
@@ -468,7 +476,7 @@ NSString* kMIDIInputInterface = @"LoopBe";
         }
         return NO;
     }
-
+    
     MIDIReceiveBlock receiveBlock = ^void (const MIDIEventList *evtlist, void *srcConRef) {
         [self receivedMIDIEvents:evtlist];
     };
@@ -489,6 +497,8 @@ NSString* kMIDIInputInterface = @"LoopBe";
         }
         return NO;
     }
+
+    [logViewController dispatchLogLine:[NSString stringWithFormat:@"listening for MIDI events on input port %@", kMIDIInputInterface]];
 
     return YES;
 }
