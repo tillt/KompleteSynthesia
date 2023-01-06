@@ -11,9 +11,9 @@
 
 @interface AppDelegate ()
 
-@property (strong) IBOutlet NSWindow *window;
-@property (strong) MIDI2HIDController* midi2hidController;
-@property (strong) LogViewController* logViewController;
+@property (nonatomic, strong) IBOutlet NSWindow *window;
+@property (nonatomic, strong) MIDI2HIDController* midi2hidController;
+@property (nonatomic, strong) LogViewController* logViewController;
 
 @property (nonatomic, strong) NSPopover *popover;
 @property (nonatomic, strong) NSMenu *statusMenu;
@@ -23,33 +23,9 @@
 
 @implementation AppDelegate
 
-- (void)updateStatusItemImage
-{
-}
-
-- (void)updateStatusItemMenu
-{
-    NSMenuItem *item = self.statusMenu.itemArray[0];
-    item.title = _midi2hidController.status;
-}
-
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
-    
-    self.statusItem.button.action = @selector(showStatusMenu:);
-    [self.statusItem.button sendActionOn:NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown];
-    NSImage *image = [NSImage imageNamed:@"StatusIcon"];
-    [image setTemplate:true];
-    self.statusItem.button.image = image;
-
-    NSMenu *menu = [[NSMenu alloc] init];
-    [menu addItemWithTitle:@"unknown" action:nil keyEquivalent:@""];
-    [menu addItem:[NSMenuItem separatorItem]];
-    [menu addItemWithTitle:@"Show Log" action:@selector(showLog:) keyEquivalent:@""];
-    [menu addItemWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
-
-    menu.delegate = self;
-    self.statusMenu = menu;
+    // Hide application icon.
+    [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
 
     _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
 
@@ -61,15 +37,22 @@
         return;
     }
 
-    [self updateStatusItemMenu];
-
-    // Hide application icon.
-    [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
-}
-
-- (void)statusItemClicked:(id)sender
-{
+    self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
     
+    self.statusItem.button.action = @selector(showStatusMenu:);
+    [self.statusItem.button sendActionOn:NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown];
+    NSImage *image = [NSImage imageNamed:@"StatusIcon"];
+    [image setTemplate:true];
+    self.statusItem.button.image = image;
+
+    NSMenu *menu = [[NSMenu alloc] init];
+    [menu addItemWithTitle:_midi2hidController.hidStatus action:nil keyEquivalent:@""];
+    [menu addItem:[NSMenuItem separatorItem]];
+    [menu addItemWithTitle:@"Show Log" action:@selector(showLog:) keyEquivalent:@""];
+    [menu addItemWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
+
+    menu.delegate = self;
+    self.statusMenu = menu;
 }
 
 - (void)showStatusMenu:(id)sender

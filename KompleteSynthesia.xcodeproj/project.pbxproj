@@ -7,17 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB31821629679983005EB410 /* MIDIController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB31821529679983005EB410 /* MIDIController.m */; };
+		BB3182192967A037005EB410 /* HIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB3182182967A037005EB410 /* HIDController.m */; };
 		BB49B3B2295CC8AE00D18605 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = BB49B3B1295CC8AE00D18605 /* AppDelegate.m */; };
 		BB49B3B4295CC8AF00D18605 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB49B3B3295CC8AF00D18605 /* Assets.xcassets */; };
 		BB49B3B7295CC8AF00D18605 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB49B3B5295CC8AF00D18605 /* MainMenu.xib */; };
 		BB49B3B9295CC8AF00D18605 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BB49B3B8295CC8AF00D18605 /* main.m */; };
 		BB49B3C3295CC91000D18605 /* LogViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB49B3C1295CC91000D18605 /* LogViewController.m */; };
 		BB49B3C4295CC91000D18605 /* LogViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB49B3C2295CC91000D18605 /* LogViewController.xib */; };
-		BB49B3C6295E52FF00D18605 /* hid.m in Sources */ = {isa = PBXBuildFile; fileRef = BB49B3C5295E52FF00D18605 /* hid.m */; };
 		BBA0166929611D1D0018B2DB /* MIDI2HIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BB31821429679983005EB410 /* MIDIController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MIDIController.h; sourceTree = "<group>"; };
+		BB31821529679983005EB410 /* MIDIController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MIDIController.m; sourceTree = "<group>"; };
+		BB3182172967A037005EB410 /* HIDController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HIDController.h; sourceTree = "<group>"; };
+		BB3182182967A037005EB410 /* HIDController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HIDController.m; sourceTree = "<group>"; };
 		BB49B3AD295CC8AE00D18605 /* KompleteSynthesia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KompleteSynthesia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB49B3B0295CC8AE00D18605 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		BB49B3B1295CC8AE00D18605 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -28,8 +33,6 @@
 		BB49B3C0295CC91000D18605 /* LogViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LogViewController.h; sourceTree = "<group>"; };
 		BB49B3C1295CC91000D18605 /* LogViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LogViewController.m; sourceTree = "<group>"; };
 		BB49B3C2295CC91000D18605 /* LogViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LogViewController.xib; sourceTree = "<group>"; };
-		BB49B3C5295E52FF00D18605 /* hid.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = hid.m; sourceTree = "<group>"; };
-		BB49B3C7295E531700D18605 /* hid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hid.h; sourceTree = "<group>"; };
 		BBA0166729611D1D0018B2DB /* MIDI2HIDController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MIDI2HIDController.h; sourceTree = "<group>"; };
 		BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MIDI2HIDController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -70,8 +73,10 @@
 				BB49B3C1295CC91000D18605 /* LogViewController.m */,
 				BBA0166729611D1D0018B2DB /* MIDI2HIDController.h */,
 				BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */,
-				BB49B3C5295E52FF00D18605 /* hid.m */,
-				BB49B3C7295E531700D18605 /* hid.h */,
+				BB3182172967A037005EB410 /* HIDController.h */,
+				BB3182182967A037005EB410 /* HIDController.m */,
+				BB31821429679983005EB410 /* MIDIController.h */,
+				BB31821529679983005EB410 /* MIDIController.m */,
 				BB49B3C2295CC91000D18605 /* LogViewController.xib */,
 				BB49B3B3295CC8AF00D18605 /* Assets.xcassets */,
 				BB49B3B5295CC8AF00D18605 /* MainMenu.xib */,
@@ -152,7 +157,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				BB49B3B9295CC8AF00D18605 /* main.m in Sources */,
-				BB49B3C6295E52FF00D18605 /* hid.m in Sources */,
+				BB3182192967A037005EB410 /* HIDController.m in Sources */,
+				BB31821629679983005EB410 /* MIDIController.m in Sources */,
 				BB49B3B2295CC8AE00D18605 /* AppDelegate.m in Sources */,
 				BB49B3C3295CC91000D18605 /* LogViewController.m in Sources */,
 				BBA0166929611D1D0018B2DB /* MIDI2HIDController.m in Sources */,

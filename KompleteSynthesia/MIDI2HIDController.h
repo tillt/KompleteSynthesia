@@ -13,7 +13,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MIDI2HIDController : NSObject
 
-@property (copy, nonatomic) NSString *status;
+@property (copy, nonatomic) NSString* hidStatus;
+@property (copy, nonatomic) NSString* midiStatus;
 
 - (id)initWithLogController:(LogViewController*)lc error:(NSError**)error;
 
