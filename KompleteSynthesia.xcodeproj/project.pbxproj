@@ -23,6 +23,7 @@
 		BB31821529679983005EB410 /* MIDIController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MIDIController.m; sourceTree = "<group>"; };
 		BB3182172967A037005EB410 /* HIDController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HIDController.h; sourceTree = "<group>"; };
 		BB3182182967A037005EB410 /* HIDController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HIDController.m; sourceTree = "<group>"; };
+		BB31821A2967C85F005EB410 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		BB49B3AD295CC8AE00D18605 /* KompleteSynthesia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KompleteSynthesia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB49B3B0295CC8AE00D18605 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		BB49B3B1295CC8AE00D18605 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -67,6 +68,7 @@
 		BB49B3AF295CC8AE00D18605 /* KompleteSynthesia */ = {
 			isa = PBXGroup;
 			children = (
+				BB31821A2967C85F005EB410 /* Info.plist */,
 				BB49B3B0295CC8AE00D18605 /* AppDelegate.h */,
 				BB49B3B1295CC8AE00D18605 /* AppDelegate.m */,
 				BB49B3C0295CC91000D18605 /* LogViewController.h */,
@@ -229,7 +231,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -281,7 +283,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -301,9 +303,10 @@
 				DEVELOPMENT_TEAM = YK4D72U3YW;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = KompleteSynthesia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Komplete Synthesia";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Till Toenshoff, 2023";
 				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -331,9 +334,10 @@
 				DEVELOPMENT_TEAM = YK4D72U3YW;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = KompleteSynthesia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Komplete Synthesia";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Till Toenshoff, 2023";
 				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (

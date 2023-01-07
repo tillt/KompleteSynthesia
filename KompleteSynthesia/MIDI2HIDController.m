@@ -127,25 +127,25 @@
     }
 }
 
-#pragma mark MIDIControllerDelegate
-
 - (NSString*)readableNote:(unsigned char)note
 {
-    int octave = (note / 12) - 1;
+    int octave = ((int)note / 12) - 1;
     NSArray* noteNames = @[@"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B"];
     NSString* readable = [NSString stringWithFormat:@"%@%d", noteNames[note % 12], octave];
     NSString* output = @"   ";
     return [output stringByReplacingCharactersInRange:NSMakeRange(0, readable.length) withString:readable];
 }
 
+#pragma mark MIDIControllerDelegate
+
 -(void)receivedMIDIEvent:(unsigned char )cv channel:(unsigned char)channel param1:(unsigned char)param1 param2:(unsigned char)param2;
 {
     if (cv == kMIDICVStatusNoteOn || cv == kMIDICVStatusNoteOff) {
-        if (cv == kMIDICVStatusNoteOn) {
-            [log dispatchLogLine:[NSString stringWithFormat:@"note on  - channel %02d - note %@ - velocity %d\n", channel, [self readableNote:param1], param2]];
-        } else if (cv == kMIDICVStatusNoteOff) {
-            [log dispatchLogLine:[NSString stringWithFormat:@"note off - channel %02d - note %@ - velocity %d\n", channel, [self readableNote:param1], param2]];
-        }
+        [log dispatchLogLine:[NSString stringWithFormat:@"note %-3s - channel %02d - note %@ - velocity %d\n",
+                              cv == kMIDICVStatusNoteOn ? "on" : "off" ,
+                              channel,
+                              [self readableNote:param1], param2]];
+
         [self lightNote:param1 type:cv channel:channel velocity:param2];
     } else if (cv == kMIDICVStatusControlChange) {
         if (channel == 0x00 && param1 == 0x10) {

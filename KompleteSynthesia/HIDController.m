@@ -32,15 +32,14 @@ const unsigned char kKompleteKontrolColorLightBlue = 0x2f;
 const unsigned char kKompleteKontrolColorGreen = 0x1d;
 const unsigned char kKompleteKontrolColorLightGreen = 0x1f;
 
+// Some funky colors.
 const unsigned char kKompleteKontrolColorsSwoop[4] = { 0x04, 0x08, 0x0e, 0x12 };
 
 const float kLightsSwoopDelay = 0.01;
 
 /// HID helper functions. Original source is:
 /// https://github.com/donniebreve/touchcursor-mac/blob/02f35660bbc6dd1e365f2485577cfb19a7b51fb0/src/hidInformation.c
-/**
- * Gets an int from the given HID reference.
- */
+
 static int32_t getIntProperty(IOHIDDeviceRef device, CFStringRef property)
 {
     CFTypeRef typeReference = IOHIDDeviceGetProperty(device, property);
@@ -54,25 +53,16 @@ static int32_t getIntProperty(IOHIDDeviceRef device, CFStringRef property)
     return 0;
 }
 
-/**
- * Gets the Product ID from the given HID reference.
- */
 static int getProductID(IOHIDDeviceRef device)
 {
     return getIntProperty(device, CFSTR(kIOHIDProductIDKey));
 }
 
-/**
- * Gets the Vendor ID from the given HID reference.
- */
 static int getVendorID(IOHIDDeviceRef device)
 {
     return getIntProperty(device, CFSTR(kIOHIDVendorIDKey));
 }
 
-/**
- * Prints the return string.
- */
 static char* getIOReturnString(IOReturn ioReturn)
 {
     switch (ioReturn)
@@ -151,15 +141,13 @@ static char* getIOReturnString(IOReturn ioReturn)
         if (device == nil) {
             return nil;
         }
-        
-        _keys = &blob[1];
-        memset(_keys, 0, 249);
-        
         if ([self initKeyboardController:error] == NO) {
             return nil;
         }
+        blob[0] = kCMD_LightsMapMK2;
+        _keys = &blob[1];
+        memset(_keys, 0, 249);
     }
-
     return self;
 }
 
@@ -227,7 +215,6 @@ static char* getIOReturnString(IOReturn ioReturn)
                 };
                 *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
             }
-            break;
         }
     }
 
@@ -276,26 +263,24 @@ static char* getIOReturnString(IOReturn ioReturn)
 - (void)lightKey:(int)key color:(unsigned char)color
 {
     _keys[key] = color;
-    [self updateLightMap];
+    [self updateLightMap:nil];
 }
 
 - (void)lightsOff
 {
-    memset(blob, 0, sizeof(blob));
-    blob[0] = kCMD_LightsMapMK2;
-    [self updateLightMap];
+    memset(_keys, 0, 249);
+    [self updateLightMap:nil];
 }
 
 - (void)lightsSwoop
 {
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        // Some funky colors.
         for (int key = 0;key < self.keyCount - 3;key++) {
             self.keys[key]   = kKompleteKontrolColorsSwoop[0];
             self.keys[key+1] = kKompleteKontrolColorsSwoop[1];
             self.keys[key+2] = kKompleteKontrolColorsSwoop[2];
             self.keys[key+3] = kKompleteKontrolColorsSwoop[3];
-            [self updateLightMap];
+            [self updateLightMap:nil];
 
             [NSThread sleepForTimeInterval:kLightsSwoopDelay];
 
@@ -303,7 +288,7 @@ static char* getIOReturnString(IOReturn ioReturn)
             self.keys[key+1] = 0x0;
             self.keys[key+2] = 0x0;
             self.keys[key+3] = 0x0;
-            [self updateLightMap];
+            [self updateLightMap:nil];
         }
 
         for (int key = self.keyCount - 3;key > 0;key--) {
@@ -311,7 +296,7 @@ static char* getIOReturnString(IOReturn ioReturn)
             self.keys[key+1] = kKompleteKontrolColorsSwoop[2];
             self.keys[key+2] = kKompleteKontrolColorsSwoop[1];
             self.keys[key+3] = kKompleteKontrolColorsSwoop[0];
-            [self updateLightMap];
+            [self updateLightMap:nil];
 
             [NSThread sleepForTimeInterval:kLightsSwoopDelay];
 
@@ -319,16 +304,26 @@ static char* getIOReturnString(IOReturn ioReturn)
             self.keys[key+1] = 0x0;
             self.keys[key+2] = 0x0;
             self.keys[key+3] = 0x0;
-            [self updateLightMap];
+            [self updateLightMap:nil];
         }
     });
 }
 
-- (void)updateLightMap
+- (void)updateLightMap:(NSError**)error
 {
     IOReturn ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, blob[0], blob, sizeof(blob));
-    if (ret != kIOReturnSuccess) {
-        NSLog(@"couldnt send light map");
+    if (ret == kIOReturnSuccess) {
+        return;
+    }
+
+    NSLog(@"couldnt send light map");
+    if (error != nil) {
+        NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
+            NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
     }
 }
 
