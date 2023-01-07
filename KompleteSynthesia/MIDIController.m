@@ -35,7 +35,7 @@ NSString* kMIDIInputInterface = @"LoopBe";
             NSLog(@"MIDIClientCreate: %d", status);
             if (error != nil) {
                 NSDictionary *userInfo = @{
-                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: %@", [self OSStatusString:status]],
+                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
                     NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
                 };
                 *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
@@ -56,7 +56,7 @@ NSString* kMIDIInputInterface = @"LoopBe";
             NSLog(@"MIDIInputPortCreate: %d", status);
             if (error != nil) {
                 NSDictionary *userInfo = @{
-                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: %@", [self OSStatusString:status]],
+                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
                     NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
                 };
                 *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
@@ -89,13 +89,40 @@ NSString* kMIDIInputInterface = @"LoopBe";
 {
     if (port != 0) {
         MIDIPortDispose(port);
-        port = 0;
     }
 
     if (client != 0) {
         MIDIClientDispose(client);
-        client = 0;
     }
+}
+
++ (NSString*)readableNote:(unsigned char)note
+{
+    int octave = ((int)note / 12) - 1;
+    NSArray* noteNames = @[@"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B"];
+    NSString* readable = [NSString stringWithFormat:@"%@%d", noteNames[note % 12], octave];
+    NSString* output = @"   ";
+    return [output stringByReplacingCharactersInRange:NSMakeRange(0, readable.length) withString:readable];
+}
+
++ (NSString*)OSStatusString:(int)status
+{
+    char fourcc[8];
+    NSString* message;
+
+    // See if it appears to be a 4-char-code.
+    *(UInt32 *)(fourcc + 1) = CFSwapInt32HostToBig(status);
+    if (isprint(fourcc[1]) && isprint(fourcc[2]) && isprint(fourcc[3]) && isprint(fourcc[4])) {
+        fourcc[0] = fourcc[5] = '\'';
+        fourcc[6] = '\0';
+        message = [NSString stringWithCString:(const char*)fourcc encoding:NSStringEncodingConversionAllowLossy];
+    } else {
+        // Otherwise try to get a human readable string from the NSError constructor.
+        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+        message = error.localizedFailureReason;
+    }
+
+    return message;
 }
 
 - (BOOL)rescanMIDI
@@ -143,8 +170,8 @@ NSString* kMIDIInputInterface = @"LoopBe";
     return NO;
 }
 
-- (void)receivedMIDIEvents:(const MIDIEventList*)eventList {
-
+- (void)receivedMIDIEvents:(const MIDIEventList*)eventList
+{
     const MIDIEventPacket *packet = &eventList->packet[0];
 
     for (unsigned i = 0; i < eventList->numPackets; ++i) {
@@ -156,32 +183,14 @@ NSString* kMIDIInputInterface = @"LoopBe";
                 unsigned char channel = (packet->words[w] & 0x000F0000) >> 16;
                 unsigned char p1 = (packet->words[w] & 0x0000FF00) >> 8;
                 unsigned char p2 = packet->words[w] & 0x000000FF;
-                
-                [_delegate receivedMIDIEvent:cvStatus channel:channel param1:p1 param2:p2];
+
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self.delegate receivedMIDIEvent:cvStatus channel:channel param1:p1 param2:p2];
+                });
             }
         }
         packet = MIDIEventPacketNext(packet);
     }
-}
-
-- (NSString*)OSStatusString:(int)status
-{
-    char fourcc[8];
-    NSString* message;
-
-    // See if it appears to be a 4-char-code.
-    *(UInt32 *)(fourcc + 1) = CFSwapInt32HostToBig(status);
-    if (isprint(fourcc[1]) && isprint(fourcc[2]) && isprint(fourcc[3]) && isprint(fourcc[4])) {
-        fourcc[0] = fourcc[5] = '\'';
-        fourcc[6] = '\0';
-        message = [NSString stringWithCString:(const char*)fourcc encoding:NSStringEncodingConversionAllowLossy];
-    } else {
-        // Otherwise try to get a human readable string from the NSError constructor.
-        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-        message = error.localizedFailureReason;
-    }
-
-    return message;
 }
 
 @end

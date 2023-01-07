@@ -13,7 +13,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nonatomic) IBOutlet NSTextView *textView;
 
 - (void)logLine:(NSString*)l;
-- (void)dispatchLogLine:(NSString*)l;
 
 @end
 

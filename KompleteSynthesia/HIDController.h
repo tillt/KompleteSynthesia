@@ -19,7 +19,7 @@ extern const unsigned char kKompleteKontrolColorLightGreen;
 @property (nonatomic, copy) NSString* status;
 @property (nonatomic, assign) BOOL mk2Controller;
 @property (nonatomic, assign) int keyOffset;
-@property (assign, nonatomic) unsigned int keyCount;
+@property (nonatomic, assign) unsigned int keyCount;
 
 - (id)init:(NSError**)error;
 - (void)lightKey:(int)note color:(unsigned char)color;

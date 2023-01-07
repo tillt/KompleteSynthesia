@@ -41,6 +41,7 @@
     
     self.statusItem.button.action = @selector(showStatusMenu:);
     [self.statusItem.button sendActionOn:NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown];
+    
     NSImage *image = [NSImage imageNamed:@"StatusIcon"];
     [image setTemplate:true];
     self.statusItem.button.image = image;
@@ -89,6 +90,5 @@
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app {
     return YES;
 }
-
 
 @end

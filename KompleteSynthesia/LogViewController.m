@@ -5,7 +5,6 @@
 //  Created by Till Toenshoff on 28.12.22.
 //
 
-
 #import "LogViewController.h"
 
 @interface LogViewController ()
@@ -30,6 +29,7 @@
 {
     // Assert the view is loaded.
     NSView* view = self.view;
+    // Avoid unused variable.
     view = nil;
 
     NSDate* date = [NSDate dateWithTimeIntervalSinceNow:startTime];
@@ -45,13 +45,6 @@
     NSAttributedString *attrstr = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@: %@", t, l] attributes:attributes];
     [self.textView.textStorage appendAttributedString:attrstr];
     [self.textView scrollRangeToVisible: NSMakeRange(self.textView.string.length, 0)];
-}
-
-- (void)dispatchLogLine:(NSString*)l
-{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self logLine:l];
-    });
 }
 
 @end

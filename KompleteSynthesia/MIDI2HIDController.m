@@ -12,7 +12,6 @@
 #import "HIDController.h"
 #import "MIDIController.h"
 
-
 @interface MIDI2HIDController ()
 @end
 
@@ -49,7 +48,7 @@
             return nil;
         }
 
-        [log dispatchLogLine:[NSString stringWithFormat:@"detected Native Instruments %@\n", hid.deviceName]];
+        [log logLine:[NSString stringWithFormat:@"detected Native Instruments %@\n", hid.deviceName]];
 
         [hid lightsOff];
         
@@ -127,36 +126,27 @@
     }
 }
 
-- (NSString*)readableNote:(unsigned char)note
-{
-    int octave = ((int)note / 12) - 1;
-    NSArray* noteNames = @[@"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B"];
-    NSString* readable = [NSString stringWithFormat:@"%@%d", noteNames[note % 12], octave];
-    NSString* output = @"   ";
-    return [output stringByReplacingCharactersInRange:NSMakeRange(0, readable.length) withString:readable];
-}
-
 #pragma mark MIDIControllerDelegate
 
 -(void)receivedMIDIEvent:(unsigned char )cv channel:(unsigned char)channel param1:(unsigned char)param1 param2:(unsigned char)param2;
 {
     if (cv == kMIDICVStatusNoteOn || cv == kMIDICVStatusNoteOff) {
-        [log dispatchLogLine:[NSString stringWithFormat:@"note %-3s - channel %02d - note %@ - velocity %d\n",
+        [log logLine:[NSString stringWithFormat:@"note %-3s - channel %02d - note %@ - velocity %d\n",
                               cv == kMIDICVStatusNoteOn ? "on" : "off" ,
                               channel,
-                              [self readableNote:param1], param2]];
+                              [MIDIController readableNote:param1], param2]];
 
         [self lightNote:param1 type:cv channel:channel velocity:param2];
     } else if (cv == kMIDICVStatusControlChange) {
         if (channel == 0x00 && param1 == 0x10) {
             if (param2 & 0x04) {
-                [log dispatchLogLine:[NSString stringWithFormat:@"user is playing\n"]];
+                [log logLine:@"user is playing\n"];
             }
             if (param2 & 0x01) {
-                [log dispatchLogLine:[NSString stringWithFormat:@"playing right hand\n"]];
+                [log logLine:@"playing right hand\n"];
             }
             if (param2 & 0x02) {
-                [log dispatchLogLine:[NSString stringWithFormat:@"playing left hand\n"]];
+                [log logLine:@"playing left hand\n"];
             }
             [hid lightsOff];
         }
