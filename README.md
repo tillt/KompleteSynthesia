@@ -1,14 +1,24 @@
 # Komplete Synthesia
-Native Instruments Komplete Kontrol Light Guide support for Synthesia
 
-![Komplete Synthesia](site/images/KompleteSynthesia.png)
+Native Instruments Komplete Kontrol Light Guide support for Synthesia.
 
-Detects a Native Instruments keyboard controller USB device. Listens on the "LoopBe" MIDI input interface port.
-Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia protocol.
+Routes Synthesia lighting information to your Native Instruments keyboard controller USB device.
+
+Auto-detects a Native Instruments S-series keyboard controller USB device.
+
+Listens on the "LoopBe" MIDI input interface port - a historic choice. Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia protocol.
 
 ## Setup 
 
 You first need to configure your system and Synthesia to support our way of routing the lighting information to KompleteSynthesia. Please follow [SETUP.md](SETUP.md).
+
+## Use
+
+Simply run `KompleteSynthesia.app`. It will detect your controller and show a little swoop on its lighting, signalling that it is up and running. You will also recognise a little MIDI cable icon on the top right of your screen.
+
+For finding out about the detected controller, click on the icon which will show a menu which contains its name.
+
+![Komplete Synthesia](site/images/KompleteSynthesia.png)
 
 ## Background and Motivation
 
