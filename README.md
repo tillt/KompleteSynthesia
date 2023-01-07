@@ -4,15 +4,18 @@ Native Instruments Komplete Kontrol Light Guide support for Synthesia
 ![Komplete Synthesia](site/images/KompleteSynthesia.png)
 
 Detects a Native Instruments keyboard controller USB device. Listens on the "LoopBe" MIDI input interface port.
-Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia
-protocol.
+Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia protocol.
+
+## Setup 
+
+You first need to configure your system and Synthesia to support our way of routing the lighting information to KompleteSynthesia. Please follow [SETUP.md](SETUP.md).
+
+## Background and Motivation
 
 The entire approach and implementation is closely following a neat little Python project called [SynthesiaKontrol](https://github.com/ojacques/SynthesiaKontrol).
 
 Kudos and many thanks to Olivier Jacques [@ojacques] for sharing!
 
-The inspiration for re-implementing this as a native macOS appllication struck me when I had a bit of a hard time getting
-that original Python project to build on a recent system as it would not run on anything beyond Python 3.7 for me. Another
-driver here is that I always took great pleasure from controlling hardware via code.
+The inspiration for re-implementing this as a native macOS appllication struck me when I had a bit of a hard time getting that original Python project to build on a recent system as it would not run on anything beyond Python 3.7 for me. Another driver here is that I always took great pleasure from controlling hardware via code.
 
 Some HID bits are taken from the original work of @donniebreve.
