@@ -39,93 +39,6 @@ const uint8_t kKompleteKontrolColorsSwoop[4] = { 0x04, 0x08, 0x0e, 0x12 };
 
 const float kLightsSwoopDelay = 0.01;
 
-/// HID helper functions. Original source is:
-/// https://github.com/donniebreve/touchcursor-mac/blob/02f35660bbc6dd1e365f2485577cfb19a7b51fb0/src/hidInformation.c
-
-static int32_t getIntProperty(IOHIDDeviceRef device, CFStringRef property)
-{
-    CFTypeRef typeReference = IOHIDDeviceGetProperty(device, property);
-    if (typeReference) {
-        if (CFGetTypeID(typeReference) == CFNumberGetTypeID()) {
-            int32_t value;
-            CFNumberGetValue((CFNumberRef)typeReference, kCFNumberSInt32Type, &value);
-            return value;
-        }
-    }
-    return 0;
-}
-
-static int getProductID(IOHIDDeviceRef device)
-{
-    return getIntProperty(device, CFSTR(kIOHIDProductIDKey));
-}
-
-static int getVendorID(IOHIDDeviceRef device)
-{
-    return getIntProperty(device, CFSTR(kIOHIDVendorIDKey));
-}
-
-static char* getIOReturnString(IOReturn ioReturn)
-{
-    switch (ioReturn)
-    {
-        case kIOReturnSuccess         : return "Success";
-        case kIOReturnError           : return "General error";
-        case kIOReturnNoMemory        : return "Can't allocate memory";
-        case kIOReturnNoResources     : return "Resource shortage";
-        case kIOReturnIPCError        : return "Error during IPC";
-        case kIOReturnNoDevice        : return "No such device";
-        case kIOReturnNotPrivileged   : return "Privilege violation";
-        case kIOReturnBadArgument     : return "Invalid argument";
-        case kIOReturnLockedRead      : return "Device read locked";
-        case kIOReturnLockedWrite     : return "Device write locked";
-        case kIOReturnExclusiveAccess : return "Exclusive access and device already open";
-        case kIOReturnBadMessageID    : return "Sent/received messages had different msg_id";
-        case kIOReturnUnsupported     : return "Unsupported function";
-        case kIOReturnVMError         : return "Miscellaneous VM failure";
-        case kIOReturnInternalError   : return "Internal error";
-        case kIOReturnIOError         : return "General I/O error";
-        case kIOReturnCannotLock      : return "Can't acquire lock";
-        case kIOReturnNotOpen         : return "Device not open";
-        case kIOReturnNotReadable     : return "Read not supported";
-        case kIOReturnNotWritable     : return "Write not supported";
-        case kIOReturnNotAligned      : return "Alignment error";
-        case kIOReturnBadMedia        : return "Media Error";
-        case kIOReturnStillOpen       : return "Device(s) still open";
-        case kIOReturnRLDError        : return "RLD failure";
-        case kIOReturnDMAError        : return "DMA failure";
-        case kIOReturnBusy            : return "Device Busy";
-        case kIOReturnTimeout         : return "I/O Timeout";
-        case kIOReturnOffline         : return "Device offline";
-        case kIOReturnNotReady        : return "Not ready";
-        case kIOReturnNotAttached     : return "Device not attached";
-        case kIOReturnNoChannels      : return "No DMA channels left";
-        case kIOReturnNoSpace         : return "No space for data";
-        case kIOReturnPortExists      : return "Port already exists";
-        case kIOReturnCannotWire      : return "Can't wire down physical memory";
-        case kIOReturnNoInterrupt     : return "No interrupt attached";
-        case kIOReturnNoFrames        : return "No DMA frames enqueued";
-        case kIOReturnMessageTooLarge : return "Oversized msg received on interrupt port";
-        case kIOReturnNotPermitted    : return "Not permitted";
-        case kIOReturnNoPower         : return "No power to device";
-        case kIOReturnNoMedia         : return "Media not present";
-        case kIOReturnUnformattedMedia: return "Media not formatted";
-        case kIOReturnUnsupportedMode : return "No such mode";
-        case kIOReturnUnderrun        : return "Data underrun";
-        case kIOReturnOverrun         : return "Data overrun";
-        case kIOReturnDeviceError     : return "The device is not working properly!";
-        case kIOReturnNoCompletion    : return "A completion routine is required";
-        case kIOReturnAborted         : return "Operation aborted";
-        case kIOReturnNoBandwidth     : return "Bus bandwidth would be exceeded";
-        case kIOReturnNotResponding   : return "Device not responding";
-        case kIOReturnIsoTooOld       : return "Isochronous I/O request for distant past!";
-        case kIOReturnIsoTooNew       : return "Isochronous I/O request for distant future";
-        case kIOReturnNotFound        : return "Data was not found";
-        case kIOReturnInvalid         : return "Should never be seen";
-    }
-    return "Unknown";
-}
-
 @interface HIDController ()
 @property (assign, nonatomic) unsigned char* keys;
 @end
@@ -161,6 +74,91 @@ static char* getIOReturnString(IOReturn ioReturn)
     }
 }
 
++ (NSString*)descriptionWithIOReturn:(IOReturn)code
+{
+    NSDictionary* descriptions = @{
+        @(kIOReturnSuccess): @"Success",
+        @(kIOReturnError): @"General error",
+        @(kIOReturnNoMemory): @"Can't allocate memory",
+        @(kIOReturnNoResources): @"Resource shortage",
+        @(kIOReturnIPCError): @"Error during IPC",
+        @(kIOReturnNoDevice): @"No such device",
+        @(kIOReturnNotPrivileged): @"Privilege violation",
+        @(kIOReturnBadArgument): @"Invalid argument",
+        @(kIOReturnLockedRead): @"Device read locked",
+        @(kIOReturnLockedWrite): @"Device write locked",
+        @(kIOReturnExclusiveAccess): @"Exclusive access and device already open",
+        @(kIOReturnBadMessageID): @"Sent/received messages had different 'msg_id'",
+        @(kIOReturnUnsupported): @"Unsupported function",
+        @(kIOReturnVMError):  @"VM failure",
+        @(kIOReturnInternalError): @"Internal error",
+        @(kIOReturnIOError): @"General I/O error",
+        @(kIOReturnCannotLock): @"Can't acquire lock",
+        @(kIOReturnNotOpen): @"Device not open",
+        @(kIOReturnNotReadable): @"Read not supported",
+        @(kIOReturnNotWritable): @"Write not supported",
+        @(kIOReturnNotAligned): @"Alignment error",
+        @(kIOReturnBadMedia): @"Media error",
+        @(kIOReturnStillOpen): @"Device(s) still open",
+        @(kIOReturnRLDError): @"RLD failure",
+        @(kIOReturnDMAError): @"DMA failure",
+        @(kIOReturnBusy): @"Device busy",
+        @(kIOReturnTimeout): @"I/O timeout",
+        @(kIOReturnOffline): @"Device offline",
+        @(kIOReturnNotReady): @"Not ready",
+        @(kIOReturnNotAttached): @"Device not attached",
+        @(kIOReturnNoChannels): @"No DMA channels left",
+        @(kIOReturnNoSpace): @"No space for data",
+        @(kIOReturnPortExists): @"Port already exists",
+        @(kIOReturnCannotWire): @"Can't wire down physical memory",
+        @(kIOReturnNoInterrupt): @"No interrupt attached",
+        @(kIOReturnNoFrames): @"No DMA frames enqueued",
+        @(kIOReturnMessageTooLarge): @"Oversized message received on interrupt port",
+        @(kIOReturnNotPermitted): @"Not permitted",
+        @(kIOReturnNoPower): @"No power to device",
+        @(kIOReturnNoMedia): @"Media not present",
+        @(kIOReturnUnformattedMedia): @"Media not formatted",
+        @(kIOReturnUnsupportedMode): @"No such mode",
+        @(kIOReturnUnderrun): @"Data underrun",
+        @(kIOReturnOverrun): @"Data overrun",
+        @(kIOReturnDeviceError): @"The device is not working properly",
+        @(kIOReturnNoCompletion): @"A completion routine is required",
+        @(kIOReturnAborted): @"Operation aborted",
+        @(kIOReturnNoBandwidth): @"Bus bandwidth would be exceeded",
+        @(kIOReturnNotResponding): @"Device not responding",
+        @(kIOReturnIsoTooOld): @"Isochronous I/O request for distant past",
+        @(kIOReturnIsoTooNew): @"Isochronous I/O request for distant future",
+        @(kIOReturnNotFound): @"Data was not found",
+        @(kIOReturnInvalid): @"Invalid return value"
+    };
+    NSString* message = [descriptions objectForKey:@(code)];
+    if (message == nil) {
+        message = @"Unknown 'IOReturn' code";
+    }
+    return message;
+}
+
++ (int)intProperty:(NSString*)property fromDevice:(IOHIDDeviceRef)device
+{
+    CFTypeRef type = IOHIDDeviceGetProperty(device,  (__bridge CFStringRef)property);
+    if (type && CFGetTypeID(type) == CFNumberGetTypeID()) {
+        int32_t value;
+        CFNumberGetValue((CFNumberRef)type, kCFNumberSInt32Type, &value);
+        return value;
+    }
+    return 0;
+}
+
++ (int)productIDWithDevice:(IOHIDDeviceRef)device
+{
+    return [HIDController intProperty:@(kIOHIDProductIDKey) fromDevice:device];
+}
+
++ (int)vendorIDWithDevice:(IOHIDDeviceRef)device
+{
+    return [HIDController intProperty:@(kIOHIDVendorIDKey) fromDevice:device];
+}
+
 - (IOHIDDeviceRef)detectKeyboardController:(NSError**)error
 {
     NSDictionary* supportedDevices = @{
@@ -184,13 +182,12 @@ static char* getIOReturnString(IOReturn ioReturn)
     CFSetGetValues(deviceSet, (const void **)devices);
 
     for (CFIndex i = 0; i < deviceCount; i++) {
-        uint32_t vendor = getVendorID(devices[i]);
-
+        int vendor = [HIDController vendorIDWithDevice:devices[i]];
         if (vendor != kVendorID) {
             continue;
         }
 
-        uint32_t product = getProductID(devices[i]);
+        int product = [HIDController productIDWithDevice:devices[i]];
 
         for (NSNumber* key in [supportedDevices allKeys]) {
             if (product != key.intValue) {
@@ -203,20 +200,7 @@ static char* getIOReturnString(IOReturn ioReturn)
             lightGuideUpdateMessage[0] = _mk2Controller ? kLightGuideCommandUpdateMK2 : kLightGuideCommandUpdateMK1;
 
             _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
-
-            IOReturn ret = IOHIDDeviceOpen(devices[i], kIOHIDOptionsTypeNone);
-            if (ret == kIOReturnSuccess) {
-                return devices[i];
-            }
-
-            if (error != nil) {
-                NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
-                NSDictionary *userInfo = @{
-                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
-                    NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-                };
-                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-            }
+            return devices[i];
         }
     }
 
@@ -258,9 +242,8 @@ static char* getIOReturnString(IOReturn ioReturn)
 
     NSLog(@"couldnt send init");
     if (error != nil) {
-        NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
         NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", [HIDController descriptionWithIOReturn:ret]],
             NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
         };
         *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
@@ -324,16 +307,19 @@ static char* getIOReturnString(IOReturn ioReturn)
 
 - (void)updateLightMap:(NSError**)error
 {
-    IOReturn ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, blob[0], blob, sizeof(blob));
+    IOReturn ret = IOHIDDeviceSetReport(device,
+                                        kIOHIDReportTypeOutput,
+                                        lightGuideUpdateMessage[0],
+                                        lightGuideUpdateMessage,
+                                        sizeof(lightGuideUpdateMessage));
     if (ret == kIOReturnSuccess) {
         return;
     }
 
     NSLog(@"couldnt send light map");
     if (error != nil) {
-        NSString* reason = [NSString stringWithCString:getIOReturnString(ret) encoding:NSStringEncodingConversionAllowLossy];
         NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", reason],
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", [HIDController descriptionWithIOReturn:ret]],
             NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
         };
         *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];

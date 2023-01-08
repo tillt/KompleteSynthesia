@@ -25,6 +25,7 @@ extern const unsigned char kKompleteKontrolColorLightGreen;
 - (void)lightKey:(int)note color:(unsigned char)color;
 - (void)lightsOff;
 - (void)lightsSwoop;
+
 @end
 
 NS_ASSUME_NONNULL_END
