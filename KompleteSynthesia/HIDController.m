@@ -24,16 +24,18 @@ const uint32_t kPID_S49MK2 = 0x1610;
 const uint32_t kPID_S61MK2 = 0x1620;
 const uint32_t kPID_S88MK2 = 0x1630;
 
-const uint8_t kCMD_LightsMapMK2 = 0x81;
-const uint8_t kCMD_LightsMapMK1 = 0x82;
+const uint8_t kLightGuideCommandUpdateMK2 = 0x81;
+const uint8_t kLightGuideCommandUpdateMK1 = 0x82;
 
-const unsigned char kKompleteKontrolColorBlue = 0x2d;
-const unsigned char kKompleteKontrolColorLightBlue = 0x2f;
-const unsigned char kKompleteKontrolColorGreen = 0x1d;
-const unsigned char kKompleteKontrolColorLightGreen = 0x1f;
+const size_t kLightGuideMessageSize = 250;
+
+const uint8_t kKompleteKontrolColorBlue = 0x2d;
+const uint8_t kKompleteKontrolColorLightBlue = 0x2f;
+const uint8_t kKompleteKontrolColorGreen = 0x1d;
+const uint8_t kKompleteKontrolColorLightGreen = 0x1f;
 
 // Some funky colors.
-const unsigned char kKompleteKontrolColorsSwoop[4] = { 0x04, 0x08, 0x0e, 0x12 };
+const uint8_t kKompleteKontrolColorsSwoop[4] = { 0x04, 0x08, 0x0e, 0x12 };
 
 const float kLightsSwoopDelay = 0.01;
 
@@ -129,7 +131,7 @@ static char* getIOReturnString(IOReturn ioReturn)
 @end
 
 @implementation HIDController {
-    unsigned char blob[250];
+    unsigned char lightGuideUpdateMessage[kLightGuideMessageSize];
     IOHIDDeviceRef device;
 }
 
@@ -144,9 +146,9 @@ static char* getIOReturnString(IOReturn ioReturn)
         if ([self initKeyboardController:error] == NO) {
             return nil;
         }
-        blob[0] = kCMD_LightsMapMK2;
-        _keys = &blob[1];
-        memset(_keys, 0, 249);
+        lightGuideUpdateMessage[0] = kLightGuideCommandUpdateMK2;
+        _keys = &lightGuideUpdateMessage[1];
+        memset(_keys, 0, kLightGuideMessageSize-1);
     }
     return self;
 }
@@ -198,7 +200,7 @@ static char* getIOReturnString(IOReturn ioReturn)
             _keyCount = [supportedDevices[key][@"keys"] intValue];
             _mk2Controller = [supportedDevices[key][@"mk2"] boolValue];
             _keyOffset = [supportedDevices[key][@"offset"] intValue];
-            blob[0] = _mk2Controller ? kCMD_LightsMapMK2 : kCMD_LightsMapMK1;
+            lightGuideUpdateMessage[0] = _mk2Controller ? kLightGuideCommandUpdateMK2 : kLightGuideCommandUpdateMK1;
 
             _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
 
@@ -236,9 +238,20 @@ static char* getIOReturnString(IOReturn ioReturn)
 
 - (BOOL)initKeyboardController:(NSError**)error
 {
-    const uint8_t initBlob[] = { 0xA0 };
+    IOReturn ret = IOHIDDeviceOpen(device, kIOHIDOptionsTypeNone);
+    if (ret != kIOReturnSuccess) {
+        if (error != nil) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@", [HIDController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
+        return NO;
+    }
 
-    IOReturn ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, initBlob[0], initBlob, sizeof(initBlob));
+    const uint8_t initBlob[] = { 0xA0 };
+    ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, initBlob[0], initBlob, sizeof(initBlob));
     if (ret == kIOReturnSuccess) {
         return YES;
     }
@@ -268,7 +281,7 @@ static char* getIOReturnString(IOReturn ioReturn)
 
 - (void)lightsOff
 {
-    memset(_keys, 0, 249);
+    memset(_keys, 0, kLightGuideMessageSize-1);
     [self updateLightMap:nil];
 }
 
