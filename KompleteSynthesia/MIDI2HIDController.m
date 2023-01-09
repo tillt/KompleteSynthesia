@@ -8,9 +8,17 @@
 #import "MIDI2HIDController.h"
 #import <CoreFoundation/CoreFoundation.h>
 #import <CoreMIDI/CoreMIDI.h>
+#import <CoreServices/CoreServices.h>
 #import "LogViewController.h"
 #import "HIDController.h"
 #import "MIDIController.h"
+
+const CGKeyCode kVK_Return = 0x24;
+const CGKeyCode kVK_Space = 0x31;
+const CGKeyCode kVK_ArrowLeft = 0x7B;
+const CGKeyCode kVK_ArrowRight = 0x7C;
+const CGKeyCode kVK_ArrowDown = 0x7D;
+const CGKeyCode kVK_ArrowUp = 0x7E;
 
 @interface MIDI2HIDController ()
 @end
@@ -43,7 +51,7 @@
     if (self) {
         log = lc;
         
-        hid = [[HIDController alloc] init:error];
+        hid = [[HIDController alloc] initWithDelegate:self error:error];
         if (hid == nil) {
             return nil;
         }
@@ -126,6 +134,13 @@
     }
 }
 
+- (void)triggerVirtualKeyEvents:(CGKeyCode)keyCode
+{
+    NSLog(@"sending virtual key events with keyCode:%d", keyCode);
+    CGEventPost(kCGHIDEventTap, CGEventCreateKeyboardEvent(nil, keyCode, true));
+    CGEventPost(kCGHIDEventTap, CGEventCreateKeyboardEvent(nil, keyCode, false));
+}
+
 #pragma mark MIDIControllerDelegate
 
 -(void)receivedMIDIEvent:(unsigned char )cv channel:(unsigned char)channel param1:(unsigned char)param1 param2:(unsigned char)param2;
@@ -150,6 +165,38 @@
             }
             [hid lightsOff];
         }
+    }
+}
+
+#pragma mark HIDControllerDelegate
+
+- (void)receivedKeyEvent:(const int)event
+{
+    switch(event) {
+        case KKBUTTON_PLAY:
+            [log logLine:@"PLAY button -> sending SPACE key\n"];
+            [self triggerVirtualKeyEvents:kVK_Space];
+            break;
+        case KKBUTTON_ENTER:
+            [log logLine:@"ENTER -> sending RETURN key\n"];
+            [self triggerVirtualKeyEvents:kVK_Return];
+            break;
+        case KKBUTTON_LEFT:
+            [log logLine:@"CURSOR LEFT -> sending ARROW LEFT key\n"];
+            [self triggerVirtualKeyEvents:kVK_ArrowLeft];
+            break;
+        case KKBUTTON_RIGHT:
+            [log logLine:@"CURSOR RIGHT -> sending ARROW RIGHT key\n"];
+            [self triggerVirtualKeyEvents:kVK_ArrowRight];
+            break;
+        case KKBUTTON_UP:
+            [log logLine:@"CURSOR UP -> sending ARROW UP key\n"];
+            [self triggerVirtualKeyEvents:kVK_ArrowUp];
+            break;
+        case KKBUTTON_DOWN:
+            [log logLine:@"CURSOR DOWN -> sending ARROW DOWN key\n"];
+            [self triggerVirtualKeyEvents:kVK_ArrowDown];
+            break;
     }
 }
 

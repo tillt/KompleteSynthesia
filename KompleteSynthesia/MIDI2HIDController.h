@@ -9,9 +9,13 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+
 @class LogViewController;
 
-@interface MIDI2HIDController : NSObject
+@protocol MIDIControllerDelegate;
+@protocol HIDControllerDelegate;
+
+@interface MIDI2HIDController : NSObject <MIDIControllerDelegate, HIDControllerDelegate>
 
 @property (copy, nonatomic) NSString* hidStatus;
 @property (copy, nonatomic) NSString* midiStatus;
