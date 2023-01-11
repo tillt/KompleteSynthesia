@@ -8,6 +8,8 @@ Listens on the "LoopBe" MIDI input interface port - a historic choice. Notes rec
 
 Additionally supports jogwheel and play button for starting and stopping a session in Synthesia.
 
+![In Action](site/images/ButtonsAndLightGuide.png)
+
 ## Setup
 
 You first need to configure your system and Synthesia to support our way of routing the lighting information to KompleteSynthesia. Please follow [SETUP.md](SETUP.md).
