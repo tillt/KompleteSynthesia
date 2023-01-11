@@ -23,7 +23,8 @@
 
 @implementation AppDelegate
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
     // Hide application icon.
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
 
@@ -83,11 +84,12 @@
     }
 }
 
-- (void)applicationWillTerminate:(NSNotification *)aNotification {
-    // Insert code here to tear down your application
+- (void)applicationWillTerminate:(NSNotification *)aNotification
+{
 }
 
-- (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app {
+- (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
+{
     return YES;
 }
 
