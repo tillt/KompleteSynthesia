@@ -31,15 +31,17 @@ const uint32_t kPID_S49MK2 = 0x1610;
 const uint32_t kPID_S61MK2 = 0x1620;
 const uint32_t kPID_S88MK2 = 0x1630;
 
-const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
-const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
+const uint8_t kKompleteKontrolColorBlue = 0x2d;         // 011101
+const uint8_t kKompleteKontrolColorLightBlue = 0x2f;    // 101111
+const uint8_t kKompleteKontrolColorGreen = 0x1d;        // 011101
+const uint8_t kKompleteKontrolColorLightGreen = 0x1f;   // 011111
 
-const uint8_t kKompleteKontrolColorBlue = 0x2d;
-const uint8_t kKompleteKontrolColorLightBlue = 0x2f;
-const uint8_t kKompleteKontrolColorGreen = 0x1d;
-const uint8_t kKompleteKontrolColorLightGreen = 0x1f;
+const uint8_t kKompleteKontrolColorRed = 0x04;          // 000100
+const uint8_t kKompleteKontrolColorOrange = 0x08;       // 001000
+const uint8_t kKompleteKontrolColorYellow = 0x0e;       // 001110
+const uint8_t kKompleteKontrolColorLightYellow = 0x12;  // 010010
 
-const uint8_t kKompleteKontrolColorBrightWhite = 0xff;
+const uint8_t kKompleteKontrolColorBrightWhite = 0xff;  // 111111
 
 // Some funky colors.
 const uint8_t kKompleteKontrolColorsSwoop[4] = { 0x04, 0x08, 0x0e, 0x12 };
@@ -51,40 +53,55 @@ const uint8_t kKompleteKontrolColorsSwoop[4] = { 0x04, 0x08, 0x0e, 0x12 };
 const uint8_t kCommandInit = 0xA0;
 const uint8_t kKompleteKontrolInit[] = { kCommandInit };
 
+const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
+const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
+const size_t kKompleteKontrolLightGuideMessageSize = 80;
+const size_t kKompleteKontrolLightGuideKeyMapSize = kKompleteKontrolLightGuideMessageSize - 1;
+
 // This buttons lighting message likely is MK2 specific.
 const uint8_t kCommandButtonLightsUpdate = 0x80;
-const uint8_t kKompleteKontrolButtonIndexM = 0;
-const uint8_t kKompleteKontrolButtonIndexS = 1;
-const uint8_t kKompleteKontrolButtonIndexFunction1 = 2;
-const uint8_t kKompleteKontrolButtonIndexFunction8 = 10;
-const uint8_t kKompleteKontrolButtonIndexKnobLeft = 11;
-const uint8_t kKompleteKontrolButtonIndexKnobUp = 12;
-const uint8_t kKompleteKontrolButtonIndexKnobDown = 13;
-const uint8_t kKompleteKontrolButtonIndexKnobRight = 14;
-const uint8_t kKompleteKontrolButtonIndexScaleEdit = 16;
-const uint8_t kKompleteKontrolButtonIndexArpEdit = 17;
-const uint8_t kKompleteKontrolButtonIndexUndoRedo = 19;
-const uint8_t kKompleteKontrolButtonIndexQuantize = 20;
-const uint8_t kKompleteKontrolButtonIndexPattern = 22;
-const uint8_t kKompleteKontrolButtonIndexPlay = 30;
-const uint8_t kKompleteKontrolButtonIndexRecord = 31;
-const uint8_t kKompleteKontrolButtonIndexStop = 32;
-const uint8_t kKompleteKontrolButtonIndexBrowser = 36;
-const uint8_t kKompleteKontrolButtonIndexSetup = 41;
-const uint8_t kKompleteKontrolButtonIndexFixedVel = 42;
-const uint8_t kKompleteKontrolButtonIndexStrip1 = 45;
-const uint8_t kKompleteKontrolButtonIndexStrip15 = 60;
-const uint8_t kKompleteKontrolButtonIndexStrip20 = 65;
-const uint8_t kKompleteKontrolButtonIndexStrip24 = 69;
-
-const size_t kKompleteKontrolLightGuideMessageSize = 250;
-const size_t kKompleteKontrolLightGuideKeyMapSize = kKompleteKontrolLightGuideMessageSize - 1;
 const size_t kKompleteKontrolButtonsMessageSize = 80;
 const size_t kKompleteKontrolButtonsMapSize = kKompleteKontrolButtonsMessageSize - 1;
 
+// Button light indezes.
+// FIXME: Many may be off - did not pay too much attention here - off by one.
+const uint8_t kKompleteKontrolButtonIndexM = 0;
+const uint8_t kKompleteKontrolButtonIndexS = 1;
+const uint8_t kKompleteKontrolButtonIndexFunction1 = 2;
+const uint8_t kKompleteKontrolButtonIndexFunction2 = 3;
+const uint8_t kKompleteKontrolButtonIndexFunction3 = 4;
+const uint8_t kKompleteKontrolButtonIndexFunction4 = 5;
+const uint8_t kKompleteKontrolButtonIndexFunction5 = 6;
+const uint8_t kKompleteKontrolButtonIndexFunction6 = 7;
+const uint8_t kKompleteKontrolButtonIndexFunction7 = 8;
+const uint8_t kKompleteKontrolButtonIndexFunction8 = 9;
+const uint8_t kKompleteKontrolButtonIndexKnobLeft = 10;
+const uint8_t kKompleteKontrolButtonIndexKnobUp = 11;
+const uint8_t kKompleteKontrolButtonIndexKnobDown = 12;
+const uint8_t kKompleteKontrolButtonIndexKnobRight = 13;
+const uint8_t kKompleteKontrolButtonIndexScaleEdit = 15;
+const uint8_t kKompleteKontrolButtonIndexArpEdit = 16;
+const uint8_t kKompleteKontrolButtonIndexUndoRedo = 18;
+const uint8_t kKompleteKontrolButtonIndexQuantize = 19;
+const uint8_t kKompleteKontrolButtonIndexPattern = 21;
+const uint8_t kKompleteKontrolButtonIndexPlay = 29;
+const uint8_t kKompleteKontrolButtonIndexRecord = 30;
+const uint8_t kKompleteKontrolButtonIndexStop = 31;
+const uint8_t kKompleteKontrolButtonIndexBrowser = 35;
+const uint8_t kKompleteKontrolButtonIndexSetup = 40;
+const uint8_t kKompleteKontrolButtonIndexFixedVel = 41;
+const uint8_t kKompleteKontrolButtonIndexStrip1 = 44;
+const uint8_t kKompleteKontrolButtonIndexStrip10 = 54;
+const uint8_t kKompleteKontrolButtonIndexStrip15 = 59;
+const uint8_t kKompleteKontrolButtonIndexStrip20 = 64;
+const uint8_t kKompleteKontrolButtonIndexStrip24 = 68;
+
 const float kLightsSwoopDelay = 0.01;
+const float kLightsSwooshDelay = 0.4;
 
 const size_t kInputBufferSize = 64;
+
+//#define DEBUG_HID_INPUT
 
 void HIDInputCallback(void* context,
                       IOReturn result,
@@ -95,7 +112,6 @@ void HIDInputCallback(void* context,
                       CFIndex reportLength)
 {
     HIDController* controller = (__bridge HIDController*)context;
-#define DEBUG_HID_INPUT
     
 #ifdef DEBUG_HID_INPUT
     NSMutableString* hex = [NSMutableString string];
@@ -407,7 +423,7 @@ void HIDInputCallback(void* context,
 
 - (BOOL)updateButtonLightMap:(NSError**)error
 {
-    return [self setReport:lightGuideUpdateMessage length:sizeof(lightGuideUpdateMessage) error:error];
+    return [self setReport:buttonLightingUpdateMessage length:sizeof(buttonLightingUpdateMessage) error:error];
 }
 
 - (void)lightKey:(int)key color:(unsigned char)color
@@ -459,6 +475,20 @@ void HIDInputCallback(void* context,
     });
 }
 
+// FIXME: work in progress
+- (void)lightsSwoosh
+{
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        int midIndex = self.keyCount / 2;
+#define LERP(a,b,t) (a + t * (b - a))
+        const unsigned int steps = 255;
+        for (unsigned int step = 0;step < steps;step++) {
+            self.keys[midIndex] = LERP(0, 255, (float)step / steps);
+            [self updateLightGuideMap:nil];
+            [NSThread sleepForTimeInterval:kLightsSwooshDelay];
+        }
+    });
+}
 
 + (NSImage*)KKImageFromNSImage:(NSImage*)image
 {

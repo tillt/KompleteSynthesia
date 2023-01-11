@@ -39,6 +39,7 @@ enum {
 - (void)lightKey:(int)note color:(unsigned char)color;
 - (void)lightsOff;
 - (void)lightsSwoop;
+- (void)lightsSwoosh;
 - (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error;
 - (void)receivedReport:(unsigned char*)report;
 
