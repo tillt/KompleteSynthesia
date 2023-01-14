@@ -20,15 +20,11 @@ Now double click on the `IAC Driver`. The following will show up;
 
 Make sure the `Device is online` as seen above.
 
-We now add two new, named ports by clicking on that small `+` within the `Ports` section of that dialog. Name one new port `LoopBe`, the other port `LoopMu`. There is no magic behind those names, KompleteSynthesia is simply hardcoded for them and SynthesiaKomplete used that name already. So why not remaining compatible with that solution.
+We now add a new, named port by clicking on that small `+` within the `Ports` section of that dialog. Name that new port `LoopBe`. There is no magic behind that name, KompleteSynthesia is simply hardcoded for that and SynthesiaKomplete used that name already. So why not remaining compatible with that solution.
 
 ![IAC Driver add LoopBe](site/images/IAC_Driver_Add_LoopBe.png)
 
-Now click on `Apply`. And on that small `+` again to add another interface.
-
-![IAC Driver add LoopMu](site/images/IAC_Driver_Add_LoopMu.png)
-
-Now click on `Apply`. We have now created two named ports on the `IAC Driver` MIDI interface. We can now go ahead and configure Synthesia to make use of those.
+Now click on `Apply`. We have now created a named port on the `IAC Driver` MIDI interface. We can now go ahead and configure Synthesia to make use of it.
 
 ## Configuring Synthesia
 
@@ -38,15 +34,11 @@ Open the `Settings` from within Synthesia. Both, Input and Output sections shoul
 
 Now lets make sure that Synthesia sends the lighting information towards our new `LoopBe` port. To do that, click on `IAC Driver LoopBe` in the `Music Output` section. Then enable `Send output to this device` on the top. In the `Use this device for:` section, click on `Key Lights`.
 
-![Synthesia Settings IAC](site/images/Synthesia_Settings_IAC_Light.png)
+![Synthesia Settings IAC LoopBe](site/images/Synthesia_Settings_IAC.png)
 
 Within the now opening list, scroll all the way down to `Finger-based channel` and activate that.
 
 ![Synthesia Settings IAC LoopBe](site/images/Synthesia_Settings_IAC_LoopBe.png)
-
-In the `Music Output` section, click on `IAC Driver LoopMu`. Then enable `Send output to this device` on the top. In the `Use this device for:` section, activate `Background Instruments`, `Percussions` and `Metronome`.
-
-![Synthesia Settings IAC LoopMu](site/images/Synthesia_Settings_IAC_Music.png)
 
 ## Testing It
 

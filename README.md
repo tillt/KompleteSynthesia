@@ -8,8 +8,6 @@ Routes Synthesia lighting information to your Native Instruments keyboard contro
 
 Listens on the "LoopBe" MIDI input interface port - a historic choice. Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia protocol.
 
-Listens on the "LoopMu" MIDI input interface port. Notes received are forwarded to the keyboard controller USB device as key lighting requests enhancing the Synthesia protocol user experience.
-
 Listens on the "Port 1" MIDI input interface port. Notes received are forwarded to the keyboard controller signalling user initiated notes played. 
 
 Additionally supports jogwheel and play button for starting and stopping a session in Synthesia.

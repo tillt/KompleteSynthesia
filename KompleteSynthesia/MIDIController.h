@@ -10,7 +10,6 @@
 NS_ASSUME_NONNULL_BEGIN
 
 extern const int kMIDIConnectionInterfaceLightLoopback;
-extern const int kMIDIConnectionInterfaceMusicLoopback;
 extern const int kMIDIConnectionInterfaceKeyboard;
 
 @protocol MIDIControllerDelegate <NSObject>

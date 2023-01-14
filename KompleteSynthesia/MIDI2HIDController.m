@@ -161,57 +161,49 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     }
     switch(interface) {
         case 0:
-            // We ignore note-off requests on the lighting loopback interface.
-            // That way we prevent those to get triggered prematurely as done by
-            // Synthesia.
+        {
+            unsigned char state = kKeyStateMaskOn;
+            unsigned char hand = kKeyStateRight;
+            if (channel == 0) {
+                // We do not know who or what this note belongs to,
+                // but light something up anyway.
+                hand = kKeyStateRight;
+            } else if (channel >= 1 && channel <= 5) {
+                // Left hand fingers, thumb through pinky.
+                hand = kKeyStateLeft;
+                if (channel == 1) {
+                    state |= kKeyStateMaskThumb;
+                }
+            }
+            // Right hand fingers, thumb through pinky.
+            if (channel >= 6 && channel <= 10) {
+                hand = kKeyStateRight;
+                if (channel == 6) {
+                    state |= kKeyStateMaskThumb;
+                }
+            }
+            // Left hand, unknown finger.
+            if (channel == 11) {
+                hand = kKeyStateLeft;
+            }
+            // Right hand, unknown finger.
+            if (channel == 12) {
+                hand = kKeyStateRight;
+            }
             if (status == kMIDICVStatusNoteOn && velocity > 0) {
-                unsigned char state = kKeyStateMaskOn;
-                unsigned char hand = kKeyStateRight;
-                if (channel == 0) {
-                    // We do not know who or what this note belongs to,
-                    // but light something up anyway.
-                    hand = kKeyStateRight;
-                } else if (channel >= 1 && channel <= 5) {
-                    // Left hand fingers, thumb through pinky.
-                    hand = kKeyStateLeft;
-                    if (channel == 1) {
-                        state |= kKeyStateMaskThumb;
-                    }
-                }
-                // Right hand fingers, thumb through pinky.
-                if (channel >= 6 && channel <= 10) {
-                    hand = kKeyStateRight;
-                    if (channel == 6) {
-                        state |= kKeyStateMaskThumb;
-                    }
-                }
-                // Left hand, unknown finger.
-                if (channel == 11) {
-                    hand = kKeyStateLeft;
-                }
-                // Right hand, unknown finger.
-                if (channel == 12) {
-                    hand = kKeyStateRight;
-                }
                 keyStates[key] |= hand | state;
-           }
-           break;
-        case 1:
-            if (status == kMIDICVStatusNoteOn && velocity > 0) {
-                keyStates[key] |= kKeyStateMaskOn | kKeyStateMaskMusic;
             } else if (status == kMIDICVStatusNoteOff || velocity == 0) {
-                // Note offs on the Music loopback interface allow shutting down Synthesia notes.
-                keyStates[key] &= ((kKeyStateMaskMusic | kKeyStateMaskOn| kKeyStateMaskHand | kKeyStateMaskThumb) ^ 0xFF);
+                keyStates[key] &= ((kKeyStateMaskHand | kKeyStateMaskThumb) ^ 0xFF);
             }
             break;
-        case 2:
+        }
+        case 1:
             if (status == kMIDICVStatusNoteOn && velocity > 0) {
                 keyStates[key] |= kKeyStateMaskOn | kKeyStateMaskUser;
             } else if (status == kMIDICVStatusNoteOff || velocity == 0) {
                 keyStates[key] &= (kKeyStateMaskUser ^ 0xFF);
             }
             break;
-
     }
     
     [hid lightKey:key color:[self keyLightColor:keyStates[key]]];
