@@ -9,8 +9,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern const int kMIDIConnectionInterfaceLightLoopback;
+extern const int kMIDIConnectionInterfaceMusicLoopback;
+extern const int kMIDIConnectionInterfaceKeyboard;
+
 @protocol MIDIControllerDelegate <NSObject>
--(void)receivedMIDIEvent:(unsigned char )cv channel:(unsigned char)channel param1:(unsigned char)control param2:(unsigned char)value;
+-(void)receivedMIDIEvent:(unsigned char)cv
+                 channel:(unsigned char)channel
+                  param1:(unsigned char)param1
+                  param2:(unsigned char)param2
+               interface:(unsigned char)interface;
 @end
 
 @interface MIDIController : NSObject

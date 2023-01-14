@@ -11,8 +11,12 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern const unsigned char kKompleteKontrolColorBlue;
 extern const unsigned char kKompleteKontrolColorLightBlue;
+extern const unsigned char kKompleteKontrolColorBrightBlue;
 extern const unsigned char kKompleteKontrolColorGreen;
 extern const unsigned char kKompleteKontrolColorLightGreen;
+extern const unsigned char kKompleteKontrolColorBrightGreen;
+extern const unsigned char kKompleteKontrolColorBrightWhite;
+extern const unsigned char kKompleteKontrolColorRed;
 
 enum {
     KKBUTTON_PLAY,
@@ -42,6 +46,7 @@ enum {
 - (void)lightsSwoosh;
 - (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error;
 - (void)receivedReport:(unsigned char*)report;
+- (unsigned char)keyColor:(int)note;
 
 @end
 

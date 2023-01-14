@@ -27,6 +27,8 @@
 
 - (void)logLine:(NSString*)l
 {
+    NSLog(l);
+    
     // Assert the view is loaded.
     NSView* view = self.view;
     // Avoid unused variable.
@@ -42,7 +44,7 @@
         NSFontAttributeName: [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightLight],
         NSForegroundColorAttributeName: NSColor.textColor
     };
-    NSAttributedString *attrstr = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@: %@", t, l] attributes:attributes];
+    NSAttributedString *attrstr = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@: %@\n", t, l] attributes:attributes];
     [self.textView.textStorage appendAttributedString:attrstr];
     [self.textView scrollRangeToVisible: NSMakeRange(self.textView.string.length, 0)];
 }

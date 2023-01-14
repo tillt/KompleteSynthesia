@@ -21,6 +21,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (copy, nonatomic) NSString* midiStatus;
 
 - (id)initWithLogController:(LogViewController*)lc error:(NSError**)error;
+- (BOOL)reset:(NSError**)error;
 
 @end
 

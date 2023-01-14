@@ -12,6 +12,7 @@
 #import "LogViewController.h"
 #import "HIDController.h"
 #import "MIDIController.h"
+#import "SynthesiaController.h"
 
 const CGKeyCode kVK_Return = 0x24;
 const CGKeyCode kVK_Space = 0x31;
@@ -19,6 +20,16 @@ const CGKeyCode kVK_ArrowLeft = 0x7B;
 const CGKeyCode kVK_ArrowRight = 0x7C;
 const CGKeyCode kVK_ArrowDown = 0x7D;
 const CGKeyCode kVK_ArrowUp = 0x7E;
+
+const unsigned char kKeyStateRight = 0x02;
+const unsigned char kKeyStateLeft = 0x04;
+
+const unsigned char kKeyStateMaskOn = 0x01;
+const unsigned char kKeyStateMaskHand = (kKeyStateLeft | kKeyStateRight);
+const unsigned char kKeyStateMaskThumb = 0x08;
+const unsigned char kKeyStateMaskUser = 0x10;
+const unsigned char kKeyStateMaskMusic = 0x20;
+
 
 @interface MIDI2HIDController ()
 @end
@@ -28,7 +39,7 @@ const CGKeyCode kVK_ArrowUp = 0x7E;
 /// Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia
 /// protocol.
 ///
-/// The entire approach and implementation is closely following a neat little Python project called
+/// The initial approach and implementation was closely following a neat little Python project called
 /// https://github.com/ojacques/SynthesiaKontrol
 /// Kudos to you Olivier Jacques for sharing!
 ///
@@ -43,6 +54,8 @@ const CGKeyCode kVK_ArrowUp = 0x7E;
     LogViewController* log;
     MIDIController* midi;
     HIDController* hid;
+    
+    unsigned char keyStates[255];
 }
 
 - (id)initWithLogController:(LogViewController*)lc error:(NSError**)error
@@ -50,24 +63,33 @@ const CGKeyCode kVK_ArrowUp = 0x7E;
     self = [super init];
     if (self) {
         log = lc;
-        
-        hid = [[HIDController alloc] initWithDelegate:self error:error];
-        if (hid == nil) {
+       
+        if ([self reset:error] == NO) {
             return nil;
         }
-
-        [log logLine:[NSString stringWithFormat:@"detected Native Instruments %@\n", hid.deviceName]];
-
-        [hid lightsOff];
-        
-        midi = [[MIDIController alloc] initWithDelegate:self error:error];
-        if (midi == nil) {
-            return nil;
-        }
-
-        [hid lightsSwoop];
     }
     return self;
+}
+
+- (BOOL)reset:(NSError**)error
+{
+    hid = [[HIDController alloc] initWithDelegate:self error:error];
+    if (hid == nil) {
+        return NO;
+    }
+
+    [log logLine:[NSString stringWithFormat:@"detected Native Instruments %@\n", hid.deviceName]];
+   
+    midi = [[MIDIController alloc] initWithDelegate:self error:error];
+    if (midi == nil) {
+        return NO;
+    }
+
+    [self lightsOff];
+    
+    [hid lightsSwoop];
+
+    return YES;
 }
 
 - (NSString*)hidStatus
@@ -80,7 +102,56 @@ const CGKeyCode kVK_ArrowUp = 0x7E;
     return [NSString stringWithFormat:@"MIDI: %@", midi.status];
 }
 
-- (void)lightNote:(unsigned int)note type:(unsigned int)type channel:(unsigned int)channel velocity:(unsigned int)velocity
+- (unsigned char)keyLightColor:(unsigned char)state
+{
+    if ((state & kKeyStateMaskOn) == 0x00) {
+        return 0x00;
+    }
+    unsigned char color = 0;
+    if ((state & kKeyStateMaskHand) == kKeyStateLeft) {
+        if (state & kKeyStateMaskUser) {
+            color = kKompleteKontrolColorBrightBlue;
+        } else if ((state & kKeyStateMaskThumb) == kKeyStateMaskThumb) {
+            color = kKompleteKontrolColorLightBlue;
+        } else {
+            color = kKompleteKontrolColorBlue;
+        }
+    } else if ((state & kKeyStateMaskHand) == kKeyStateRight) {
+        if (state & kKeyStateMaskUser) {
+            color = kKompleteKontrolColorBrightGreen;
+        } else if ((state & kKeyStateMaskThumb) == kKeyStateMaskThumb) {
+            color = kKompleteKontrolColorLightGreen;
+        } else {
+            color = kKompleteKontrolColorGreen;
+        }
+    } else if (state & kKeyStateMaskUser) {
+        color = kKompleteKontrolColorBrightWhite;
+    }
+    return color;
+}
+
+- (void)lightsOff
+{
+    memset(keyStates, 0, sizeof(keyStates));
+    [hid lightsOff];
+}
+
+/// The Synthesia lighting loopback interface expects the Synthesia "Per Channel"  lighting protocol:
+///  channel 0 = unknown
+///  channel 1 = left hand, thumb
+///  channel 2-5 = left hand
+///  channel 6 = right hand, thumb
+///  channel 7-10 = right hand
+///  channel 11 = left hand, unknown finger
+///  channel 12 = left hand, unknown finger
+/// The Music loopback interface determines if Synthesia notes get switched off.
+/// The Keyboard interface helps determining a match of user input and Synthesia notes.
+///
+- (void)lightNote:(unsigned int)note
+           status:(unsigned int)status
+          channel:(unsigned int)channel
+         velocity:(unsigned int)velocity
+        interface:(unsigned int)interface
 {
     int key = note + hid.keyOffset;
 
@@ -88,82 +159,93 @@ const CGKeyCode kVK_ArrowUp = 0x7E;
         NSLog(@"unexpected note lighting requested for key %d", key);
         return;
     }
+    switch(interface) {
+        case 0:
+            // We ignore note-off requests on the lighting loopback interface.
+            // That way we prevent those to get triggered prematurely as done by
+            // Synthesia.
+            if (status == kMIDICVStatusNoteOn && velocity > 0) {
+                unsigned char state = kKeyStateMaskOn;
+                unsigned char hand = kKeyStateRight;
+                if (channel == 0) {
+                    // We do not know who or what this note belongs to,
+                    // but light something up anyway.
+                    hand = kKeyStateRight;
+                } else if (channel >= 1 && channel <= 5) {
+                    // Left hand fingers, thumb through pinky.
+                    hand = kKeyStateLeft;
+                    if (channel == 1) {
+                        state |= kKeyStateMaskThumb;
+                    }
+                }
+                // Right hand fingers, thumb through pinky.
+                if (channel >= 6 && channel <= 10) {
+                    hand = kKeyStateRight;
+                    if (channel == 6) {
+                        state |= kKeyStateMaskThumb;
+                    }
+                }
+                // Left hand, unknown finger.
+                if (channel == 11) {
+                    hand = kKeyStateLeft;
+                }
+                // Right hand, unknown finger.
+                if (channel == 12) {
+                    hand = kKeyStateRight;
+                }
+                keyStates[key] |= hand | state;
+           }
+           break;
+        case 1:
+            if (status == kMIDICVStatusNoteOn && velocity > 0) {
+                keyStates[key] |= kKeyStateMaskOn | kKeyStateMaskMusic;
+            } else if (status == kMIDICVStatusNoteOff || velocity == 0) {
+                // Note offs on the Music loopback interface allow shutting down Synthesia notes.
+                keyStates[key] &= ((kKeyStateMaskMusic | kKeyStateMaskOn| kKeyStateMaskHand | kKeyStateMaskThumb) ^ 0xFF);
+            }
+            break;
+        case 2:
+            if (status == kMIDICVStatusNoteOn && velocity > 0) {
+                keyStates[key] |= kKeyStateMaskOn | kKeyStateMaskUser;
+            } else if (status == kMIDICVStatusNoteOff || velocity == 0) {
+                keyStates[key] &= (kKeyStateMaskUser ^ 0xFF);
+            }
+            break;
 
-    unsigned char left = kKompleteKontrolColorBlue;
-    unsigned char left_thumb = kKompleteKontrolColorLightBlue;
-    unsigned char right = kKompleteKontrolColorGreen;
-    unsigned char right_thumb = kKompleteKontrolColorLightGreen;
-
-    unsigned char def = right;
-    unsigned char color = def;
-
-    if (channel == 0) {
-        // We do not know who or what this note belongs to,
-        // but light something up anyway.
-        color = def;
-    } else if (channel >= 1 && channel <= 5) {
-        // Left hand fingers, thumb through pinky.
-        if (channel == 1) {
-            color = left_thumb;
-        } else {
-            color = left;
-        }
-    }
-    if (channel >= 6 && channel <= 10) {
-        // Right hand fingers, thumb through pinky.
-        if (channel == 6) {
-            color = right_thumb;
-        } else {
-            color = right;
-        }
-    }
-    if (channel == 11) {
-        // Left hand, unknown finger.
-        color = left;
-    }
-    if (channel == 12) {
-        // Right hand, unknown finger.
-        color = right;
     }
     
-    if (type == kMIDICVStatusNoteOn && velocity != 0) {
-        [hid lightKey:key color:color];
-    }
-    if (type == kMIDICVStatusNoteOff || velocity == 0) {
-        [hid lightKey:key color:0x00];
-    }
-}
-
-- (void)triggerVirtualKeyEvents:(CGKeyCode)keyCode
-{
-    NSLog(@"sending virtual key events with keyCode:%d", keyCode);
-    CGEventPost(kCGHIDEventTap, CGEventCreateKeyboardEvent(nil, keyCode, true));
-    CGEventPost(kCGHIDEventTap, CGEventCreateKeyboardEvent(nil, keyCode, false));
+    [hid lightKey:key color:[self keyLightColor:keyStates[key]]];
 }
 
 #pragma mark MIDIControllerDelegate
 
--(void)receivedMIDIEvent:(unsigned char )cv channel:(unsigned char)channel param1:(unsigned char)param1 param2:(unsigned char)param2;
+-(void)receivedMIDIEvent:(unsigned char)cv
+                 channel:(unsigned char)channel
+                  param1:(unsigned char)param1
+                  param2:(unsigned char)param2
+               interface:(unsigned char)interface;
 {
     if (cv == kMIDICVStatusNoteOn || cv == kMIDICVStatusNoteOff) {
-        [log logLine:[NSString stringWithFormat:@"note %-3s - channel %02d - note %@ - velocity %d\n",
-                              cv == kMIDICVStatusNoteOn ? "on" : "off" ,
-                              channel,
-                              [MIDIController readableNote:param1], param2]];
+        [log logLine:[NSString stringWithFormat:@"port %d - note %-3s - channel %02d - note %@ - velocity %d",
+                      interface,
+                      cv == kMIDICVStatusNoteOn ? "on" : "off" ,
+                      channel + 1,
+                      [MIDIController readableNote:param1],
+                      param2]];
 
-        [self lightNote:param1 type:cv channel:channel velocity:param2];
+        [self lightNote:param1 status:cv channel:channel velocity:param2 interface:interface];
     } else if (cv == kMIDICVStatusControlChange) {
         if (channel == 0x00 && param1 == 0x10) {
             if (param2 & 0x04) {
-                [log logLine:@"user is playing\n"];
+                [log logLine:@"user is playing"];
             }
             if (param2 & 0x01) {
-                [log logLine:@"playing right hand\n"];
+                [log logLine:@"playing right hand"];
             }
             if (param2 & 0x02) {
-                [log logLine:@"playing left hand\n"];
+                [log logLine:@"playing left hand"];
             }
-            [hid lightsOff];
+            [self lightsOff];
         }
     }
 }
@@ -172,30 +254,34 @@ const CGKeyCode kVK_ArrowUp = 0x7E;
 
 - (void)receivedKeyEvent:(const int)event
 {
+    if (![SynthesiaController synthesiaHasFocus]) {
+        [log logLine:@"Synthesia not in foreground"];
+        return;
+    }
     switch(event) {
         case KKBUTTON_PLAY:
-            [log logLine:@"PLAY button -> sending SPACE key\n"];
-            [self triggerVirtualKeyEvents:kVK_Space];
+            [log logLine:@"PLAY button -> sending SPACE key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_Space];
             break;
         case KKBUTTON_ENTER:
-            [log logLine:@"ENTER -> sending RETURN key\n"];
-            [self triggerVirtualKeyEvents:kVK_Return];
+            [log logLine:@"ENTER -> sending RETURN key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_Return];
             break;
         case KKBUTTON_LEFT:
-            [log logLine:@"CURSOR LEFT -> sending ARROW LEFT key\n"];
-            [self triggerVirtualKeyEvents:kVK_ArrowLeft];
+            [log logLine:@"CURSOR LEFT -> sending ARROW LEFT key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowLeft];
             break;
         case KKBUTTON_RIGHT:
-            [log logLine:@"CURSOR RIGHT -> sending ARROW RIGHT key\n"];
-            [self triggerVirtualKeyEvents:kVK_ArrowRight];
+            [log logLine:@"CURSOR RIGHT -> sending ARROW RIGHT key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowRight];
             break;
         case KKBUTTON_UP:
-            [log logLine:@"CURSOR UP -> sending ARROW UP key\n"];
-            [self triggerVirtualKeyEvents:kVK_ArrowUp];
+            [log logLine:@"CURSOR UP -> sending ARROW UP key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowUp];
             break;
         case KKBUTTON_DOWN:
-            [log logLine:@"CURSOR DOWN -> sending ARROW DOWN key\n"];
-            [self triggerVirtualKeyEvents:kVK_ArrowDown];
+            [log logLine:@"CURSOR DOWN -> sending ARROW DOWN key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowDown];
             break;
     }
 }

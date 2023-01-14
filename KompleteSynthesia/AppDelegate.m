@@ -8,12 +8,14 @@
 #import "AppDelegate.h"
 #import "MIDI2HIDController.h"
 #import "LogViewController.h"
+#import "SynthesiaController.h"
 
 @interface AppDelegate ()
 
 @property (nonatomic, strong) IBOutlet NSWindow *window;
 @property (nonatomic, strong) MIDI2HIDController* midi2hidController;
 @property (nonatomic, strong) LogViewController* logViewController;
+@property (nonatomic, strong) SynthesiaController* synthesia;
 
 @property (nonatomic, strong) NSPopover *popover;
 @property (nonatomic, strong) NSMenu *statusMenu;
@@ -25,11 +27,8 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    // Hide application icon.
-    [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
-
     _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
-
+    
     NSError* error = nil;
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController error:&error];
     if (_midi2hidController == nil) {
@@ -37,7 +36,10 @@
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;
     }
-
+    
+    // Hide application icon.
+    [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
+    
     self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
     
     self.statusItem.button.action = @selector(showStatusMenu:);
@@ -46,21 +48,36 @@
     NSImage *image = [NSImage imageNamed:@"StatusIcon"];
     [image setTemplate:true];
     self.statusItem.button.image = image;
-
+    
     NSMenu *menu = [[NSMenu alloc] init];
     [menu addItemWithTitle:_midi2hidController.hidStatus action:nil keyEquivalent:@""];
+    [menu addItemWithTitle:[SynthesiaController status] action:nil keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
+    [menu addItemWithTitle:@"Reset" action:@selector(reset:) keyEquivalent:@""];
     [menu addItemWithTitle:@"Show Log" action:@selector(showLog:) keyEquivalent:@""];
+    [menu addItem:[NSMenuItem separatorItem]];
     [menu addItemWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
-
+    
     menu.delegate = self;
     self.statusMenu = menu;
+    
+    _synthesia = [[SynthesiaController alloc] initWithDelegate:self];
 }
 
 - (void)showStatusMenu:(id)sender
 {
     self.statusItem.menu = self.statusMenu;
     [self.statusItem.button performClick:nil];
+}
+
+- (void)reset:(id)sender
+{
+    NSError* error = nil;
+    if ([_midi2hidController reset:&error] == NO) {
+        [[NSAlert alertWithError:error] runModal];
+        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+        return;
+    }
 }
 
 - (void)showLog:(id)sender
@@ -77,8 +94,8 @@
         [self.popover performClose:sender];
     } else {
         [self.popover showRelativeToRect:self.statusItem.button.bounds ofView:self.statusItem.button preferredEdge:NSRectEdgeMinY];
-        __block AppDelegate *blocksafeSelf = self;
-        [NSEvent addGlobalMonitorForEventsMatchingMask:NSEventTypeLeftMouseDown | NSEventTypeRightMouseDown handler:^(NSEvent *event) {
+        __block AppDelegate* blocksafeSelf = self;
+        [NSEvent addGlobalMonitorForEventsMatchingMask:NSEventTypeLeftMouseDown | NSEventTypeRightMouseDown handler:^(NSEvent* event) {
             [blocksafeSelf.popover performClose:nil];
         }];
     }
@@ -91,6 +108,15 @@
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
 {
     return YES;
+}
+
+#pragma mark SynthesiaControllerDelegate
+
+- (void)synthesiaStateUpdate:(NSString*)status
+{
+    assert(self.statusMenu.itemArray.count > 1);
+    NSMenuItem* item = self.statusMenu.itemArray[1];
+    item.title = status;
 }
 
 @end

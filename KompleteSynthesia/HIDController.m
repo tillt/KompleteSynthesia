@@ -18,6 +18,9 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <CoreImage/CoreImage.h>
 
+/// Detects a Komplete Kontrol S-series controller. Listens for any incoming button presses and forwards them
+/// to the delegate.
+
 const uint32_t kVendorID = 0x17CC;
 
 // MK1 controllers.
@@ -32,9 +35,11 @@ const uint32_t kPID_S61MK2 = 0x1620;
 const uint32_t kPID_S88MK2 = 0x1630;
 
 const uint8_t kKompleteKontrolColorBlue = 0x2d;         // 011101
-const uint8_t kKompleteKontrolColorLightBlue = 0x2f;    // 101111
+const uint8_t kKompleteKontrolColorLightBlue = 0x2e;
+const uint8_t kKompleteKontrolColorBrightBlue = 0x2f;   // 101111
 const uint8_t kKompleteKontrolColorGreen = 0x1d;        // 011101
-const uint8_t kKompleteKontrolColorLightGreen = 0x1f;   // 011111
+const uint8_t kKompleteKontrolColorLightGreen = 0x1e;
+const uint8_t kKompleteKontrolColorBrightGreen = 0x1f;  // 011111
 
 const uint8_t kKompleteKontrolColorRed = 0x04;          // 000100
 const uint8_t kKompleteKontrolColorOrange = 0x08;       // 001000
@@ -55,7 +60,7 @@ const uint8_t kKompleteKontrolInit[] = { kCommandInit };
 
 const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
 const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
-const size_t kKompleteKontrolLightGuideMessageSize = 80;
+const size_t kKompleteKontrolLightGuideMessageSize = 250;
 const size_t kKompleteKontrolLightGuideKeyMapSize = kKompleteKontrolLightGuideMessageSize - 1;
 
 // This buttons lighting message likely is MK2 specific.
@@ -138,6 +143,12 @@ void HIDInputCallback(void* context,
     // FIXME: This may need double-buffering, not sure.
     unsigned char inputBuffer[kInputBufferSize];
     IOHIDDeviceRef device;
+}
+
+- (unsigned char)keyColor:(int)note
+{
+    assert(note < kKompleteKontrolLightGuideKeyMapSize);
+    return _keys[note];
 }
 
 - (void)receivedReport:(unsigned char*)report
@@ -340,7 +351,7 @@ void HIDInputCallback(void* context,
     NSLog(@"No Native Instruments keyboard controller detected");
     if (error != nil) {
         NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : @"Keyboard Error: No Native Instruments controller detected",
+            NSLocalizedDescriptionKey : @"No Native Instruments controller detected",
             NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
         };
         *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
