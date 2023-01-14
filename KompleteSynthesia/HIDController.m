@@ -213,6 +213,9 @@ void HIDInputCallback(void* context,
 
 - (void)dealloc
 {
+    // Make sure we dont leave a mess behind!
+    [self lightsOff];
+
     if (device != 0) {
         IOHIDDeviceClose(device, kIOHIDOptionsTypeNone);
     }
