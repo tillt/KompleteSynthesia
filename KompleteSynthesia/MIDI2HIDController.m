@@ -144,9 +144,6 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 ///  channel 7-10 = right hand
 ///  channel 11 = left hand, unknown finger
 ///  channel 12 = left hand, unknown finger
-/// The Music loopback interface determines if Synthesia notes get switched off.
-/// The Keyboard interface helps determining a match of user input and Synthesia notes.
-///
 - (void)lightNote:(unsigned int)note
            status:(unsigned int)status
           channel:(unsigned int)channel
