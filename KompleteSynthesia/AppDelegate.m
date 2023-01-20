@@ -61,7 +61,9 @@
     menu.delegate = self;
     self.statusMenu = menu;
     
-    _synthesia = [[SynthesiaController alloc] initWithDelegate:self];
+    _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
+                                                               delegate:self];
+    
 }
 
 - (void)showStatusMenu:(id)sender
@@ -103,6 +105,7 @@
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
+    [_midi2hidController teardown];
 }
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app

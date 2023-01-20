@@ -19,6 +19,7 @@
 		BB8570FC2971AD980004218B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = BB8570FB2971AD980004218B /* README.md */; };
 		BB8570FE2971ED4B0004218B /* SETUP.md in Resources */ = {isa = PBXBuildFile; fileRef = BB8570FD2971ED4A0004218B /* SETUP.md */; };
 		BBA0166929611D1D0018B2DB /* MIDI2HIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */; };
+		BBB5EFAF29738E6F00C1BAC3 /* USBController.m in Sources */ = {isa = PBXBuildFile; fileRef = BBB5EFAE29738E6F00C1BAC3 /* USBController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +44,8 @@
 		BB8570FD2971ED4A0004218B /* SETUP.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = SETUP.md; sourceTree = SOURCE_ROOT; };
 		BBA0166729611D1D0018B2DB /* MIDI2HIDController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MIDI2HIDController.h; sourceTree = "<group>"; };
 		BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MIDI2HIDController.m; sourceTree = "<group>"; };
+		BBB5EFAD29738E6F00C1BAC3 /* USBController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = USBController.h; sourceTree = "<group>"; };
+		BBB5EFAE29738E6F00C1BAC3 /* USBController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = USBController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,6 +87,8 @@
 				BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */,
 				BB3182172967A037005EB410 /* HIDController.h */,
 				BB3182182967A037005EB410 /* HIDController.m */,
+				BBB5EFAD29738E6F00C1BAC3 /* USBController.h */,
+				BBB5EFAE29738E6F00C1BAC3 /* USBController.m */,
 				BB31821429679983005EB410 /* MIDIController.h */,
 				BB31821529679983005EB410 /* MIDIController.m */,
 				BB8570F82971935B0004218B /* SynthesiaController.h */,
@@ -171,6 +176,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBB5EFAF29738E6F00C1BAC3 /* USBController.m in Sources */,
 				BB8570FA2971935B0004218B /* SynthesiaController.m in Sources */,
 				BB49B3B9295CC8AF00D18605 /* main.m in Sources */,
 				BB3182192967A037005EB410 /* HIDController.m in Sources */,
@@ -329,7 +335,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.21;
+				MARKETING_VERSION = 0.30;
 				PRODUCT_BUNDLE_IDENTIFIER = tillt.KompleteSynthesia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -362,7 +368,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.21;
+				MARKETING_VERSION = 0.30;
 				PRODUCT_BUNDLE_IDENTIFIER = tillt.KompleteSynthesia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

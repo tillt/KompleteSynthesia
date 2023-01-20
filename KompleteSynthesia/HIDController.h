@@ -18,17 +18,29 @@ extern const unsigned char kKompleteKontrolColorBrightGreen;
 extern const unsigned char kKompleteKontrolColorBrightWhite;
 extern const unsigned char kKompleteKontrolColorRed;
 
+extern const uint8_t kKeyColorUnpressed;
+extern const uint8_t kKeyColorPressed;
+
+
 enum {
     KKBUTTON_PLAY,
     KKBUTTON_LEFT,
     KKBUTTON_RIGHT,
     KKBUTTON_UP,
     KKBUTTON_DOWN,
-    KKBUTTON_ENTER
+    KKBUTTON_ENTER,
+    KKBUTTON_PAGE_RIGHT,
+    KKBUTTON_PAGE_LEFT,
+    KKBUTTON_FUNCTION1,
+    KKBUTTON_FUNCTION2,
+    KKBUTTON_FUNCTION3,
+    KKBUTTON_FUNCTION4,
+    KKBUTTON_SCROLL
 };
 
 @protocol HIDControllerDelegate <NSObject>
-- (void)receivedKeyEvent:(const int)event;
+- (void)receivedEvent:(const int)event value:(int)value;
+- (void)deviceRemoved;
 @end
 
 @interface HIDController : NSObject
@@ -42,10 +54,12 @@ enum {
 - (id)initWithDelegate:(id)delegate error:(NSError**)error;
 - (void)lightKey:(int)note color:(unsigned char)color;
 - (void)lightsOff;
+- (void)lightsDefault;
 - (void)lightsSwoop;
 - (void)lightsSwoosh;
 - (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error;
 - (void)receivedReport:(unsigned char*)report;
+- (void)deviceRemoved;
 - (unsigned char)keyColor:(int)note;
 
 @end

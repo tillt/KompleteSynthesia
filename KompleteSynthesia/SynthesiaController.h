@@ -10,20 +10,24 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class LogViewController;
+
 @protocol SynthesiaControllerDelegate <NSObject>
 - (void)synthesiaStateUpdate:(NSString*)status;
 @end
 
-@interface SynthesiaController : NSObject
+@interface SynthesiaController : NSObject <NSXMLParserDelegate>
 
 @property (nonatomic, weak) id<SynthesiaControllerDelegate> delegate;
 
 + (BOOL)synthesiaRunning;
 + (BOOL)synthesiaHasFocus;
 + (void)triggerVirtualKeyEvents:(CGKeyCode)keyCode;
++ (void)triggerVirtualMouseWheelEvent:(int)distance;
+
 + (NSString*)status;
 
-- (id)initWithDelegate:(id)delegate;
+- (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate;
 
 @end
 

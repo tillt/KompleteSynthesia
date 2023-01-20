@@ -22,6 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (id)initWithLogController:(LogViewController*)lc error:(NSError**)error;
 - (BOOL)reset:(NSError**)error;
+- (void)teardown;
 
 @end
 

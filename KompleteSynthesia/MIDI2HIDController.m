@@ -11,11 +11,20 @@
 #import <CoreServices/CoreServices.h>
 #import "LogViewController.h"
 #import "HIDController.h"
+#import "USBController.h"
 #import "MIDIController.h"
 #import "SynthesiaController.h"
 
+const CGKeyCode kVK_ANSI_Z = 0x06;
+const CGKeyCode kVK_ANSI_X = 0x07;
 const CGKeyCode kVK_Return = 0x24;
 const CGKeyCode kVK_Space = 0x31;
+const CGKeyCode kVK_PageUp = 0x74;
+const CGKeyCode kVK_F1 = 0x7A;
+const CGKeyCode kVK_F2 = 0x78;
+const CGKeyCode kVK_F3 = 0x63;
+const CGKeyCode kVK_F4 = 0x76;
+const CGKeyCode kVK_PageDown = 0x79;
 const CGKeyCode kVK_ArrowLeft = 0x7B;
 const CGKeyCode kVK_ArrowRight = 0x7C;
 const CGKeyCode kVK_ArrowDown = 0x7D;
@@ -29,7 +38,6 @@ const unsigned char kKeyStateMaskHand = (kKeyStateLeft | kKeyStateRight);
 const unsigned char kKeyStateMaskThumb = 0x08;
 const unsigned char kKeyStateMaskUser = 0x10;
 const unsigned char kKeyStateMaskMusic = 0x20;
-
 
 @interface MIDI2HIDController ()
 @end
@@ -48,13 +56,12 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 ///
 /// TODO: Fully implement MK1 support. Sorry, too lazy and no way to test.
 ///
-/// TODO: Hot swap / re-detection of HID devices.
-///
 @implementation MIDI2HIDController {
     LogViewController* log;
     MIDIController* midi;
     HIDController* hid;
-    
+    USBController* usb;
+
     unsigned char keyStates[255];
 }
 
@@ -77,19 +84,29 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     if (hid == nil) {
         return NO;
     }
+    [log logLine:[NSString stringWithFormat:@"detected %@ HID device", hid.deviceName]];
 
-    [log logLine:[NSString stringWithFormat:@"detected Native Instruments %@\n", hid.deviceName]];
-   
+//    usb = [[USBController alloc] initWithDelegate:self error:error];
+//    if (usb == nil) {
+//        return NO;
+//    }
+//    [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
+
     midi = [[MIDIController alloc] initWithDelegate:self error:error];
     if (midi == nil) {
         return NO;
     }
 
-    [self lightsOff];
+    [self lightsDefault];
     
     [hid lightsSwoop];
 
     return YES;
+}
+
+- (void)teardown
+{
+    [hid lightsOff];
 }
 
 - (NSString*)hidStatus
@@ -102,12 +119,12 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     return [NSString stringWithFormat:@"MIDI: %@", midi.status];
 }
 
-- (unsigned char)keyLightColor:(unsigned char)state
+- (unsigned char)lightColorWithState:(unsigned char)state
 {
     if ((state & kKeyStateMaskOn) == 0x00) {
-        return 0x00;
+        return kKeyColorUnpressed;
     }
-    unsigned char color = 0;
+    unsigned char color = kKeyColorUnpressed;
     if ((state & kKeyStateMaskHand) == kKeyStateLeft) {
         if (state & kKeyStateMaskUser) {
             color = kKompleteKontrolColorBrightBlue;
@@ -125,15 +142,15 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             color = kKompleteKontrolColorGreen;
         }
     } else if (state & kKeyStateMaskUser) {
-        color = kKompleteKontrolColorBrightWhite;
+        color = kKeyColorPressed;
     }
     return color;
 }
 
-- (void)lightsOff
+- (void)lightsDefault
 {
     memset(keyStates, 0, sizeof(keyStates));
-    [hid lightsOff];
+    [hid lightsDefault];
 }
 
 /// The Synthesia lighting loopback interface expects the Synthesia "Per Channel"  lighting protocol:
@@ -203,7 +220,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             break;
     }
     
-    [hid lightKey:key color:[self keyLightColor:keyStates[key]]];
+    [hid lightKey:key color:[self lightColorWithState:keyStates[key]]];
 }
 
 #pragma mark MIDIControllerDelegate
@@ -234,14 +251,26 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             if (param2 & 0x02) {
                 [log logLine:@"playing left hand"];
             }
-            [self lightsOff];
+            [self lightsDefault];
         }
     }
 }
 
 #pragma mark HIDControllerDelegate
 
-- (void)receivedKeyEvent:(const int)event
+- (void)deviceRemoved
+{
+    [log logLine:@"HID device removed"];
+    
+    NSError* error = nil;
+    if ([self reset:&error] == NO) {
+        [[NSAlert alertWithError:error] runModal];
+        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+        return;
+    }
+}
+
+- (void)receivedEvent:(const int)event value:(int)value
 {
     if (![SynthesiaController synthesiaHasFocus]) {
         [log logLine:@"Synthesia not in foreground"];
@@ -268,11 +297,40 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             [log logLine:@"CURSOR UP -> sending ARROW UP key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowUp];
             break;
+        case KKBUTTON_PAGE_LEFT:
+            [log logLine:@"PAGE LEFT -> sending PAGE UP key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_ANSI_Z];
+            break;
+        case KKBUTTON_PAGE_RIGHT:
+            [log logLine:@"PAGE RIGHT -> sending PAGE DOWN key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_ANSI_X];
+            break;
         case KKBUTTON_DOWN:
             [log logLine:@"CURSOR DOWN -> sending ARROW DOWN key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowDown];
             break;
+        case KKBUTTON_FUNCTION1:
+            [log logLine:@"FUNCTION1 -> sending F1 key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_F1];
+            break;
+        case KKBUTTON_FUNCTION2:
+            [log logLine:@"FUNCTION2 -> sending F2 key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_F2];
+            break;
+        case KKBUTTON_FUNCTION3:
+            [log logLine:@"FUNCTION3 -> sending F3 key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_F3];
+            break;
+        case KKBUTTON_FUNCTION4:
+            [log logLine:@"FUNCTION4 -> sending F4 key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_F4];
+            break;
+        case KKBUTTON_SCROLL:
+            [log logLine:@"SCROLL -> sending mouse WHEEL"];
+            [SynthesiaController triggerVirtualMouseWheelEvent:-value];
+            break;
     }
+
 }
 
 @end

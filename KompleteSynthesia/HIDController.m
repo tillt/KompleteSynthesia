@@ -18,21 +18,10 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <CoreImage/CoreImage.h>
 
+#import "USBController.h"
+
 /// Detects a Komplete Kontrol S-series controller. Listens for any incoming button presses and forwards them
 /// to the delegate.
-
-const uint32_t kVendorID = 0x17CC;
-
-// MK1 controllers.
-const uint32_t kPID_S25MK1 = 0x1340;
-const uint32_t kPID_S49MK1 = 0x1350;
-const uint32_t kPID_S61MK1 = 0x1360;
-const uint32_t kPID_S88MK1 = 0x1410;
-
-// MK2 controllers.
-const uint32_t kPID_S49MK2 = 0x1610;
-const uint32_t kPID_S61MK2 = 0x1620;
-const uint32_t kPID_S88MK2 = 0x1630;
 
 const uint8_t kKompleteKontrolColorBlue = 0x2d;         // 011101
 const uint8_t kKompleteKontrolColorLightBlue = 0x2e;
@@ -69,7 +58,6 @@ const size_t kKompleteKontrolButtonsMessageSize = 80;
 const size_t kKompleteKontrolButtonsMapSize = kKompleteKontrolButtonsMessageSize - 1;
 
 // Button light indezes.
-// FIXME: Many may be off - did not pay too much attention here - off by one.
 const uint8_t kKompleteKontrolButtonIndexM = 0;
 const uint8_t kKompleteKontrolButtonIndexS = 1;
 const uint8_t kKompleteKontrolButtonIndexFunction1 = 2;
@@ -89,17 +77,36 @@ const uint8_t kKompleteKontrolButtonIndexArpEdit = 16;
 const uint8_t kKompleteKontrolButtonIndexUndoRedo = 18;
 const uint8_t kKompleteKontrolButtonIndexQuantize = 19;
 const uint8_t kKompleteKontrolButtonIndexPattern = 21;
+const uint8_t kKompleteKontrolButtonIndexPresetUp = 22;
+const uint8_t kKompleteKontrolButtonIndexTrack = 23;
+const uint8_t kKompleteKontrolButtonIndexLoop = 24;
+const uint8_t kKompleteKontrolButtonIndexMetro = 25;
+const uint8_t kKompleteKontrolButtonIndexTempo = 26;
+const uint8_t kKompleteKontrolButtonIndexPresetDown = 27;
+const uint8_t kKompleteKontrolButtonIndexKeyMode = 28;
 const uint8_t kKompleteKontrolButtonIndexPlay = 29;
 const uint8_t kKompleteKontrolButtonIndexRecord = 30;
 const uint8_t kKompleteKontrolButtonIndexStop = 31;
+const uint8_t kKompleteKontrolButtonIndexPageLeft = 32;
+const uint8_t kKompleteKontrolButtonIndexPageRight = 33;
+const uint8_t kKompleteKontrolButtonIndexClear = 34;
 const uint8_t kKompleteKontrolButtonIndexBrowser = 35;
+const uint8_t kKompleteKontrolButtonIndexPlugin = 36;
+const uint8_t kKompleteKontrolButtonIndexMixer = 37;
+const uint8_t kKompleteKontrolButtonIndexInstance = 38;
+const uint8_t kKompleteKontrolButtonIndexMIDI = 39;
 const uint8_t kKompleteKontrolButtonIndexSetup = 40;
 const uint8_t kKompleteKontrolButtonIndexFixedVel = 41;
+const uint8_t kKompleteKontrolButtonIndexUnused1 = 42;
+const uint8_t kKompleteKontrolButtonIndexUnused2 = 43;
 const uint8_t kKompleteKontrolButtonIndexStrip1 = 44;
 const uint8_t kKompleteKontrolButtonIndexStrip10 = 54;
 const uint8_t kKompleteKontrolButtonIndexStrip15 = 59;
 const uint8_t kKompleteKontrolButtonIndexStrip20 = 64;
 const uint8_t kKompleteKontrolButtonIndexStrip24 = 68;
+
+const uint8_t kKeyColorUnpressed = kKompleteKontrolColorOrange;
+const uint8_t kKeyColorPressed = kKompleteKontrolColorLightYellow;
 
 const float kLightsSwoopDelay = 0.01;
 const float kLightsSwooshDelay = 0.4;
@@ -108,13 +115,13 @@ const size_t kInputBufferSize = 64;
 
 //#define DEBUG_HID_INPUT
 
-void HIDInputCallback(void* context,
-                      IOReturn result,
-                      void* sender,
-                      IOHIDReportType type,
-                      uint32_t reportID,
-                      uint8_t *report,
-                      CFIndex reportLength)
+static void HIDInputCallback(void* context,
+                             IOReturn result,
+                             void* sender,
+                             IOHIDReportType type,
+                             uint32_t reportID,
+                             uint8_t *report,
+                             CFIndex reportLength)
 {
     HIDController* controller = (__bridge HIDController*)context;
     
@@ -132,6 +139,12 @@ void HIDInputCallback(void* context,
     }
 }
 
+static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sender)
+{
+    HIDController* controller = (__bridge HIDController*)context;
+    [controller deviceRemoved];
+}
+
 @interface HIDController ()
 @property (assign, nonatomic) unsigned char* keys;
 @property (assign, nonatomic) unsigned char* buttons;
@@ -143,40 +156,6 @@ void HIDInputCallback(void* context,
     // FIXME: This may need double-buffering, not sure.
     unsigned char inputBuffer[kInputBufferSize];
     IOHIDDeviceRef device;
-}
-
-- (unsigned char)keyColor:(int)note
-{
-    assert(note < kKompleteKontrolLightGuideKeyMapSize);
-    return _keys[note];
-}
-
-- (void)receivedReport:(unsigned char*)report
-{
-    if (report[2] == 0x10) {
-        [_delegate receivedKeyEvent:KKBUTTON_PLAY];
-        return;
-    }
-    if (report[6] == 0x44) {
-        [_delegate receivedKeyEvent:KKBUTTON_DOWN];
-        return;
-    }
-    if (report[6] == 0x24) {
-        [_delegate receivedKeyEvent:KKBUTTON_UP];
-        return;
-    }
-    if (report[6] == 0x14) {
-        [_delegate receivedKeyEvent:KKBUTTON_LEFT];
-        return;
-    }
-    if (report[6] == 0x84) {
-        [_delegate receivedKeyEvent:KKBUTTON_RIGHT];
-        return;
-    }
-    if (report[6] == 0x0C) {
-        [_delegate receivedKeyEvent:KKBUTTON_ENTER];
-        return;
-    }
 }
 
 - (id)initWithDelegate:(id)delegate error:(NSError**)error
@@ -193,7 +172,7 @@ void HIDInputCallback(void* context,
         }
         lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK2;
         _keys = &lightGuideUpdateMessage[1];
-        memset(_keys, 0, kKompleteKontrolLightGuideKeyMapSize);
+        memset(_keys, kKeyColorUnpressed, kKompleteKontrolLightGuideKeyMapSize);
 
         buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
         _buttons = &buttonLightingUpdateMessage[1];
@@ -203,7 +182,13 @@ void HIDInputCallback(void* context,
         _buttons[kKompleteKontrolButtonIndexKnobUp] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIndexKnobLeft] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIndexKnobRight] = kKompleteKontrolColorBrightWhite;
-        
+        _buttons[kKompleteKontrolButtonIndexPageLeft] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIndexPageRight] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIndexFunction1] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIndexFunction2] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIndexFunction3] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIndexFunction4] = kKompleteKontrolColorBrightWhite;
+
         if ([self updateButtonLightMap:error] == NO) {
             return nil;
         }
@@ -213,9 +198,6 @@ void HIDInputCallback(void* context,
 
 - (void)dealloc
 {
-    // Make sure we dont leave a mess behind!
-    [self lightsOff];
-
     if (device != 0) {
         IOHIDDeviceClose(device, kIOHIDOptionsTypeNone);
     }
@@ -306,6 +288,87 @@ void HIDInputCallback(void* context,
     return [HIDController intProperty:@(kIOHIDVendorIDKey) withDevice:device];
 }
 
+- (unsigned char)keyColor:(int)note
+{
+    assert(note < kKompleteKontrolLightGuideKeyMapSize);
+    return _keys[note];
+}
+
+- (void)deviceRemoved
+{
+    if (device != 0) {
+        IOHIDDeviceClose(device, kIOHIDOptionsTypeNone);
+    }
+    device = 0;
+
+    [_delegate deviceRemoved];
+}
+
+- (void)receivedReport:(unsigned char*)report
+{
+    static int lastValue = 0;
+    int delta = report[30] - lastValue;
+    if (delta == 15) {
+        delta = -1;
+    } else if (delta == -15) {
+        delta = 1;
+    }
+    if (delta != 0) {
+        [_delegate receivedEvent:KKBUTTON_SCROLL value:delta];
+    }
+    lastValue = report[30];
+    
+    // TODO: Consider making use of some clever mapping for slicker code.
+    if (report[1] == 0x10) {
+        [_delegate receivedEvent:KKBUTTON_FUNCTION1 value:0];
+        return;
+    }
+    if (report[1] == 0x20) {
+        [_delegate receivedEvent:KKBUTTON_FUNCTION2 value:0];
+        return;
+    }
+    if (report[1] == 0x40) {
+        [_delegate receivedEvent:KKBUTTON_FUNCTION3 value:0];
+        return;
+    }
+    if (report[1] == 0x80) {
+        [_delegate receivedEvent:KKBUTTON_FUNCTION4 value:0];
+        return;
+    }
+    if (report[2] == 0x10) {
+        [_delegate receivedEvent:KKBUTTON_PLAY value:0];
+        return;
+    }
+    if (report[6] == 0x44) {
+        [_delegate receivedEvent:KKBUTTON_DOWN value:0];
+        return;
+    }
+    if (report[3] == 0x80) {
+        [_delegate receivedEvent:KKBUTTON_PAGE_LEFT value:0];
+        return;
+    }
+    if (report[3] == 0x20) {
+        [_delegate receivedEvent:KKBUTTON_PAGE_RIGHT value:0];
+        return;
+    }
+    if (report[6] == 0x24) {
+        [_delegate receivedEvent:KKBUTTON_UP value:0];
+        return;
+    }
+    if (report[6] == 0x14) {
+        [_delegate receivedEvent:KKBUTTON_LEFT value:0];
+        return;
+    }
+    if (report[6] == 0x84) {
+        [_delegate receivedEvent:KKBUTTON_RIGHT value:0];
+        return;
+    }
+    if (report[6] == 0x0C) {
+        [_delegate receivedEvent:KKBUTTON_ENTER value:0];
+        return;
+    }
+}
+
 - (IOHIDDeviceRef)detectKeyboardController:(NSError**)error
 {
     NSDictionary* supportedDevices = @{
@@ -330,7 +393,7 @@ void HIDInputCallback(void* context,
 
     for (CFIndex i = 0; i < deviceCount; i++) {
         int vendor = [HIDController vendorIDWithDevice:devices[i]];
-        if (vendor != kVendorID) {
+        if (vendor != kVendorID_NativeInstruments) {
             continue;
         }
 
@@ -351,7 +414,7 @@ void HIDInputCallback(void* context,
         }
     }
 
-    NSLog(@"No Native Instruments keyboard controller detected");
+    NSLog(@"No Native Instruments keyboard controller HID device detected");
     if (error != nil) {
         NSDictionary *userInfo = @{
             NSLocalizedDescriptionKey : @"No Native Instruments controller detected",
@@ -369,6 +432,8 @@ void HIDInputCallback(void* context,
 
 - (BOOL)initKeyboardController:(NSError**)error
 {
+    IOHIDDeviceRegisterRemovalCallback(device, HIDDeviceRemovedCallback, (__bridge void*)self);
+    
     IOReturn ret = IOHIDDeviceOpen(device, kIOHIDOptionsTypeNone);
     if (ret != kIOReturnSuccess) {
         if (error != nil) {
@@ -448,7 +513,13 @@ void HIDInputCallback(void* context,
 
 - (void)lightsOff
 {
-    memset(_keys, 0, kKompleteKontrolLightGuideKeyMapSize);
+    memset(_keys, 0x00, kKompleteKontrolLightGuideKeyMapSize);
+    [self updateLightGuideMap:nil];
+}
+
+- (void)lightsDefault
+{
+    memset(_keys, kKeyColorUnpressed, kKompleteKontrolLightGuideKeyMapSize);
     [self updateLightGuideMap:nil];
 }
 
@@ -464,10 +535,10 @@ void HIDInputCallback(void* context,
 
             [NSThread sleepForTimeInterval:kLightsSwoopDelay];
 
-            self.keys[key] = 0x0;
-            self.keys[key+1] = 0x0;
-            self.keys[key+2] = 0x0;
-            self.keys[key+3] = 0x0;
+            self.keys[key] = kKeyColorUnpressed;
+            self.keys[key+1] = kKeyColorUnpressed;
+            self.keys[key+2] = kKeyColorUnpressed;
+            self.keys[key+3] = kKeyColorUnpressed;
             [self updateLightGuideMap:nil];
         }
 
@@ -480,10 +551,10 @@ void HIDInputCallback(void* context,
 
             [NSThread sleepForTimeInterval:kLightsSwoopDelay];
 
-            self.keys[key] = 0x0;
-            self.keys[key+1] = 0x0;
-            self.keys[key+2] = 0x0;
-            self.keys[key+3] = 0x0;
+            self.keys[key] = kKeyColorUnpressed;
+            self.keys[key+1] = kKeyColorUnpressed;
+            self.keys[key+2] = kKeyColorUnpressed;
+            self.keys[key+3] = kKeyColorUnpressed;
             [self updateLightGuideMap:nil];
         }
     });

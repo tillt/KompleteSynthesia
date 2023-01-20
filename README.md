@@ -50,9 +50,17 @@ For finding out about the detected controller, click on the icon which will show
 - Button background lighting changes when I push a Play or use the jogwheel
     - Known issue happening due to Native Instruments components interfereing
     
-- Synthesia lighting only evet shows green keys, never blue
+- Synthesia lighting only ever shows green keys, never blue
     - Synthesia isn't setup the way we need it - we need "Finger-based channel" lighting
     - Make sure you followed the [Setup](#setup) documentation
+
+- All Keyboard LEDs show blue lights
+    - Did you possibly push the "Instance" button?
+        - On macOS the NI component listening for controller button pushes does re-initialize the controller into a mode incompatible with KompleteSynthesia
+    - Are you running any other NI applications while running KompleteSynthesia?
+        - Some NI tools like KompleteKontrol.app do set the keyboard into something KompleteSynthesia just can not work with
+        - Exit KompleteKontrol.app - you wont need it while using Synthesia
+    - Use the "Reset" function in KompleteSynthesia drop-down menu
 
 ## Background and Motivation
 
