@@ -76,6 +76,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     if (self) {
         needsConfigurationPatch = YES;
         _delegate = delegate;
+        log = logViewController;
         NSError* error = nil;
         [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
                                                                selector:@selector(synthesiaMayHaveChangedStatus:)
@@ -97,6 +98,8 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
             } else {
                 [userDefaults setBool:YES forKey:@"initial_synthesia_config_assert_done"];
             }
+        } else {
+            [log logLine:@"Synthesia configuration was validated before"];
         }
     }
     return self;
@@ -112,7 +115,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     panel.title = @"Locate Synthesia setup";
     panel.message = @"Please locate and select the Synthesia 'multiDevice.xml' configuration file and activate 'Open' below!";
-    panel.directoryURL = [NSURL fileURLWithFileSystemRepresentation:"/Users/Till/Library/Application Support/Synthesia/multiDevice.xml" isDirectory:NO relativeToURL:nil];
+    panel.directoryURL = [NSURL fileURLWithFileSystemRepresentation:"~/Library/Application Support/Synthesia/multiDevice.xml" isDirectory:NO relativeToURL:nil];
     if ([panel runModal] != NSModalResponseOK) {
         NSLog(@"user canceled file selection");
         return NO;
@@ -181,12 +184,11 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 {
     if ([elementName isEqualToString:@"OutputDevice"]) {
         if ([attributeDict[@"name"] compare:@"IAC Driver LoopBe"] == NSOrderedSame) {
-            if ([attributeDict objectForKey:@"enabled"] != nil || [attributeDict[@"enabled"] boolValue] != YES) {
+            if ([attributeDict objectForKey:@"enabled"] == nil || [attributeDict[@"enabled"] boolValue] != YES) {
                 NSLog(@"device is not enabled, we need to patch!");
-            } else if ([attributeDict objectForKey:@"lightChannel"] != nil || [attributeDict[@"lightChannel"] compare:@"-2"] != NSOrderedSame) {
+            } else if ([attributeDict objectForKey:@"lightChannel"] == nil || [attributeDict[@"lightChannel"] compare:@"-2"] != NSOrderedSame) {
                 NSLog(@"key lights setup not matching, we need to patch!");
             } else {
-                NSLog(@"%@", attributeDict);
                 needsConfigurationPatch = NO;
             }
         }
