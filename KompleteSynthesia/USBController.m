@@ -99,9 +99,10 @@ const uint32_t kPID_S88MK2 = 0x1630;
         if (device == NULL) {
             return nil;
         }
-        if ([self initKeyboardController:error] == NO) {
-            return nil;
-        }
+// Broken at the moment.
+//        if ([self initKeyboardController:error] == NO) {
+//            return nil;
+//        }
     }
     return self;
 }
@@ -163,6 +164,7 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
 {
     IOReturn ret = (*device)->USBDeviceOpenSeize(device);
     if (ret != kIOReturnSuccess) {
+        NSLog(@"USBDeviceOpenSeize failed");
         return NO;
     }
     
@@ -171,6 +173,7 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
     
     ret = (*device)->GetConfigurationDescriptorPtr(device, config_index, &desc);
     if (ret != kIOReturnSuccess) {
+        NSLog(@"GetConfigurationDescriptorPtr failed");
         return NO;
     }
     
