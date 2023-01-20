@@ -9,6 +9,7 @@
 #import "MIDI2HIDController.h"
 #import "LogViewController.h"
 #import "SynthesiaController.h"
+#import "PreferencesWindowController.h"
 
 @interface AppDelegate ()
 
@@ -16,6 +17,7 @@
 @property (nonatomic, strong) MIDI2HIDController* midi2hidController;
 @property (nonatomic, strong) LogViewController* logViewController;
 @property (nonatomic, strong) SynthesiaController* synthesia;
+@property (nonatomic, strong) PreferencesWindowController* preferences;
 
 @property (nonatomic, strong) NSPopover *popover;
 @property (nonatomic, strong) NSMenu *statusMenu;
@@ -39,7 +41,8 @@
         return;
     }
 
-    _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController error:&error];
+    _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController
+                                                                      error:&error];
     if (_midi2hidController == nil) {
         [[NSAlert alertWithError:error] runModal];
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
@@ -62,6 +65,8 @@
     [menu addItemWithTitle:_midi2hidController.hidStatus action:nil keyEquivalent:@""];
     [menu addItemWithTitle:[SynthesiaController status] action:nil keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
+    [menu addItemWithTitle:@"Settings" action:@selector(preferences:) keyEquivalent:@""];
+    [menu addItem:[NSMenuItem separatorItem]];
     [menu addItemWithTitle:@"Reset" action:@selector(reset:) keyEquivalent:@""];
     [menu addItemWithTitle:@"Show Log" action:@selector(showLog:) keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
@@ -69,6 +74,14 @@
     
     menu.delegate = self;
     self.statusMenu = menu;
+}
+
+- (void)preferences:(id)sender
+{
+    if (_preferences == nil) {
+        _preferences = [[PreferencesWindowController alloc] initWithWindowNibName:@"PreferencesWindowController"];
+    }
+    [[_preferences window] makeKeyAndOrderFront:self];
 }
 
 - (void)showStatusMenu:(id)sender
