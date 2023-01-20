@@ -34,6 +34,8 @@ extern const uint32_t kPID_S88MK2;
 @property (nonatomic, assign) unsigned int keyCount;
 @property (nonatomic, assign) BOOL mk2Controller;
 
++ (NSString*)descriptionWithIOReturn:(IOReturn)code;
+
 - (id)initWithDelegate:(id)delegate error:(NSError**)error;
 
 @end

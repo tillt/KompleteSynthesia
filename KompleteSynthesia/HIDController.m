@@ -203,70 +203,6 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     }
 }
 
-+ (NSString*)descriptionWithIOReturn:(IOReturn)code
-{
-    NSDictionary* descriptions = @{
-        @(kIOReturnSuccess): @"Success",
-        @(kIOReturnError): @"General error",
-        @(kIOReturnNoMemory): @"Can't allocate memory",
-        @(kIOReturnNoResources): @"Resource shortage",
-        @(kIOReturnIPCError): @"Error during IPC",
-        @(kIOReturnNoDevice): @"No such device",
-        @(kIOReturnNotPrivileged): @"Privilege violation",
-        @(kIOReturnBadArgument): @"Invalid argument",
-        @(kIOReturnLockedRead): @"Device read locked",
-        @(kIOReturnLockedWrite): @"Device write locked",
-        @(kIOReturnExclusiveAccess): @"Exclusive access and device already open",
-        @(kIOReturnBadMessageID): @"Sent/received messages had different 'msg_id'",
-        @(kIOReturnUnsupported): @"Unsupported function",
-        @(kIOReturnVMError):  @"VM failure",
-        @(kIOReturnInternalError): @"Internal error",
-        @(kIOReturnIOError): @"General I/O error",
-        @(kIOReturnCannotLock): @"Can't acquire lock",
-        @(kIOReturnNotOpen): @"Device not open",
-        @(kIOReturnNotReadable): @"Read not supported",
-        @(kIOReturnNotWritable): @"Write not supported",
-        @(kIOReturnNotAligned): @"Alignment error",
-        @(kIOReturnBadMedia): @"Media error",
-        @(kIOReturnStillOpen): @"Device(s) still open",
-        @(kIOReturnRLDError): @"RLD failure",
-        @(kIOReturnDMAError): @"DMA failure",
-        @(kIOReturnBusy): @"Device busy",
-        @(kIOReturnTimeout): @"I/O timeout",
-        @(kIOReturnOffline): @"Device offline",
-        @(kIOReturnNotReady): @"Not ready",
-        @(kIOReturnNotAttached): @"Device not attached",
-        @(kIOReturnNoChannels): @"No DMA channels left",
-        @(kIOReturnNoSpace): @"No space for data",
-        @(kIOReturnPortExists): @"Port already exists",
-        @(kIOReturnCannotWire): @"Can't wire down physical memory",
-        @(kIOReturnNoInterrupt): @"No interrupt attached",
-        @(kIOReturnNoFrames): @"No DMA frames enqueued",
-        @(kIOReturnMessageTooLarge): @"Oversized message received on interrupt port",
-        @(kIOReturnNotPermitted): @"Not permitted",
-        @(kIOReturnNoPower): @"No power to device",
-        @(kIOReturnNoMedia): @"Media not present",
-        @(kIOReturnUnformattedMedia): @"Media not formatted",
-        @(kIOReturnUnsupportedMode): @"No such mode",
-        @(kIOReturnUnderrun): @"Data underrun",
-        @(kIOReturnOverrun): @"Data overrun",
-        @(kIOReturnDeviceError): @"The device is not working properly",
-        @(kIOReturnNoCompletion): @"A completion routine is required",
-        @(kIOReturnAborted): @"Operation aborted",
-        @(kIOReturnNoBandwidth): @"Bus bandwidth would be exceeded",
-        @(kIOReturnNotResponding): @"Device not responding",
-        @(kIOReturnIsoTooOld): @"Isochronous I/O request for distant past",
-        @(kIOReturnIsoTooNew): @"Isochronous I/O request for distant future",
-        @(kIOReturnNotFound): @"Data was not found",
-        @(kIOReturnInvalid): @"Invalid return value"
-    };
-    NSString* message = [descriptions objectForKey:@(code)];
-    if (message == nil) {
-        message = @"Unknown 'IOReturn' code";
-    }
-    return message;
-}
-
 + (int)intProperty:(NSString*)property withDevice:(IOHIDDeviceRef)device
 {
     CFTypeRef type = IOHIDDeviceGetProperty(device,  (__bridge CFStringRef)property);
@@ -439,7 +375,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         if (error != nil) {
             NSDictionary *userInfo = @{
                 NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@",
-                                             [HIDController descriptionWithIOReturn:ret]],
+                                             [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
             *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
@@ -456,7 +392,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         if (error != nil) {
             NSDictionary *userInfo = @{
                 NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@",
-                                             [HIDController descriptionWithIOReturn:ret]],
+                                             [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
             *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
@@ -487,7 +423,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     if (error != nil) {
         NSDictionary *userInfo = @{
             NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@",
-                                         [HIDController descriptionWithIOReturn:ret]],
+                                         [USBController descriptionWithIOReturn:ret]],
             NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
         };
         *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
