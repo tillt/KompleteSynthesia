@@ -27,9 +27,18 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
-    
     NSError* error = nil;
+
+    _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
+
+    _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
+                                                               delegate:self];
+    if (_synthesia == nil) {
+        [[NSAlert alertWithError:error] runModal];
+        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+        return;
+    }
+
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController error:&error];
     if (_midi2hidController == nil) {
         [[NSAlert alertWithError:error] runModal];
@@ -60,10 +69,6 @@
     
     menu.delegate = self;
     self.statusMenu = menu;
-    
-    _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
-                                                               delegate:self];
-    
 }
 
 - (void)showStatusMenu:(id)sender

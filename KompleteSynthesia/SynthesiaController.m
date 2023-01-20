@@ -94,7 +94,8 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 
         if ([userDefaults boolForKey:@"initial_synthesia_config_assert_done"] == NO) {
             if ([self assertMultiDeviceConfig:&error] == NO) {
-                [log logLine:@"failed to patch Synthesia configuration"];
+                NSLog(@"failed to assert Synthesia key light loopback setup");
+                return nil;
             } else {
                 [userDefaults setBool:YES forKey:@"initial_synthesia_config_assert_done"];
             }
@@ -135,7 +136,8 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
         NSLog(@"Error %@", *error);
         return NO;
     }
-   
+    [log logLine:@"parsed Synthesia configuration"];
+
     if (!needsConfigurationPatch) {
         [log logLine:@"configuration seems fine as is, no patch needed"];
         return YES;
