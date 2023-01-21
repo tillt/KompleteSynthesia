@@ -233,13 +233,11 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
                 unsigned char param1 = (packet->words[w] & 0x0000FF00) >> 8;
                 unsigned char param2 = packet->words[w] & 0x000000FF;
 
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.delegate receivedMIDIEvent:cvStatus
-                                             channel:channel
-                                              param1:param1
-                                              param2:param2
-                                           interface:interface];
-                });
+                [self.delegate receivedMIDIEvent:cvStatus
+                                         channel:channel
+                                          param1:param1
+                                          param2:param2
+                                       interface:interface];
             }
         }
         packet = MIDIEventPacketNext(packet);

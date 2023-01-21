@@ -232,24 +232,32 @@ const unsigned char kKeyStateMaskMusic = 0x20;
                interface:(unsigned char)interface;
 {
     if (cv == kMIDICVStatusNoteOn || cv == kMIDICVStatusNoteOff) {
-        [log logLine:[NSString stringWithFormat:@"port %d - note %-3s - channel %02d - note %@ - velocity %d",
-                      interface,
-                      cv == kMIDICVStatusNoteOn ? "on" : "off" ,
-                      channel + 1,
-                      [MIDIController readableNote:param1],
-                      param2]];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [log logLine:[NSString stringWithFormat:@"port %d - note %-3s - channel %02d - note %@ - velocity %d",
+                          interface,
+                          cv == kMIDICVStatusNoteOn ? "on" : "off" ,
+                          channel + 1,
+                          [MIDIController readableNote:param1],
+                          param2]];
+        });
 
         [self lightNote:param1 status:cv channel:channel velocity:param2 interface:interface];
     } else if (cv == kMIDICVStatusControlChange) {
         if (channel == 0x00 && param1 == 0x10) {
             if (param2 & 0x04) {
-                [log logLine:@"user is playing"];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [log logLine:@"user is playing"];
+                });
             }
             if (param2 & 0x01) {
-                [log logLine:@"playing right hand"];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [log logLine:@"playing right hand"];
+                });
             }
             if (param2 & 0x02) {
-                [log logLine:@"playing left hand"];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [log logLine:@"playing left hand"];
+                });
             }
             [self lightsDefault];
         }
