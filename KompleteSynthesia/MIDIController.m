@@ -35,7 +35,7 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
 
 + (NSString*)OSStatusString:(int)status
 {
-    char fourcc[8];
+    char fourcc[8] = {};
     NSString* message;
 
     // See if it appears to be a 4-char-code.

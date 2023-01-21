@@ -27,7 +27,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSString*)status;
 
-- (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate;
+- (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate error:(NSError**)error;
 
 @end
 

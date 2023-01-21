@@ -51,8 +51,14 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 + (void)triggerVirtualKeyEvents:(CGKeyCode)keyCode
 {
     NSLog(@"sending virtual key events with keyCode:%d", keyCode);
-    CGEventPost(kCGHIDEventTap, CGEventCreateKeyboardEvent(nil, keyCode, true));
-    CGEventPost(kCGHIDEventTap, CGEventCreateKeyboardEvent(nil, keyCode, false));
+    
+    CGEventRef down = CGEventCreateKeyboardEvent(nil, keyCode, true);
+    CGEventPost(kCGHIDEventTap, down);
+    CFRelease(down);
+
+    CGEventRef up = CGEventCreateKeyboardEvent(nil, keyCode, false);
+    CGEventPost(kCGHIDEventTap, up);
+    CFRelease(up);
 }
 
 + (void)triggerVirtualMouseWheelEvent:(int)distance
@@ -70,14 +76,13 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     CFRelease(event);
 }
 
-- (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate;
+- (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate error:(NSError**)error;
 {
     self = [super init];
     if (self) {
         needsConfigurationPatch = YES;
         _delegate = delegate;
         log = logViewController;
-        NSError* error = nil;
         [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
                                                                selector:@selector(synthesiaMayHaveChangedStatus:)
                                                                    name:NSWorkspaceDidActivateApplicationNotification
@@ -93,7 +98,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
         [userDefaults registerDefaults:@{@"initial_synthesia_config_assert_done": @(NO)}];
 
         if ([userDefaults boolForKey:@"initial_synthesia_config_assert_done"] == NO) {
-            if ([self assertMultiDeviceConfig:&error] == NO) {
+            if ([self assertMultiDeviceConfig:error] == NO) {
                 NSLog(@"failed to assert Synthesia key light loopback setup");
                 return nil;
             } else {

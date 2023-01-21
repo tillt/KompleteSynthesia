@@ -199,12 +199,14 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
     IOReturn ret = (*device)->USBDeviceOpen(device);
     if (ret != kIOReturnSuccess) {
         NSLog(@"USBDeviceOpen failed");
-        NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                         [USBController descriptionWithIOReturn:ret]],
-            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-        };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                             [USBController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
         return NO;
     }
     
@@ -214,34 +216,40 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
     ret = (*device)->GetConfigurationDescriptorPtr(device, config_index, &desc);
     if (ret != kIOReturnSuccess) {
         NSLog(@"GetConfigurationDescriptorPtr failed");
-        NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                         [USBController descriptionWithIOReturn:ret]],
-            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-        };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                             [USBController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
         return NO;
     }
     
     ret = [self openDeviceInterface:1];
     if (ret != kIOReturnSuccess) {
-        NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                         [USBController descriptionWithIOReturn:ret]],
-            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-        };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                             [USBController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
         return NO;
     }
 
     ret = [self endpoints];
     if (ret != kIOReturnSuccess) {
-        NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                         [USBController descriptionWithIOReturn:ret]],
-            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-        };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                             [USBController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
         return NO;
     }
 

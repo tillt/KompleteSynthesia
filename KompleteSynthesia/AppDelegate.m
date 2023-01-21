@@ -34,7 +34,8 @@
     _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
 
     _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
-                                                               delegate:self];
+                                                               delegate:self
+                                                                  error:&error];
     if (_synthesia == nil) {
         [[NSAlert alertWithError:error] runModal];
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];

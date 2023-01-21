@@ -29,10 +29,20 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
-                            <tabViewItem label="Info" identifier="" image="NSInfo" id="erR-wt-3H5">
+                            <tabViewItem label="Buttons" identifier="" image="NSInfo" id="erR-wt-3H5">
                                 <view key="view" id="po6-mk-svN">
                                     <rect key="frame" x="10" y="33" width="476" height="240"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IYA-Ho-9yy">
+                                            <rect key="frame" x="43" y="162" width="389" height="32"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <buttonCell key="cell" type="check" title="Forward button events only when Synthesia is in foreground" bezelStyle="regularSquare" imagePosition="left" inset="2" id="cCF-lR-49o">
+                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                        </button>
+                                    </subviews>
                                 </view>
                             </tabViewItem>
                             <tabViewItem label="Key Colors" identifier="" image="NSColorPanel" id="vzw-DZ-lO5">
@@ -133,9 +143,9 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="HVU-cO-C7e">
-                                            <rect key="frame" x="165" y="110" width="147" height="32"/>
+                                            <rect key="frame" x="107" y="110" width="264" height="32"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="push" title="Setup Synthesia" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Rou-M1-HAc">
+                                            <buttonCell key="cell" type="push" title="Repair light configuration in Synthesia" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Rou-M1-HAc">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
