@@ -81,7 +81,8 @@
     if (_preferences == nil) {
         _preferences = [[PreferencesWindowController alloc] initWithWindowNibName:@"PreferencesWindowController"];
     }
-    [[_preferences window] makeKeyAndOrderFront:self];
+    NSWindow* window = [_preferences window];
+    [window makeKeyAndOrderFront:self];
 }
 
 - (void)showStatusMenu:(id)sender
@@ -135,9 +136,10 @@
 
 - (void)synthesiaStateUpdate:(NSString*)status
 {
-    assert(self.statusMenu.itemArray.count > 1);
-    NSMenuItem* item = self.statusMenu.itemArray[1];
-    item.title = status;
+    if(self.statusMenu.itemArray.count > 1) {
+        NSMenuItem* item = self.statusMenu.itemArray[1];
+        item.title = status;
+    }
 }
 
 @end

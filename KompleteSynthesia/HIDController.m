@@ -35,6 +35,18 @@ const uint8_t kKompleteKontrolColorOrange = 0x08;       // 001000
 const uint8_t kKompleteKontrolColorYellow = 0x0e;       // 001110
 const uint8_t kKompleteKontrolColorLightYellow = 0x12;  // 010010
 
+const uint8_t kKompleteKontrolColorWhite = 0x13;        //
+
+const uint8_t kKompleteKontrolColorDarkestPaleYellow = 0x14;   //
+
+const uint8_t kKompleteKontrolColorDarkPaleYellow = 0x15;      //
+
+const uint8_t kKompleteKontrolColorPaleYellow = 0x16;   //
+
+const uint8_t kKompleteKontrolColorUnknown = 0x16;      //
+
+
+
 const uint8_t kKompleteKontrolColorBrightWhite = 0xff;  // 111111
 
 // Some funky colors.

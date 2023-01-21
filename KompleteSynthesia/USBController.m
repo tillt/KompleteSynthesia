@@ -24,70 +24,14 @@ const uint32_t kPID_S88MK2 = 0x1630;
 
 @implementation USBController {
     IOUSBDeviceInterface** device;
+    IOUSBInterfaceInterface800** interface;
+    uint8_t endpointCount;
+    uint8_t endpointAddresses[32];
 }
 
-+ (NSString*)descriptionWithIOReturn:(IOReturn)code
++ (NSString*)descriptionWithIOReturn:(IOReturn)err
 {
-    NSDictionary* descriptions = @{
-        @(kIOReturnSuccess): @"Success",
-        @(kIOReturnError): @"General error",
-        @(kIOReturnNoMemory): @"Can't allocate memory",
-        @(kIOReturnNoResources): @"Resource shortage",
-        @(kIOReturnIPCError): @"Error during IPC",
-        @(kIOReturnNoDevice): @"No such device",
-        @(kIOReturnNotPrivileged): @"Privilege violation",
-        @(kIOReturnBadArgument): @"Invalid argument",
-        @(kIOReturnLockedRead): @"Device read locked",
-        @(kIOReturnLockedWrite): @"Device write locked",
-        @(kIOReturnExclusiveAccess): @"Exclusive access and device already open",
-        @(kIOReturnBadMessageID): @"Sent/received messages had different 'msg_id'",
-        @(kIOReturnUnsupported): @"Unsupported function",
-        @(kIOReturnVMError):  @"VM failure",
-        @(kIOReturnInternalError): @"Internal error",
-        @(kIOReturnIOError): @"General I/O error",
-        @(kIOReturnCannotLock): @"Can't acquire lock",
-        @(kIOReturnNotOpen): @"Device not open",
-        @(kIOReturnNotReadable): @"Read not supported",
-        @(kIOReturnNotWritable): @"Write not supported",
-        @(kIOReturnNotAligned): @"Alignment error",
-        @(kIOReturnBadMedia): @"Media error",
-        @(kIOReturnStillOpen): @"Device(s) still open",
-        @(kIOReturnRLDError): @"RLD failure",
-        @(kIOReturnDMAError): @"DMA failure",
-        @(kIOReturnBusy): @"Device busy",
-        @(kIOReturnTimeout): @"I/O timeout",
-        @(kIOReturnOffline): @"Device offline",
-        @(kIOReturnNotReady): @"Not ready",
-        @(kIOReturnNotAttached): @"Device not attached",
-        @(kIOReturnNoChannels): @"No DMA channels left",
-        @(kIOReturnNoSpace): @"No space for data",
-        @(kIOReturnPortExists): @"Port already exists",
-        @(kIOReturnCannotWire): @"Can't wire down physical memory",
-        @(kIOReturnNoInterrupt): @"No interrupt attached",
-        @(kIOReturnNoFrames): @"No DMA frames enqueued",
-        @(kIOReturnMessageTooLarge): @"Oversized message received on interrupt port",
-        @(kIOReturnNotPermitted): @"Not permitted",
-        @(kIOReturnNoPower): @"No power to device",
-        @(kIOReturnNoMedia): @"Media not present",
-        @(kIOReturnUnformattedMedia): @"Media not formatted",
-        @(kIOReturnUnsupportedMode): @"No such mode",
-        @(kIOReturnUnderrun): @"Data underrun",
-        @(kIOReturnOverrun): @"Data overrun",
-        @(kIOReturnDeviceError): @"The device is not working properly",
-        @(kIOReturnNoCompletion): @"A completion routine is required",
-        @(kIOReturnAborted): @"Operation aborted",
-        @(kIOReturnNoBandwidth): @"Bus bandwidth would be exceeded",
-        @(kIOReturnNotResponding): @"Device not responding",
-        @(kIOReturnIsoTooOld): @"Isochronous I/O request for distant past",
-        @(kIOReturnIsoTooNew): @"Isochronous I/O request for distant future",
-        @(kIOReturnNotFound): @"Data was not found",
-        @(kIOReturnInvalid): @"Invalid return value"
-    };
-    NSString* message = [descriptions objectForKey:@(code)];
-    if (message == nil) {
-        message = @"Unknown 'IOReturn' code";
-    }
-    return message;
+    return [NSString stringWithCString:mach_error_string(err) encoding:NSStringEncodingConversionAllowLossy];
 }
 
 - (id)initWithDelegate:(id)delegate error:(NSError**)error
@@ -99,10 +43,10 @@ const uint32_t kPID_S88MK2 = 0x1630;
         if (device == NULL) {
             return nil;
         }
-// Broken at the moment.
-//        if ([self initKeyboardController:error] == NO) {
-//            return nil;
-//        }
+        // Broken at the moment.
+        if ([self initKeyboardController:error] == NO) {
+            return nil;
+        }
     }
     return self;
 }
@@ -114,22 +58,22 @@ const uint32_t kPID_S88MK2 = 0x1630;
     }
 }
 
-static bool get_ioregistry_value_number (io_service_t service, CFStringRef property, CFNumberType type, void *p) {
-  CFTypeRef cfNumber = IORegistryEntryCreateCFProperty (service, property, kCFAllocatorDefault, 0);
-  Boolean success = 0;
+static bool get_ioregistry_value_number (io_service_t service, CFStringRef property, CFNumberType type, void *p)
+{
+    Boolean success = 0;
 
-  if (cfNumber) {
-    if (CFGetTypeID(cfNumber) == CFNumberGetTypeID()) {
-      success = CFNumberGetValue(cfNumber, type, p);
+    CFTypeRef cfNumber = IORegistryEntryCreateCFProperty(service, property, kCFAllocatorDefault, 0);
+    if (cfNumber) {
+        if (CFGetTypeID(cfNumber) == CFNumberGetTypeID()) {
+            success = CFNumberGetValue(cfNumber, type, p);
+        }
+        CFRelease (cfNumber);
     }
 
-    CFRelease (cfNumber);
-  }
-
-  return (success != 0);
+    return (success != 0);
 }
 
-- (IOReturn)interface:(uint8_t)ifc interface:(io_service_t*)usbInterfacep
+- (IOReturn)interface:(io_service_t*)usbInterfacep atIndex:(uint8_t)number
 {
     *usbInterfacep = IO_OBJECT_NULL;
 
@@ -147,11 +91,11 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
 
     while ((*usbInterfacep = IOIteratorNext(interface_iterator))) {
         UInt8 bInterfaceNumber;
-        BOOL ret = get_ioregistry_value_number (*usbInterfacep,
-                                                CFSTR("bInterfaceNumber"),
-                                                kCFNumberSInt8Type,
-                                                &bInterfaceNumber);
-        if (ret && bInterfaceNumber == ifc) {
+        BOOL ret = get_ioregistry_value_number(*usbInterfacep,
+                                               CFSTR("bInterfaceNumber"),
+                                               kCFNumberSInt8Type,
+                                               &bInterfaceNumber);
+        if (ret && bInterfaceNumber == number) {
             break;
         }
         IOObjectRelease(*usbInterfacep);
@@ -160,26 +104,144 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
     return kIOReturnSuccess;
 }
 
+- (IOReturn)endpoints
+{
+    NSLog(@"building table of endpoints");
+
+    // Retrieve the total number of endpoints on this interface.
+    IOReturn ret = (*interface)->GetNumEndpoints(interface, &endpointCount);
+    if (ret != kIOReturnSuccess) {
+        NSLog(@"GetNumEndpoints failed");
+        return ret;
+    }
+    assert(endpointCount <= 32);
+
+    // iterate through pipe references.
+    for (int i = 1 ; i <= endpointCount ; i++) {
+        UInt8 direction;
+        UInt8 number;
+        UInt8 dont_care1, dont_care3;
+        UInt16 dont_care2;
+        ret = (*interface)->GetPipeProperties(interface,
+                                              i,
+                                              &direction,
+                                              &number,
+                                              &dont_care1,
+                                              &dont_care2,
+                                              &dont_care3);
+        if (ret != kIOReturnSuccess) {
+            NSLog(@"GetPipeProperties failed");
+            return ret;
+        }
+        endpointAddresses[i - 1] = (((kUSBIn == direction) << kUSBRqDirnShift) | (number & 0x0f));
+        
+        NSLog(@"pipe: %d, direction: %d, number: %d", i, endpointAddresses[i - 1] >> kUSBRqDirnShift, endpointAddresses[i - 1] & 0x0F);
+
+    }
+    return kIOReturnSuccess;
+}
+
+- (IOReturn)openDeviceInterface:(int)number
+{
+    io_service_t usbInterface = IO_OBJECT_NULL;
+
+    IOReturn ret = [self interface:&usbInterface atIndex:number];
+    if (ret != kIOReturnSuccess) {
+        return ret;
+    }
+
+    // Get an interface to the device's interface.
+    IOCFPlugInInterface **pluginInterface = NULL;
+    SInt32 score;
+    ret = IOCreatePlugInInterfaceForService(usbInterface,
+                                            kIOUSBInterfaceUserClientTypeID,
+                                            kIOCFPlugInInterfaceID,
+                                            &pluginInterface,
+                                            &score);
+    IOObjectRelease(usbInterface);
+    if (ret != kIOReturnSuccess) {
+        NSLog(@"IOCreatePlugInInterfaceForService failed");
+        return ret;
+    }
+    if (!pluginInterface) {
+        NSLog(@"plugin interface not found");
+        return kIOReturnIOError;
+    }
+
+    ret = (*pluginInterface)->QueryInterface(pluginInterface,
+                                             CFUUIDGetUUIDBytes(kIOUSBInterfaceInterfaceID),
+                                             (LPVOID)&interface);
+    // We no longer need the intermediate plug-in.
+    // Use release instead of IODestroyPlugInInterface to avoid stopping IOServices associated with this device
+    (*pluginInterface)->Release (pluginInterface);
+    if (ret != kIOReturnSuccess) {
+        NSLog(@"pluginInterface->QueryInterface failed");
+        return ret;
+    }
+    if (!interface) {
+        NSLog(@"device interface not found");
+        return kIOReturnIOError;
+    }
+
+    ret = (*interface)->USBInterfaceOpen(interface);
+    if (ret != kIOReturnSuccess) {
+        NSLog(@"USBInterfaceOpen failed");
+        return ret;
+    }
+
+    NSLog(@"interface opened");
+    
+    return ret;
+}
+
 - (BOOL)initKeyboardController:(NSError**)error
 {
-    IOReturn ret = (*device)->USBDeviceOpenSeize(device);
+    IOReturn ret = (*device)->USBDeviceOpen(device);
     if (ret != kIOReturnSuccess) {
-        NSLog(@"USBDeviceOpenSeize failed");
+        NSLog(@"USBDeviceOpen failed");
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                         [USBController descriptionWithIOReturn:ret]],
+            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
         return NO;
     }
     
-    IOUSBConfigurationDescriptorPtr desc;
-    uint8_t config_index = 1;
+    IOUSBConfigurationDescriptorPtr desc = NULL;
+    uint8_t config_index = 0;
     
     ret = (*device)->GetConfigurationDescriptorPtr(device, config_index, &desc);
     if (ret != kIOReturnSuccess) {
         NSLog(@"GetConfigurationDescriptorPtr failed");
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                         [USBController descriptionWithIOReturn:ret]],
+            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
         return NO;
     }
     
-    io_service_t service;
-    ret = [self interface:1 interface:&service];
+    ret = [self openDeviceInterface:1];
     if (ret != kIOReturnSuccess) {
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                         [USBController descriptionWithIOReturn:ret]],
+            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        return NO;
+    }
+
+    ret = [self endpoints];
+    if (ret != kIOReturnSuccess) {
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                         [USBController descriptionWithIOReturn:ret]],
+            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
         return NO;
     }
 

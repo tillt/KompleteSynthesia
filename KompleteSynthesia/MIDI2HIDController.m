@@ -86,11 +86,11 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     }
     [log logLine:[NSString stringWithFormat:@"detected %@ HID device", hid.deviceName]];
 
-    usb = [[USBController alloc] initWithDelegate:self error:error];
-    if (usb == nil) {
-        return NO;
-    }
-    [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
+//    usb = [[USBController alloc] initWithDelegate:self error:error];
+//    if (usb == nil) {
+//        return NO;
+//    }
+//    [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
 
     midi = [[MIDIController alloc] initWithDelegate:self error:error];
     if (midi == nil) {

@@ -86,8 +86,13 @@
 				BB31821A2967C85F005EB410 /* Info.plist */,
 				BB49B3B0295CC8AE00D18605 /* AppDelegate.h */,
 				BB49B3B1295CC8AE00D18605 /* AppDelegate.m */,
+				BB49B3B5295CC8AF00D18605 /* MainMenu.xib */,
 				BB49B3C0295CC91000D18605 /* LogViewController.h */,
 				BB49B3C1295CC91000D18605 /* LogViewController.m */,
+				BB49B3C2295CC91000D18605 /* LogViewController.xib */,
+				BB76A1A1297B333D00A869D8 /* PreferencesWindowController.h */,
+				BB76A1A2297B333D00A869D8 /* PreferencesWindowController.m */,
+				BB76A1A3297B333D00A869D8 /* PreferencesWindowController.xib */,
 				BBA0166729611D1D0018B2DB /* MIDI2HIDController.h */,
 				BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */,
 				BB3182172967A037005EB410 /* HIDController.h */,
@@ -98,16 +103,11 @@
 				BB31821529679983005EB410 /* MIDIController.m */,
 				BB8570F82971935B0004218B /* SynthesiaController.h */,
 				BB8570F92971935B0004218B /* SynthesiaController.m */,
-				BB49B3C2295CC91000D18605 /* LogViewController.xib */,
 				BB49B3B3295CC8AF00D18605 /* Assets.xcassets */,
-				BB49B3B5295CC8AF00D18605 /* MainMenu.xib */,
 				BB49B3B8295CC8AF00D18605 /* main.m */,
 				BB49B3BA295CC8AF00D18605 /* KompleteSynthesia.entitlements */,
 				BB8570FB2971AD980004218B /* README.md */,
 				BB8570FD2971ED4A0004218B /* SETUP.md */,
-				BB76A1A1297B333D00A869D8 /* PreferencesWindowController.h */,
-				BB76A1A2297B333D00A869D8 /* PreferencesWindowController.m */,
-				BB76A1A3297B333D00A869D8 /* PreferencesWindowController.xib */,
 			);
 			path = KompleteSynthesia;
 			sourceTree = "<group>";
@@ -345,7 +345,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.30;
+				MARKETING_VERSION = 0.40;
 				PRODUCT_BUNDLE_IDENTIFIER = tillt.KompleteSynthesia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -378,7 +378,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.30;
+				MARKETING_VERSION = 0.40;
 				PRODUCT_BUNDLE_IDENTIFIER = tillt.KompleteSynthesia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
