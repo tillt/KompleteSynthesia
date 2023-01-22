@@ -20,31 +20,33 @@
 /// Detects a Komplete Kontrol S-series controller. Listens for any incoming button presses and forwards them
 /// to the delegate.
 
-const uint8_t kKompleteKontrolColorBlue = 0x2d;         // 011101
-const uint8_t kKompleteKontrolColorLightBlue = 0x2e;
-const uint8_t kKompleteKontrolColorBrightBlue = 0x2f;   // 101111
-const uint8_t kKompleteKontrolColorGreen = 0x1d;        // 011101
-const uint8_t kKompleteKontrolColorLightGreen = 0x1e;
-const uint8_t kKompleteKontrolColorBrightGreen = 0x1f;  // 011111
+const uint8_t kKompleteKontrolColorRed = 0x04;          //
+const uint8_t kKompleteKontrolColorOrange = 0x08;
+const uint8_t kKompleteKontrolColorYellow = 0x0E;
+const uint8_t kKompleteKontrolColorGreen = 0x1C;        //
+const uint8_t kKompleteKontrolColorBlue = 0x28;         //
 
-const uint8_t kKompleteKontrolColorRed = 0x04;          // 000100
-const uint8_t kKompleteKontrolColorOrange = 0x08;       // 001000
-const uint8_t kKompleteKontrolColorYellow = 0x0e;       // 001110
-const uint8_t kKompleteKontrolColorLightYellow = 0x12;  // 010010
+const uint8_t kKompleteKontrolColorWhite = 0x7c;        //
 
-const uint8_t kKompleteKontrolColorWhite = 0x13;        //
+const uint8_t kKompleteKontrolColorMask = 0xfc;         //
+const uint8_t kKompleteKontrolIntensityMask = 0x03;     //
 
-const uint8_t kKompleteKontrolColorDarkestPaleYellow = 0x14;   //
+const uint8_t kKompleteKontrolIntensityLow = 0x00;
+const uint8_t kKompleteKontrolIntensityMedium = 0x01;
+const uint8_t kKompleteKontrolIntensityHigh = 0x02;
+const uint8_t kKompleteKontrolIntensityBright = 0x03;
 
-const uint8_t kKompleteKontrolColorDarkPaleYellow = 0x15;      //
+const uint8_t kKompleteKontrolColorLightBlue = kKompleteKontrolColorBlue | kKompleteKontrolIntensityHigh;
+const uint8_t kKompleteKontrolColorBrightBlue = kKompleteKontrolColorBlue | kKompleteKontrolIntensityBright;
 
-const uint8_t kKompleteKontrolColorPaleYellow = 0x16;   //
+const uint8_t kKompleteKontrolColorLightGreen = kKompleteKontrolColorGreen | kKompleteKontrolIntensityHigh;
+const uint8_t kKompleteKontrolColorBrightGreen = kKompleteKontrolColorGreen | kKompleteKontrolIntensityBright;
 
-const uint8_t kKompleteKontrolColorUnknown = 0x16;      //
+const uint8_t kKompleteKontrolColorLightYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityHigh;
 
+const uint8_t kKompleteKontrolColorLightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityHigh;
+const uint8_t kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityBright;
 
-
-const uint8_t kKompleteKontrolColorBrightWhite = 0xff;  // 111111
 
 // Some funky colors.
 const uint8_t kKompleteKontrolColorsSwoop[4] = { 0x04, 0x08, 0x0e, 0x12 };
@@ -114,15 +116,20 @@ const uint8_t kKompleteKontrolButtonIndexStrip15 = 59;
 const uint8_t kKompleteKontrolButtonIndexStrip20 = 64;
 const uint8_t kKompleteKontrolButtonIndexStrip24 = 68;
 
-const uint8_t kKeyColorUnpressed = kKompleteKontrolColorOrange;
-const uint8_t kKeyColorPressed = kKompleteKontrolColorLightYellow;
+const uint8_t kKeyColorUnpressed = kKompleteKontrolColorWhite;
+//const uint8_t kKeyColorUnpressed = kKompleteKontrolColorBlue;
+
+//const uint8_t kKeyColorUnpressed = kKompleteKontrolColorMask;
+//const uint8_t kKeyColorPressed = kKompleteKontrolColorLightYellow;
+//const uint8_t kKeyColorPressed = kKompleteKontrolColorLightBlue;
+const uint8_t kKeyColorPressed = kKompleteKontrolColorBrightWhite;
 
 const float kLightsSwoopDelay = 0.01;
 const float kLightsSwooshDelay = 0.4;
 
 const size_t kInputBufferSize = 64;
 
-//#define DEBUG_HID_INPUT
+#define DEBUG_HID_INPUT
 
 static void HIDInputCallback(void* context,
                              IOReturn result,
@@ -252,7 +259,13 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
 - (void)receivedReport:(unsigned char*)report
 {
+    if (report[0] != 0x01) {
+        NSLog(@"ignoring report %02Xh", report[0]);
+        return;
+    }
+
     static int lastValue = 0;
+    
     int delta = report[30] - lastValue;
     if (delta == 15) {
         delta = -1;
@@ -420,6 +433,9 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
 - (BOOL)setReport:(const unsigned char*)report length:(size_t)length error:(NSError**)error
 {
+    if (device == NULL) {
+        return NO;
+    }
     IOReturn ret = IOHIDDeviceSetReport(device,
                                         kIOHIDReportTypeOutput,
                                         report[0],

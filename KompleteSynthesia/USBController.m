@@ -17,6 +17,12 @@
 
 #import <AppKit/AppKit.h>
 
+/*
+killall -9 NIHardwareAgent
+killall -9 NIHostIntegrationAgent
+killall -9 NTKDaemon
+*/
+
 const uint32_t kVendorID_NativeInstruments = 0x17CC;
 
 // MK1 controllers.
@@ -39,7 +45,8 @@ const uint32_t kPID_S88MK2 = 0x1630;
 
 + (NSString*)descriptionWithIOReturn:(IOReturn)err
 {
-    return [NSString stringWithCString:mach_error_string(err) encoding:NSStringEncodingConversionAllowLossy];
+    return [NSString stringWithCString:mach_error_string(err)
+                              encoding:NSStringEncodingConversionAllowLossy];
 }
 
 - (id)initWithDelegate:(id)delegate error:(NSError**)error
@@ -54,7 +61,6 @@ const uint32_t kPID_S88MK2 = 0x1630;
         if ([self initKeyboardController:error] == NO) {
             return nil;
         }
-
         NSImage* image = [NSImage imageNamed:@"test"];
         if ([self drawImage:image screen:0 x:0 y:0 error:error] == NO) {
             return nil;
@@ -75,10 +81,9 @@ const uint32_t kPID_S88MK2 = 0x1630;
     }
 }
 
-static bool get_ioregistry_value_number (io_service_t service, CFStringRef property, CFNumberType type, void *p)
++ (BOOL)ioRegistryValueNumber:(io_service_t)service name:(CFStringRef)property type:(CFNumberType)type target:(void*)p
 {
     Boolean success = 0;
-
     CFTypeRef cfNumber = IORegistryEntryCreateCFProperty(service, property, kCFAllocatorDefault, 0);
     if (cfNumber) {
         if (CFGetTypeID(cfNumber) == CFNumberGetTypeID()) {
@@ -86,7 +91,6 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
         }
         CFRelease (cfNumber);
     }
-
     return (success != 0);
 }
 
@@ -108,10 +112,10 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
 
     while ((*usbInterfacep = IOIteratorNext(interface_iterator))) {
         UInt8 bInterfaceNumber;
-        BOOL ret = get_ioregistry_value_number(*usbInterfacep,
-                                               CFSTR("bInterfaceNumber"),
-                                               kCFNumberSInt8Type,
-                                               &bInterfaceNumber);
+        BOOL ret = [USBController ioRegistryValueNumber:*usbInterfacep
+                                                   name:CFSTR("bInterfaceNumber")
+                                                   type:kCFNumberSInt8Type
+                                                 target:&bInterfaceNumber];
         if (ret && bInterfaceNumber == number) {
             break;
         }
@@ -123,8 +127,6 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
 
 - (IOReturn)endpoints
 {
-    NSLog(@"building table of endpoints");
-
     // Retrieve the total number of endpoints on this interface.
     IOReturn ret = (*interface)->GetNumEndpoints(interface, &endpointCount);
     if (ret != kIOReturnSuccess) {
@@ -151,9 +153,7 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
             return ret;
         }
         endpointAddresses[i - 1] = (((kUSBIn == direction) << kUSBRqDirnShift) | (number & 0x0f));
-        
         NSLog(@"pipe: %d, direction: %d, number: %d", i, endpointAddresses[i - 1] >> kUSBRqDirnShift, endpointAddresses[i - 1] & 0x0F);
-
     }
     return kIOReturnSuccess;
 }
@@ -167,7 +167,6 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
         return ret;
     }
 
-    // Get an interface to the device's interface.
     IOCFPlugInInterface **pluginInterface = NULL;
     SInt32 score;
     ret = IOCreatePlugInInterfaceForService(usbInterface,
@@ -188,9 +187,7 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
     ret = (*pluginInterface)->QueryInterface(pluginInterface,
                                              CFUUIDGetUUIDBytes(kIOUSBInterfaceInterfaceID),
                                              (LPVOID)&interface);
-    // We no longer need the intermediate plug-in.
-    // Use release instead of IODestroyPlugInInterface to avoid stopping IOServices associated with this device
-    (*pluginInterface)->Release (pluginInterface);
+    (*pluginInterface)->Release(pluginInterface);
     if (ret != kIOReturnSuccess) {
         NSLog(@"pluginInterface->QueryInterface failed");
         return ret;
@@ -206,34 +203,26 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
         return ret;
     }
 
-    NSLog(@"interface opened");
-    
+    CFRunLoopSourceRef compl_event_source;
+    ret = (*interface)->CreateInterfaceAsyncEventSource(interface, &compl_event_source);
+    if (ret != kIOReturnSuccess) {
+        NSLog(@"CreateInterfaceAsyncEventSource failed");
+        return ret;
+    }
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), compl_event_source, kCFRunLoopDefaultMode);
+
+    NSLog(@"interface opened and async port setup");
+
     return ret;
 }
 
-static void callback (void *refcon, IOReturn result, void *arg0)
+static void asyncCallback (void *refcon, IOReturn result, void *arg0)
 {
-//  struct usbi_transfer *itransfer = (struct usbi_transfer *)refcon;
-//  struct libusb_transfer *transfer = USBI_TRANSFER_TO_LIBUSB_TRANSFER(itransfer);
-//  struct darwin_transfer_priv *tpriv = usbi_transfer_get_os_priv(itransfer);
-
-    NSLog(@"an async io operation has completed");
-
-    // if requested write a zero packet
-//    if (kIOReturnSuccess == result && IS_XFEROUT(transfer) && transfer->flags & LIBUSB_TRANSFER_ADD_ZERO_PACKET) {
-//        struct darwin_interface *cInterface;
-//        uint8_t pipeRef;
-//
-//        (void) ep_to_pipeRef (transfer->dev_handle, transfer->endpoint, &pipeRef, NULL, &cInterface);
-//
-//        (*(cInterface->interface))->WritePipe (cInterface->interface, pipeRef, transfer->buffer, 0);
-//    }
-
-//    tpriv->result = result;
-//    tpriv->size = (UInt32) (uintptr_t) arg0;
-//
-//    // signal the core that this transfer is complete
-//    usbi_signal_transfer_completion(itransfer);
+    //USBController* caller = (__bridge USBController*)refcon;
+    NSLog(@"bulk transfer complete");
+    if (result != kIOReturnSuccess) {
+        NSLog(@"async transfer failed");
+    }
 }
 
 - (BOOL)endpoint:(uint8_t)ep pipeRef:(uint8_t*)pipep
@@ -251,17 +240,16 @@ static void callback (void *refcon, IOReturn result, void *arg0)
     return NO;
 }
 
-- (IOReturn)submitBulkTransfer:(NSData*)data
+- (IOReturn)bulkWriteData:(NSData*)data endpoint:(int)endpointNumber
 {
-    uint8_t transferType;
-    uint8_t direction, number, interval, pipeRef;
-    uint16_t maxPacketSize;
-
-    if ([self endpoint:3 pipeRef:&pipeRef] == NO) {
+    uint8_t pipeRef;
+    if ([self endpoint:endpointNumber pipeRef:&pipeRef] == NO) {
         NSLog(@"endpoint doesnt exist");
         return kIOReturnIOError;
     }
- 
+    
+    uint8_t transferType, direction, number, interval;
+    uint16_t maxPacketSize;
     IOReturn ret = (*interface)->GetPipeProperties(interface,
                                                    pipeRef,
                                                    &direction,
@@ -273,66 +261,29 @@ static void callback (void *refcon, IOReturn result, void *arg0)
         NSLog(@"GetPipeProperties failed");
         return ret;
     }
+
     assert(transferType == kUSBBulk);
     assert(data.length % maxPacketSize);
-
-    //itransfer->timeout_flags |= USBI_TRANSFER_OS_HANDLES_TIMEOUT;
-
-//    ret = (*interface)->WritePipeAsync(interface,
-//                                       pipeRef,
-//                                       data.bytes,
-//                                       data.length,
-//                                       callback,
-//                                       (__bridge void *)self);
+    
     ret = (*interface)->WritePipeAsyncTO(interface,
                                          pipeRef,
-                                         data.bytes,
-                                         data.length,
+                                         (void *)data.bytes,
+                                         (UInt32)data.length,
                                          0,
                                          0,
-                                         callback,
+                                         asyncCallback,
                                          (__bridge void *)self);
     if (ret != kIOReturnSuccess) {
         NSLog(@"(*interface)->WritePipeAsync failed");
         return ret;
     }
-
+    
     return ret;
-
-  /* submit the request */
-  /* timeouts are unavailable on interrupt endpoints */
-    /*
-  if (transferType == kUSBInterrupt) {
-    if (IS_XFERIN(transfer))
-      ret = (*(cInterface->interface))->ReadPipeAsync(cInterface->interface, pipeRef, transfer->buffer,
-                                                      transfer->length, darwin_async_io_callback, itransfer);
-    else
-      ret = (*(cInterface->interface))->WritePipeAsync(cInterface->interface, pipeRef, transfer->buffer,
-                                                       transfer->length, darwin_async_io_callback, itransfer);
-  } else {
-    itransfer->timeout_flags |= USBI_TRANSFER_OS_HANDLES_TIMEOUT;
-
-    if (IS_XFERIN(transfer))
-      ret = (*(cInterface->interface))->ReadPipeAsyncTO(cInterface->interface, pipeRef, transfer->buffer,
-                                                        transfer->length, transfer->timeout, transfer->timeout,
-                                                        darwin_async_io_callback, (void *)itransfer);
-    else
-      ret = (*(cInterface->interface))->WritePipeAsyncTO(cInterface->interface, pipeRef, transfer->buffer,
-                                                         transfer->length, transfer->timeout, transfer->timeout,
-                                                         darwin_async_io_callback, (void *)itransfer);
-  }
-
-  if (ret)
-    usbi_err (TRANSFER_CTX (transfer), "bulk transfer failed (dir = %s): %s (code = 0x%08x)", IS_XFERIN(transfer) ? "In" : "Out",
-               darwin_error_str(ret), ret);
-
-  return darwin_to_libusb (ret);
-     */
 }
 
 - (BOOL)initKeyboardController:(NSError**)error
 {
-    IOReturn ret = (*device)->USBDeviceOpenSeize(device);
+    IOReturn ret = (*device)->USBDeviceOpen(device);
     if (ret != kIOReturnSuccess) {
         NSLog(@"USBDeviceOpen failed");
         if (error) {
@@ -406,31 +357,33 @@ static void callback (void *refcon, IOReturn result, void *arg0)
         @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES, @"offset": @(-21) },
     };
 
-    io_registry_entry_t entry   = 0;
-    io_iterator_t       iter    = 0;
-    io_service_t        service = 0;
-    kern_return_t       kret;
+    io_registry_entry_t entry = 0;
 
     entry = IORegistryGetRootEntry(kIOMasterPortDefault);
     if (entry == 0) {
         return nil;
     }
 
-    kret = IORegistryEntryCreateIterator(entry, kIOUSBPlane, kIORegistryIterateRecursively, &iter);
-    if (kret != KERN_SUCCESS || iter == 0) {
+    kern_return_t ret;
+    io_iterator_t iter = 0;
+
+    ret = IORegistryEntryCreateIterator(entry, kIOUSBPlane, kIORegistryIterateRecursively, &iter);
+    if (ret != KERN_SUCCESS || iter == 0) {
         return nil;
     }
 
+    io_service_t service = 0;
+
     while ((service = IOIteratorNext(iter))) {
-        IOCFPlugInInterface  **plug  = NULL;
-        IOUSBDeviceInterface **dev   = NULL;
+        IOCFPlugInInterface  **plug = NULL;
+        IOUSBDeviceInterface **dev = NULL;
         io_string_t path;
         SInt32 score = 0;
         IOReturn ioret;
 
-        kret = IOCreatePlugInInterfaceForService(service, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &plug, &score);
+        ret = IOCreatePlugInInterfaceForService(service, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &plug, &score);
         IOObjectRelease(service);
-        if (kret != KERN_SUCCESS || plug == NULL) {
+        if (ret != KERN_SUCCESS || plug == NULL) {
             continue;
         }
 
@@ -498,7 +451,7 @@ static void callback (void *refcon, IOReturn result, void *arg0)
     CGImageRef dst = CGBitmapContextCreateImage(context);
     CGContextRelease(context);
 
-    return [[NSImage alloc] initWithCGImage:dst size:NSMakeSize(width, height)];
+   return [[NSImage alloc] initWithCGImage:dst size:NSMakeSize(width, height)];
 }
 
 - (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
@@ -520,21 +473,24 @@ static void callback (void *refcon, IOReturn result, void *arg0)
     const unsigned char commandBlob2[] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob2 length:sizeof(commandBlob2)];
     
-    CGImageRef source = [bitmap CGImageForProposedRect:nil context:nil hints:nil];
-    CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider(source));
+    CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider([bitmap CGImageForProposedRect:NULL context:NULL hints:NULL]));
 
     // Pretty sure that hardware expects 32bit boundary data.
     size_t imageSize = [(__bridge NSData*)raw length];
     uint16_t imageLongs = (imageSize >> 2);
+    
+    assert(imageLongs == (width * height)/2);
     // FIXME(tillt): This may explode - watch your image sizes used for the transfer!
-    assert((imageLongs << 2) == imageSize);
+    //assert((imageLongs << 2) == imageSize);
     [stream appendBytes:&imageLongs length:sizeof(imageLongs)];
     [stream appendData:(__bridge NSData*)raw];
 
     const unsigned char commandBlob3[] = { 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob3 length:sizeof(commandBlob3)];
 
-    IOReturn ret = [self submitBulkTransfer:stream];
+    assert([stream writeToFile: @"tmp/test.data" atomically:NO]);
+
+    IOReturn ret = [self bulkWriteData:stream endpoint:3];
     if (ret == kIOReturnSuccess) {
         NSLog(@"transferred image");
         return YES;

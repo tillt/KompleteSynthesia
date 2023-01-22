@@ -78,7 +78,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     return self;
 }
 
-//#define USB_DEVICE_SHIZZLE
+#define USB_DEVICE_SHIZZLE
 
 - (BOOL)reset:(NSError**)error
 {
@@ -87,6 +87,12 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         return NO;
     }
     [log logLine:[NSString stringWithFormat:@"detected %@ HID device", hid.deviceName]];
+    [self lightsDefault];
+
+    midi = [[MIDIController alloc] initWithDelegate:self error:error];
+    if (midi == nil) {
+        return NO;
+    }
 
 #ifdef USB_DEVICE_SHIZZLE
     usb = [[USBController alloc] initWithDelegate:self error:error];
@@ -96,14 +102,8 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
 #endif
 
-    midi = [[MIDIController alloc] initWithDelegate:self error:error];
-    if (midi == nil) {
-        return NO;
-    }
-
-    [self lightsDefault];
     
-    [hid lightsSwoop];
+    //[hid lightsSwoop];
 
     return YES;
 }
