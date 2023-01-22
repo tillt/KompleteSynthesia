@@ -70,13 +70,15 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     self = [super init];
     if (self) {
         log = lc;
-       
+
         if ([self reset:error] == NO) {
             return nil;
         }
     }
     return self;
 }
+
+//#define USB_DEVICE_SHIZZLE
 
 - (BOOL)reset:(NSError**)error
 {
@@ -86,11 +88,13 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     }
     [log logLine:[NSString stringWithFormat:@"detected %@ HID device", hid.deviceName]];
 
-//    usb = [[USBController alloc] initWithDelegate:self error:error];
-//    if (usb == nil) {
-//        return NO;
-//    }
-//    [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
+#ifdef USB_DEVICE_SHIZZLE
+    usb = [[USBController alloc] initWithDelegate:self error:error];
+    if (usb == nil) {
+        return NO;
+    }
+    [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
+#endif
 
     midi = [[MIDIController alloc] initWithDelegate:self error:error];
     if (midi == nil) {
@@ -280,10 +284,13 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
 - (void)receivedEvent:(const int)event value:(int)value
 {
-    if (![SynthesiaController synthesiaHasFocus]) {
-        [log logLine:@"Synthesia not in foreground"];
-        return;
+    if  (_forwardButtonsToSynthesiaOnly) {
+        if (![SynthesiaController synthesiaHasFocus]) {
+            [log logLine:@"Synthesia not in foreground"];
+            return;
+        }
     }
+
     switch(event) {
         case KKBUTTON_PLAY:
             [log logLine:@"PLAY button -> sending SPACE key"];

@@ -20,6 +20,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (copy, nonatomic) NSString* hidStatus;
 @property (copy, nonatomic) NSString* midiStatus;
 
+@property (assign, nonatomic) BOOL forwardButtonsToSynthesiaOnly;
+
 - (id)initWithLogController:(LogViewController*)lc error:(NSError**)error;
 - (BOOL)reset:(NSError**)error;
 - (void)teardown;

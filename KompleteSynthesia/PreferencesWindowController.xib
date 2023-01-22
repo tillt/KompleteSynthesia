@@ -9,6 +9,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PreferencesWindowController">
             <connections>
+                <outlet property="forwardButtonsOnlyToSynthesia" destination="IYA-Ho-9yy" id="vYE-Rs-pYT"/>
                 <outlet property="tabView" destination="qrt-pB-3fV" id="3MD-ul-L0g"/>
                 <outlet property="window" destination="F0z-JX-Cv5" id="gIp-Ho-8D9"/>
             </connections>
@@ -41,6 +42,9 @@
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
+                                            <connections>
+                                                <action selector="fowardingValueChanged:" target="-2" id="YZk-dv-wMI"/>
+                                            </connections>
                                         </button>
                                     </subviews>
                                 </view>
@@ -149,6 +153,9 @@
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                 <font key="font" metaFont="system"/>
                                             </buttonCell>
+                                            <connections>
+                                                <action selector="assertSynthesiaConfig:" target="-2" id="QL1-Y3-Uaf"/>
+                                            </connections>
                                         </button>
                                     </subviews>
                                 </view>

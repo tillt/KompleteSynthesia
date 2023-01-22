@@ -58,6 +58,8 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     self = [super init];
     if (self) {
         _delegate = delegate;
+        portLight = 0;
+        portKeyboard = 0;
         
         OSStatus status = MIDIClientCreateWithBlock((CFStringRef)@"KompleteSynthesia",
                                                     &client,
@@ -209,14 +211,12 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
                 }
                 connectedToKeyboard = YES;
             }
-            if (connectedToKeyboard &&
-                connectedToLightLoopback) {
-                connected = YES;
-                return YES;
-            }
         }
     }
-    return NO;
+    if (connectedToLightLoopback) {
+        connected = YES;
+    }
+    return connected;
 }
 
 - (void)receivedMIDIEvents:(const MIDIEventList*)eventList interface:(unsigned char)interface

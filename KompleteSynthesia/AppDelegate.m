@@ -50,6 +50,10 @@
         return;
     }
     
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults registerDefaults:@{@"forward_buttons_to_synthesia_only": @(YES)}];
+    _midi2hidController.forwardButtonsToSynthesiaOnly = [userDefaults boolForKey:@"forward_buttons_to_synthesia_only"];
+   
     // Hide application icon.
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
     
@@ -82,6 +86,8 @@
     if (_preferences == nil) {
         _preferences = [[PreferencesWindowController alloc] initWithWindowNibName:@"PreferencesWindowController"];
     }
+    _preferences.synthesia = _synthesia;
+    _preferences.midi2hid = _midi2hidController;
     NSWindow* window = [_preferences window];
     [window makeKeyAndOrderFront:self];
 }

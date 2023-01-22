@@ -37,6 +37,7 @@ extern const uint32_t kPID_S88MK2;
 + (NSString*)descriptionWithIOReturn:(IOReturn)code;
 
 - (id)initWithDelegate:(id)delegate error:(NSError**)error;
+- (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error;
 
 @end
 

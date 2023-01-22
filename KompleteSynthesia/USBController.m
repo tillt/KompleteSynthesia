@@ -6,8 +6,16 @@
 //
 
 #import "USBController.h"
+
+#import <Foundation/Foundation.h>
+
 #import <IOKit/IOKitLib.h>
 #import <IOKit/usb/IOUSBLib.h>
+
+#import <CoreGraphics/CoreGraphics.h>
+#import <CoreImage/CoreImage.h>
+
+#import <AppKit/AppKit.h>
 
 const uint32_t kVendorID_NativeInstruments = 0x17CC;
 
@@ -43,8 +51,12 @@ const uint32_t kPID_S88MK2 = 0x1630;
         if (device == NULL) {
             return nil;
         }
-        // Broken at the moment.
         if ([self initKeyboardController:error] == NO) {
+            return nil;
+        }
+
+        NSImage* image = [NSImage imageNamed:@"test"];
+        if ([self drawImage:image screen:0 x:0 y:0 error:error] == NO) {
             return nil;
         }
     }
@@ -53,7 +65,12 @@ const uint32_t kPID_S88MK2 = 0x1630;
 
 - (void)dealloc
 {
+    if (interface != NULL) {
+        (*interface)->USBInterfaceClose(interface);
+        (*interface)->Release(interface);
+    }
     if (device != NULL) {
+        (*device)->USBDeviceClose(device);
         (*device)->Release(device);
     }
 }
@@ -194,9 +211,128 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
     return ret;
 }
 
+static void callback (void *refcon, IOReturn result, void *arg0)
+{
+//  struct usbi_transfer *itransfer = (struct usbi_transfer *)refcon;
+//  struct libusb_transfer *transfer = USBI_TRANSFER_TO_LIBUSB_TRANSFER(itransfer);
+//  struct darwin_transfer_priv *tpriv = usbi_transfer_get_os_priv(itransfer);
+
+    NSLog(@"an async io operation has completed");
+
+    // if requested write a zero packet
+//    if (kIOReturnSuccess == result && IS_XFEROUT(transfer) && transfer->flags & LIBUSB_TRANSFER_ADD_ZERO_PACKET) {
+//        struct darwin_interface *cInterface;
+//        uint8_t pipeRef;
+//
+//        (void) ep_to_pipeRef (transfer->dev_handle, transfer->endpoint, &pipeRef, NULL, &cInterface);
+//
+//        (*(cInterface->interface))->WritePipe (cInterface->interface, pipeRef, transfer->buffer, 0);
+//    }
+
+//    tpriv->result = result;
+//    tpriv->size = (UInt32) (uintptr_t) arg0;
+//
+//    // signal the core that this transfer is complete
+//    usbi_signal_transfer_completion(itransfer);
+}
+
+- (BOOL)endpoint:(uint8_t)ep pipeRef:(uint8_t*)pipep
+{
+    NSLog(@"converting ep address 0x%02x to pipeRef", ep);
+    for (int8_t i = 0 ; i < endpointCount; i++) {
+        if (endpointAddresses[i] == ep) {
+            *pipep = i + 1;
+            NSLog(@"pipe %d matches", *pipep);
+            return YES;
+        }
+    }
+    // No pipe found with the correct endpoint address
+    NSLog(@"no pipeRef found with endpoint address 0x%02x", ep);
+    return NO;
+}
+
+- (IOReturn)submitBulkTransfer:(NSData*)data
+{
+    uint8_t transferType;
+    uint8_t direction, number, interval, pipeRef;
+    uint16_t maxPacketSize;
+
+    if ([self endpoint:3 pipeRef:&pipeRef] == NO) {
+        NSLog(@"endpoint doesnt exist");
+        return kIOReturnIOError;
+    }
+ 
+    IOReturn ret = (*interface)->GetPipeProperties(interface,
+                                                   pipeRef,
+                                                   &direction,
+                                                   &number,
+                                                   &transferType,
+                                                   &maxPacketSize,
+                                                   &interval);
+    if (ret != kIOReturnSuccess) {
+        NSLog(@"GetPipeProperties failed");
+        return ret;
+    }
+    assert(transferType == kUSBBulk);
+    assert(data.length % maxPacketSize);
+
+    //itransfer->timeout_flags |= USBI_TRANSFER_OS_HANDLES_TIMEOUT;
+
+//    ret = (*interface)->WritePipeAsync(interface,
+//                                       pipeRef,
+//                                       data.bytes,
+//                                       data.length,
+//                                       callback,
+//                                       (__bridge void *)self);
+    ret = (*interface)->WritePipeAsyncTO(interface,
+                                         pipeRef,
+                                         data.bytes,
+                                         data.length,
+                                         0,
+                                         0,
+                                         callback,
+                                         (__bridge void *)self);
+    if (ret != kIOReturnSuccess) {
+        NSLog(@"(*interface)->WritePipeAsync failed");
+        return ret;
+    }
+
+    return ret;
+
+  /* submit the request */
+  /* timeouts are unavailable on interrupt endpoints */
+    /*
+  if (transferType == kUSBInterrupt) {
+    if (IS_XFERIN(transfer))
+      ret = (*(cInterface->interface))->ReadPipeAsync(cInterface->interface, pipeRef, transfer->buffer,
+                                                      transfer->length, darwin_async_io_callback, itransfer);
+    else
+      ret = (*(cInterface->interface))->WritePipeAsync(cInterface->interface, pipeRef, transfer->buffer,
+                                                       transfer->length, darwin_async_io_callback, itransfer);
+  } else {
+    itransfer->timeout_flags |= USBI_TRANSFER_OS_HANDLES_TIMEOUT;
+
+    if (IS_XFERIN(transfer))
+      ret = (*(cInterface->interface))->ReadPipeAsyncTO(cInterface->interface, pipeRef, transfer->buffer,
+                                                        transfer->length, transfer->timeout, transfer->timeout,
+                                                        darwin_async_io_callback, (void *)itransfer);
+    else
+      ret = (*(cInterface->interface))->WritePipeAsyncTO(cInterface->interface, pipeRef, transfer->buffer,
+                                                         transfer->length, transfer->timeout, transfer->timeout,
+                                                         darwin_async_io_callback, (void *)itransfer);
+  }
+
+  if (ret)
+    usbi_err (TRANSFER_CTX (transfer), "bulk transfer failed (dir = %s): %s (code = 0x%08x)", IS_XFERIN(transfer) ? "In" : "Out",
+               darwin_error_str(ret), ret);
+
+  return darwin_to_libusb (ret);
+     */
+}
+
 - (BOOL)initKeyboardController:(NSError**)error
 {
-    IOReturn ret = (*device)->USBDeviceOpen(device);
+    IOReturn ret = (*device)->USBDeviceOpenSeize(device);
     if (ret != kIOReturnSuccess) {
         NSLog(@"USBDeviceOpen failed");
         if (error) {
@@ -227,7 +363,7 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
         return NO;
     }
     
-    ret = [self openDeviceInterface:1];
+    ret = [self openDeviceInterface:3];
     if (ret != kIOReturnSuccess) {
         if (error) {
             NSDictionary *userInfo = @{
@@ -338,6 +474,82 @@ static bool get_ioregistry_value_number (io_service_t service, CFStringRef prope
     }
     IOObjectRelease(iter);
     return nil;
+}
+
++ (NSImage*)KKImageFromNSImage:(NSImage*)image
+{
+    // Reduce the color information to an NSImage that is 16bitRBG (no alpha).
+    NSImageRep* rep = [[image representations] objectAtIndex:0];
+    const float width = rep.pixelsWide;
+    const float height = rep.pixelsHigh;
+
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef context = CGBitmapContextCreate(NULL, width, height, 5, width * 2, colorSpace, kCGImageAlphaNoneSkipFirst);
+    CGColorSpaceRelease(colorSpace);
+
+    CGInterpolationQuality quality = kCGInterpolationHigh;
+    CGContextSetInterpolationQuality(context, quality);
+
+    CGImageSourceRef source = CGImageSourceCreateWithData((CFDataRef)[image TIFFRepresentation], NULL);
+    CGImageRef srcImage =  CGImageSourceCreateImageAtIndex(source, 0, NULL);
+
+    CGContextDrawImage(context, CGRectMake(0, 0, width, height), srcImage);
+    CGImageRelease(srcImage);
+    CGImageRef dst = CGBitmapContextCreateImage(context);
+    CGContextRelease(context);
+
+    return [[NSImage alloc] initWithCGImage:dst size:NSMakeSize(width, height)];
+}
+
+- (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
+{
+    NSImage* bitmap = [USBController KKImageFromNSImage:image];
+
+    NSImageRep* rep = [[image representations] objectAtIndex:0];
+    const float width = rep.pixelsWide;
+    const float height = rep.pixelsHigh;
+
+    NSMutableData* stream = [NSMutableData data];
+
+    const unsigned char commandBlob1[] = { 0x84, 0x00, screen, 0x60, 0x00, 0x00, 0x00, 0x00 };
+    [stream appendBytes:commandBlob1 length:sizeof(commandBlob1)];
+
+    const uint16_t rect[] = { x, y, width, height };
+    [stream appendBytes:&rect length:sizeof(rect)];
+
+    const unsigned char commandBlob2[] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    [stream appendBytes:commandBlob2 length:sizeof(commandBlob2)];
+    
+    CGImageRef source = [bitmap CGImageForProposedRect:nil context:nil hints:nil];
+    CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider(source));
+
+    // Pretty sure that hardware expects 32bit boundary data.
+    size_t imageSize = [(__bridge NSData*)raw length];
+    uint16_t imageLongs = (imageSize >> 2);
+    // FIXME(tillt): This may explode - watch your image sizes used for the transfer!
+    assert((imageLongs << 2) == imageSize);
+    [stream appendBytes:&imageLongs length:sizeof(imageLongs)];
+    [stream appendData:(__bridge NSData*)raw];
+
+    const unsigned char commandBlob3[] = { 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };
+    [stream appendBytes:commandBlob3 length:sizeof(commandBlob3)];
+
+    IOReturn ret = [self submitBulkTransfer:stream];
+    if (ret == kIOReturnSuccess) {
+        NSLog(@"transferred image");
+        return YES;
+    }
+
+    if (error) {
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                         [USBController descriptionWithIOReturn:ret]],
+            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+    }
+    
+    return NO;
 }
 
 @end
