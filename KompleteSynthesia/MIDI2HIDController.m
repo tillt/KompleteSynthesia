@@ -161,27 +161,27 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     if ((state & kKeyStateMaskOn) == 0x00) {
         return colorMap[kColorMapUnpressed];
     }
-    unsigned char color = kKeyColorUnpressed;
+    unsigned char index = kColorMapUnpressed;
     if ((state & kKeyStateMaskHand) == kKeyStateLeft) {
         if (state & kKeyStateMaskUser) {
-            color = colorMap[kColorMapLeftPressed];
+            index = kColorMapLeftPressed;
         } else if ((state & kKeyStateMaskThumb) == kKeyStateMaskThumb) {
-            color = colorMap[kColorMapLeftThumb];
+            index = kColorMapLeftThumb;
         } else {
-            color = colorMap[kColorMapLeft];
+            index = kColorMapLeft;
         }
     } else if ((state & kKeyStateMaskHand) == kKeyStateRight) {
         if (state & kKeyStateMaskUser) {
-            color = colorMap[kColorMapRightPressed];
+            index = kColorMapRightPressed;
         } else if ((state & kKeyStateMaskThumb) == kKeyStateMaskThumb) {
-            color = colorMap[kColorMapRightThumb];
+            index = kColorMapRightThumb;
         } else {
-            color = colorMap[kColorMapRight];
+            index = kColorMapRight;
         }
     } else if (state & kKeyStateMaskUser) {
-        color = colorMap[kColorMapPressed];
+        index = kColorMapPressed;
     }
-    return color;
+    return colorMap[index];
 }
 
 - (void)lightsDefault

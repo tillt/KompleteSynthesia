@@ -482,7 +482,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
 static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsigned char endState)
 {
-    if (lightUp == NO && keyState == kKompleteKontrolKeyStateLightOff) {
+    if (lightUp == NO && keyState == endState) {
         return keyState;
     }
     if (lightUp == YES && keyState == endState) {
@@ -493,7 +493,7 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
     unsigned char keyIntensity = keyState & kKompleteKontrolIntensityMask;
 
     if (lightUp == NO && keyIntensity == 0) {
-        return kKompleteKontrolKeyStateLightOff;
+        return endState;
     }
         
     if (lightUp == NO) {
@@ -520,6 +520,11 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
         const unsigned int fadeTick = lastTick - (midIndex + 4);
 
         BOOL needsUpdate = YES;
+        
+        for (unsigned int key=0;key < self.keyCount;key++) {
+            self.keys[key] = (self.keys[key] & 0xFC) | 0x3;
+        }
+        
         for (unsigned int tick=0;tick < lastTick;tick++) {
             unsigned int index = tick % midIndex;
 
@@ -550,8 +555,12 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
                 for(unsigned int w = 0;w < 8;w++) {
                     if (index >= w) {
                         const int i = MIN(index - w, midIndex);
-                        self.keys[midIndex + i] = dimmedKeyState(self.keys[midIndex + i], YES, unpressedKeyState);
-                        self.keys[midIndex - i] = dimmedKeyState(self.keys[midIndex - i], YES, unpressedKeyState);
+                        self.keys[midIndex + i] = dimmedKeyState(self.keys[midIndex + i],
+                                                                 unpressedKeyState != kKompleteKontrolKeyStateLightOff,
+                                                                 unpressedKeyState);
+                        self.keys[midIndex - i] = dimmedKeyState(self.keys[midIndex - i],
+                                                                 unpressedKeyState != kKompleteKontrolKeyStateLightOff,
+                                                                 unpressedKeyState);
                     }
                 }
                 needsUpdate = YES;
