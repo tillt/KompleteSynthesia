@@ -41,6 +41,7 @@
         { 0xFF, 0xFF, 0xFF }    // 16: white
     };
     
+    // FIXME: This intensity simulation only really works for white - racist shit!
     return [NSColor colorWithRed:(((float)palette[colorIndex][0] / 255.0) * colorIntensity) / intensityDivider
                            green:(((float)palette[colorIndex][1] / 255.0) * colorIntensity) / intensityDivider
                             blue:(((float)palette[colorIndex][2] / 255.0) * colorIntensity) / intensityDivider

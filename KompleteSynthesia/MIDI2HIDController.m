@@ -268,37 +268,40 @@ const unsigned char kKeyStateMaskMusic = 0x20;
                   param2:(unsigned char)param2
                interface:(unsigned char)interface;
 {
+    if (cv != kMIDICVStatusNoteOn && cv != kMIDICVStatusNoteOff && cv != kMIDICVStatusControlChange) {
+        return;
+    }
+
     if (cv == kMIDICVStatusNoteOn || cv == kMIDICVStatusNoteOff) {
-        dispatch_async(dispatch_get_main_queue(), ^{
+        [self lightNote:param1 status:cv channel:channel velocity:param2 interface:interface];
+    } else if (cv == kMIDICVStatusControlChange && channel == 0x00 && param1 == 0x10) {
+        [self lightsDefault];
+    }
+
+    // Logging (UI related) has to happen on the main thread and this callback is invoked
+    // on a CoreMidi thread.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (cv == kMIDICVStatusNoteOn || cv == kMIDICVStatusNoteOff) {
             [log logLine:[NSString stringWithFormat:@"port %d - note %-3s - channel %02d - note %@ - velocity %d",
                           interface,
                           cv == kMIDICVStatusNoteOn ? "on" : "off" ,
                           channel + 1,
                           [MIDIController readableNote:param1],
                           param2]];
-        });
-
-        [self lightNote:param1 status:cv channel:channel velocity:param2 interface:interface];
-    } else if (cv == kMIDICVStatusControlChange) {
-        if (channel == 0x00 && param1 == 0x10) {
-            if (param2 & 0x04) {
-                dispatch_async(dispatch_get_main_queue(), ^{
+        } else if (cv == kMIDICVStatusControlChange) {
+            if (channel == 0x00 && param1 == 0x10) {
+                if (param2 & 0x04) {
                     [log logLine:@"user is playing"];
-                });
-            }
-            if (param2 & 0x01) {
-                dispatch_async(dispatch_get_main_queue(), ^{
+                }
+                if (param2 & 0x01) {
                     [log logLine:@"playing right hand"];
-                });
-            }
-            if (param2 & 0x02) {
-                dispatch_async(dispatch_get_main_queue(), ^{
+                }
+                if (param2 & 0x02) {
                     [log logLine:@"playing left hand"];
-                });
+                }
             }
-            [self lightsDefault];
         }
-    }
+    });
 }
 
 #pragma mark HIDControllerDelegate

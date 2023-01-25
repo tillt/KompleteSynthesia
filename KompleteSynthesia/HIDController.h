@@ -21,7 +21,6 @@ extern const unsigned char kKompleteKontrolColorRed;
 extern const uint8_t kKeyColorUnpressed;
 extern const uint8_t kKeyColorPressed;
 
-
 enum {
     KKBUTTON_PLAY,
     KKBUTTON_LEFT,
@@ -37,7 +36,6 @@ enum {
     KKBUTTON_FUNCTION4,
     KKBUTTON_SCROLL
 };
-
 @protocol HIDControllerDelegate <NSObject>
 - (void)receivedEvent:(const int)event value:(int)value;
 - (void)deviceRemoved;

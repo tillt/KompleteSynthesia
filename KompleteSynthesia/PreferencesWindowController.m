@@ -14,7 +14,7 @@
 
 @implementation PreferencesWindowController {
     NSArray<ColorField*>* controls;
-    NSArray<NSString*>* names;
+    NSArray<NSString*>* userDefaultKeys;
 
     PaletteViewController* paletteViewController;
 }
@@ -32,14 +32,14 @@
                   _colorRightThumb,
                   _colorRightPressed ];
 
-    names = @[ @"kColorMapUnpressed",
-               @"kColorMapPressed",
-               @"kColorMapLeft",
-               @"kColorMapLeftThumb",
-               @"kColorMapLeftPressed",
-               @"kColorMapRight",
-               @"kColorMapRightThumb",
-               @"kColorMapRightPressed" ];
+    userDefaultKeys = @[ @"kColorMapUnpressed",
+                         @"kColorMapPressed",
+                         @"kColorMapLeft",
+                         @"kColorMapLeftThumb",
+                         @"kColorMapLeftPressed",
+                         @"kColorMapRight",
+                         @"kColorMapRightThumb",
+                         @"kColorMapRightPressed" ];
     
     for (int key = 0;key < controls.count;key++) {
         ColorField* colorField = controls[key];
@@ -92,7 +92,7 @@
     [colorField setNeedsDisplay:YES];
 
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    [userDefaults setInteger:keyState forKey:names[index]];
+    [userDefaults setInteger:keyState forKey:userDefaultKeys[index]];
 }
 
 - (IBAction)fowardingValueChanged:(id)sender
@@ -106,9 +106,21 @@
 - (IBAction)assertSynthesiaConfig:(id)sender
 {
     NSError* error = nil;
-    if ([_synthesia assertMultiDeviceConfig:&error] == NO) {
+    NSString* message = nil;
+    if ([_synthesia assertMultiDeviceConfig:&error message:&message] == NO) {
         NSLog(@"failed to assert Synthesia key light loopback setup");
-        [[NSAlert alertWithError:error] runModal];
+        if (error == nil && message != nil) {
+            NSAlert* alert = [NSAlert alertWithError:error];
+            alert.messageText = message;
+            alert.alertStyle = NSAlertStyleWarning;
+            [alert runModal];
+        } else {
+            NSAlert* alert = [NSAlert alertWithError:error];
+            alert.alertStyle = NSAlertStyleWarning;
+            [alert runModal];
+        }
+    } else {
+        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"initial_synthesia_config_assert_done"];
     }
 }
 

@@ -55,7 +55,6 @@ const uint8_t kKompleteKontrolColorBrightOrange = kKompleteKontrolColorOrange | 
 const uint8_t kKompleteKontrolColorLightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityHigh;
 const uint8_t kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityBright;
 
-
 // Quote from https://www.native-instruments.com/forum/threads/programming-the-guide-lights.320806/
 // By @jasonbrent:
 // Seems to be overall device state/Mode Sending just 0xa0 initializes the
@@ -74,52 +73,54 @@ const size_t kKompleteKontrolButtonsMessageSize = 80;
 const size_t kKompleteKontrolButtonsMapSize = kKompleteKontrolButtonsMessageSize - 1;
 
 // Button light indezes.
-const uint8_t kKompleteKontrolButtonIndexM = 0;
-const uint8_t kKompleteKontrolButtonIndexS = 1;
-const uint8_t kKompleteKontrolButtonIndexFunction1 = 2;
-const uint8_t kKompleteKontrolButtonIndexFunction2 = 3;
-const uint8_t kKompleteKontrolButtonIndexFunction3 = 4;
-const uint8_t kKompleteKontrolButtonIndexFunction4 = 5;
-const uint8_t kKompleteKontrolButtonIndexFunction5 = 6;
-const uint8_t kKompleteKontrolButtonIndexFunction6 = 7;
-const uint8_t kKompleteKontrolButtonIndexFunction7 = 8;
-const uint8_t kKompleteKontrolButtonIndexFunction8 = 9;
-const uint8_t kKompleteKontrolButtonIndexKnobLeft = 10;
-const uint8_t kKompleteKontrolButtonIndexKnobUp = 11;
-const uint8_t kKompleteKontrolButtonIndexKnobDown = 12;
-const uint8_t kKompleteKontrolButtonIndexKnobRight = 13;
-const uint8_t kKompleteKontrolButtonIndexScaleEdit = 15;
-const uint8_t kKompleteKontrolButtonIndexArpEdit = 16;
-const uint8_t kKompleteKontrolButtonIndexUndoRedo = 18;
-const uint8_t kKompleteKontrolButtonIndexQuantize = 19;
-const uint8_t kKompleteKontrolButtonIndexPattern = 21;
-const uint8_t kKompleteKontrolButtonIndexPresetUp = 22;
-const uint8_t kKompleteKontrolButtonIndexTrack = 23;
-const uint8_t kKompleteKontrolButtonIndexLoop = 24;
-const uint8_t kKompleteKontrolButtonIndexMetro = 25;
-const uint8_t kKompleteKontrolButtonIndexTempo = 26;
-const uint8_t kKompleteKontrolButtonIndexPresetDown = 27;
-const uint8_t kKompleteKontrolButtonIndexKeyMode = 28;
-const uint8_t kKompleteKontrolButtonIndexPlay = 29;
-const uint8_t kKompleteKontrolButtonIndexRecord = 30;
-const uint8_t kKompleteKontrolButtonIndexStop = 31;
-const uint8_t kKompleteKontrolButtonIndexPageLeft = 32;
-const uint8_t kKompleteKontrolButtonIndexPageRight = 33;
-const uint8_t kKompleteKontrolButtonIndexClear = 34;
-const uint8_t kKompleteKontrolButtonIndexBrowser = 35;
-const uint8_t kKompleteKontrolButtonIndexPlugin = 36;
-const uint8_t kKompleteKontrolButtonIndexMixer = 37;
-const uint8_t kKompleteKontrolButtonIndexInstance = 38;
-const uint8_t kKompleteKontrolButtonIndexMIDI = 39;
-const uint8_t kKompleteKontrolButtonIndexSetup = 40;
-const uint8_t kKompleteKontrolButtonIndexFixedVel = 41;
-const uint8_t kKompleteKontrolButtonIndexUnused1 = 42;
-const uint8_t kKompleteKontrolButtonIndexUnused2 = 43;
-const uint8_t kKompleteKontrolButtonIndexStrip1 = 44;
-const uint8_t kKompleteKontrolButtonIndexStrip10 = 54;
-const uint8_t kKompleteKontrolButtonIndexStrip15 = 59;
-const uint8_t kKompleteKontrolButtonIndexStrip20 = 64;
-const uint8_t kKompleteKontrolButtonIndexStrip24 = 68;
+enum {
+    kKompleteKontrolButtonIndexM = 0,
+    kKompleteKontrolButtonIndexS = 1,
+    kKompleteKontrolButtonIndexFunction1 = 2,
+    kKompleteKontrolButtonIndexFunction2 = 3,
+    kKompleteKontrolButtonIndexFunction3 = 4,
+    kKompleteKontrolButtonIndexFunction4 = 5,
+    kKompleteKontrolButtonIndexFunction5 = 6,
+    kKompleteKontrolButtonIndexFunction6 = 7,
+    kKompleteKontrolButtonIndexFunction7 = 8,
+    kKompleteKontrolButtonIndexFunction8 = 9,
+    kKompleteKontrolButtonIndexKnobLeft = 10,
+    kKompleteKontrolButtonIndexKnobUp = 11,
+    kKompleteKontrolButtonIndexKnobDown = 12,
+    kKompleteKontrolButtonIndexKnobRight = 13,
+    kKompleteKontrolButtonIndexScaleEdit = 15,
+    kKompleteKontrolButtonIndexArpEdit = 16,
+    kKompleteKontrolButtonIndexUndoRedo = 18,
+    kKompleteKontrolButtonIndexQuantize = 19,
+    kKompleteKontrolButtonIndexPattern = 21,
+    kKompleteKontrolButtonIndexPresetUp = 22,
+    kKompleteKontrolButtonIndexTrack = 23,
+    kKompleteKontrolButtonIndexLoop = 24,
+    kKompleteKontrolButtonIndexMetro = 25,
+    kKompleteKontrolButtonIndexTempo = 26,
+    kKompleteKontrolButtonIndexPresetDown = 27,
+    kKompleteKontrolButtonIndexKeyMode = 28,
+    kKompleteKontrolButtonIndexPlay = 29,
+    kKompleteKontrolButtonIndexRecord = 30,
+    kKompleteKontrolButtonIndexStop = 31,
+    kKompleteKontrolButtonIndexPageLeft = 32,
+    kKompleteKontrolButtonIndexPageRight = 33,
+    kKompleteKontrolButtonIndexClear = 34,
+    kKompleteKontrolButtonIndexBrowser = 35,
+    kKompleteKontrolButtonIndexPlugin = 36,
+    kKompleteKontrolButtonIndexMixer = 37,
+    kKompleteKontrolButtonIndexInstance = 38,
+    kKompleteKontrolButtonIndexMIDI = 39,
+    kKompleteKontrolButtonIndexSetup = 40,
+    kKompleteKontrolButtonIndexFixedVel = 41,
+    kKompleteKontrolButtonIndexUnused1 = 42,
+    kKompleteKontrolButtonIndexUnused2 = 43,
+    kKompleteKontrolButtonIndexStrip1 = 44,
+    kKompleteKontrolButtonIndexStrip10 = 54,
+    kKompleteKontrolButtonIndexStrip15 = 59,
+    kKompleteKontrolButtonIndexStrip20 = 64,
+    kKompleteKontrolButtonIndexStrip24 = 68,
+};
 
 const uint8_t kKeyColorUnpressed = kKompleteKontrolColorOrange;
 const uint8_t kKeyColorPressed = kKompleteKontrolColorLightOrange;
@@ -130,7 +131,7 @@ const float kLightsSwooshDelay = 0.4;
 
 const size_t kInputBufferSize = 64;
 
-#define DEBUG_HID_INPUT
+//#define DEBUG_HID_INPUT
 
 static void HIDInputCallback(void* context,
                              IOReturn result,

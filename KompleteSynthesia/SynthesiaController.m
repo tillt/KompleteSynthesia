@@ -15,6 +15,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 
 @implementation SynthesiaController {
     BOOL needsConfigurationPatch;
+    BOOL dataformatExpected;
     LogViewController* log;
 }
 
@@ -82,6 +83,9 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     if (self) {
         _delegate = delegate;
         log = logViewController;
+        dataformatExpected = NO;
+        needsConfigurationPatch = YES;
+
         [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
                                                                selector:@selector(synthesiaMayHaveChangedStatus:)
                                                                    name:NSWorkspaceDidActivateApplicationNotification
@@ -97,9 +101,16 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
         [userDefaults registerDefaults:@{@"initial_synthesia_config_assert_done": @(NO)}];
 
         if ([userDefaults boolForKey:@"initial_synthesia_config_assert_done"] == NO) {
-            if ([self assertMultiDeviceConfig:error] == NO) {
-                NSLog(@"failed to assert Synthesia key light loopback setup");
-                return nil;
+            [log logLine:@"Synthesia configuration needs to get validated"];
+
+            NSString* message = nil;
+            if ([self assertMultiDeviceConfig:error message:&message] == NO) {
+                [log logLine:@"Failed to assert Synthesia key light loopback setup"];
+                // Note, we don't fail here -- chances are the user knows what he is doing.
+                NSAlert* alert = [NSAlert alertWithError:*error];
+                alert.messageText = message;
+                alert.alertStyle = NSAlertStyleWarning;
+                [alert runModal];
             } else {
                 [userDefaults setBool:YES forKey:@"initial_synthesia_config_assert_done"];
             }
@@ -115,7 +126,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     [_delegate synthesiaStateUpdate:[SynthesiaController status]];
 }
 
-- (BOOL)assertMultiDeviceConfig:(NSError**)error
+- (BOOL)assertMultiDeviceConfig:(NSError**)error message:(NSString*_Nullable *_Nullable)message
 {
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     panel.title = @"Locate Synthesia setup";
@@ -123,6 +134,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     panel.directoryURL = [NSURL fileURLWithFileSystemRepresentation:"~/Library/Application Support/Synthesia/multiDevice.xml" isDirectory:NO relativeToURL:nil];
     if ([panel runModal] != NSModalResponseOK) {
         NSLog(@"user canceled file selection");
+        *message = @"User canceled the file selection";
         return NO;
     }
 
@@ -145,7 +157,8 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     [log logLine:@"parsed Synthesia configuration"];
 
     if (!needsConfigurationPatch) {
-        [log logLine:@"configuration seems fine as is, no patch needed"];
+        *message = @"configuration seems fine as is, no patch needed";
+        [log logLine:*message];
         return YES;
     }
 

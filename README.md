@@ -4,13 +4,11 @@ Native Instruments Komplete Kontrol Light Guide support for Synthesia.
 
 ## Features
 
-Routes Synthesia lighting information to your Native Instruments keyboard controller USB device. Auto-detects a Native Instruments S-series keyboard controller USB device.
+Routes Synthesia lighting information to your Native Instruments keyboard controller USB device. 
 
-Listens on the "LoopBe" MIDI input interface port - a historic choice. Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia protocol.
+Auto-detects a Native Instruments S-series keyboard controller USB device. Listens on the 'LoopBe' MIDI input interface port. Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia protocol.
 
-Optionally listens on the "Port 1" MIDI input interface port. Notes received are forwarded to the keyboard controller signalling user initiated notes played. That interface is a feature of the Native Instruments Agent.
-
-Additionally supports jogwheel and play button for starting and stopping a session in Synthesia.
+Additionally supports jogwheel and the 'Play' button for starting and stopping a session in Synthesia.
 
 ![In Action](site/images/ButtonsAndLightGuide.png)
 
@@ -28,15 +26,15 @@ Simply run `KompleteSynthesia.app`. First thing you will have to permit a bunch 
 
 When running it the first time, the first thing you will be asked by your system is:
 
-- Allow for "Input Monitoring"
+- Allow for 'Input Monitoring'
     - this is needed for receiving button events from the Komplete Kontrol controller
 
-Then, when pushing the "Play" button or using the jogwheel, the system will ask you for:
+Then, when pushing the 'Play' button or using the jogwheel, the system will ask you for:
 
-- Allow for "Accessibility"
+- Allow for 'Accessibility'
     - this is needed for sending out virtual keyboard events to your system, recognized by Synthesia
 
-Komplete Synthesia will detect your controller and show a little rainbow swoosh on the keyboard lights, signalling that it is up and running. The Play button should be illuminated now just like the jogwheel. You will also recognise a little MIDI cable icon on the top right of your screen.
+Komplete Synthesia will detect your controller and show a little rainbow swoosh on the keyboard lights, signalling that it is up and running. The 'Play' button should be illuminated now just like the jogwheel. You will also recognise a little MIDI cable icon on the top right of your screen.
 
 For finding out about the detected controller, click on the icon which will show a menu which contains its name. The displayed menu will additionally tell you if Synthesia was detected running.
 

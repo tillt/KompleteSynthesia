@@ -27,7 +27,7 @@
 
 - (void)logLine:(NSString*)l
 {
-    NSLog(l);
+    NSLog(@"%@", l);
     
     // Assert the view is loaded.
     NSView* view = self.view;

@@ -105,9 +105,9 @@ const uint32_t kPID_S88MK2 = 0x1630;
     request.bAlternateSetting = kIOUSBFindInterfaceDontCare;
 
     io_iterator_t interface_iterator;
-    IOReturn kresult = (*device)->CreateInterfaceIterator(device, &request, &interface_iterator);
-    if (kresult != kIOReturnSuccess) {
-        return kresult;
+    IOReturn ret = (*device)->CreateInterfaceIterator(device, &request, &interface_iterator);
+    if (ret != kIOReturnSuccess) {
+        return ret;
     }
 
     while ((*usbInterfacep = IOIteratorNext(interface_iterator))) {
@@ -122,6 +122,7 @@ const uint32_t kPID_S88MK2 = 0x1630;
         IOObjectRelease(*usbInterfacep);
     }
     IOObjectRelease(interface_iterator);
+
     return kIOReturnSuccess;
 }
 
@@ -481,7 +482,7 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     uint16_t imageLongs = (imageSize >> 2);
     
     assert(imageLongs == (width * height)/2);
-    // FIXME(tillt): This may explode - watch your image sizes used for the transfer!
+    // FIXME: This may explode - watch your image sizes used for the transfer!
     //assert((imageLongs << 2) == imageSize);
     [stream appendBytes:&imageLongs length:sizeof(imageLongs)];
     [stream appendData:(__bridge NSData*)raw];
