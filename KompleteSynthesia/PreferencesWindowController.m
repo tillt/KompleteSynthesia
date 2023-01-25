@@ -13,7 +13,9 @@
 @end
 
 @implementation PreferencesWindowController {
-    NSDictionary<NSNumber*,ColorField*>* controls;
+    NSArray<ColorField*>* controls;
+    NSArray<NSString*>* names;
+
     PaletteViewController* paletteViewController;
 }
 
@@ -21,18 +23,27 @@
 {
     [super windowDidLoad];
     
-    controls = @{ @(kColorMapUnpressed): _colorUnpressed,
-                  @(kColorMapPressed): _colorPressed,
-                  @(kColorMapLeft): _colorLeft,
-                  @(kColorMapLeftThumb): _colorLeftThumb,
-                  @(kColorMapLeftPressed): _colorLeftPressed,
-                  @(kColorMapRight): _colorRight,
-                  @(kColorMapRightThumb): _colorRightThumb,
-                  @(kColorMapRightPressed): _colorRightPressed };
+    controls = @[ _colorUnpressed,
+                  _colorPressed,
+                  _colorLeft,
+                  _colorLeftThumb,
+                  _colorLeftPressed,
+                  _colorRight,
+                  _colorRightThumb,
+                  _colorRightPressed ];
+
+    names = @[ @"kColorMapUnpressed",
+               @"kColorMapPressed",
+               @"kColorMapLeft",
+               @"kColorMapLeftThumb",
+               @"kColorMapLeftPressed",
+               @"kColorMapRight",
+               @"kColorMapRightThumb",
+               @"kColorMapRightPressed" ];
     
-    for (NSNumber* key in [controls allKeys]) {
+    for (int key = 0;key < controls.count;key++) {
         ColorField* colorField = controls[key];
-        colorField.keyState = _midi2hid.colors[key.intValue];
+        colorField.keyState = _midi2hid.colors[key];
         colorField.rounded = YES;
     }
 
@@ -41,7 +52,7 @@
 
 - (IBAction)selectKeyState:(id)sender
 {
-    if (sender == nil || ![controls.allValues containsObject:sender]) {
+    if (sender == nil || ![controls containsObject:sender]) {
         return;
     }
     ColorField* colorField = sender;
@@ -53,10 +64,11 @@
         paletteViewController.delegate = self;
     }
     paletteViewController.keyState = colorField.keyState;
-    NSArray<NSNumber*>* keys = [controls allKeysForObject:colorField];
-    assert(keys.count == 1);
-    assert(keys[0].intValue < kColorMapSize);
-    paletteViewController.index = keys[0].intValue;
+
+    NSInteger key = [controls indexOfObject:colorField];
+    assert(key != NSNotFound);
+    assert(key < kColorMapSize);
+    paletteViewController.index = key;
     popOver.contentViewController = paletteViewController;
     popOver.contentSize = paletteViewController.view.bounds.size;
     popOver.animates = YES;
@@ -74,20 +86,12 @@
         [_midi2hid lightsDefault];
     }
 
-    assert([controls objectForKey:@(index)] != nil);
-    ColorField* colorField = controls[@(index)];
+    assert(controls.count > index);
+    ColorField* colorField = controls[index];
     colorField.keyState = keyState;
     [colorField setNeedsDisplay:YES];
 
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    NSArray<NSString*>* names = @[ @"kColorMapUnpressed",
-                                   @"kColorMapPressed",
-                                   @"kColorMapLeft",
-                                   @"kColorMapLeftThumb",
-                                   @"kColorMapLeftPressed",
-                                   @"kColorMapRight",
-                                   @"kColorMapRightThumb",
-                                   @"kColorMapRightPressed" ];
     [userDefaults setInteger:keyState forKey:names[index]];
 }
 

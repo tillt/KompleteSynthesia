@@ -44,7 +44,7 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IYA-Ho-9yy">
-                                            <rect key="frame" x="43" y="162" width="389" height="32"/>
+                                            <rect key="frame" x="43" y="111" width="389" height="32"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="check" title="Forward button events only when Synthesia is in foreground" bezelStyle="regularSquare" imagePosition="left" inset="2" id="cCF-lR-49o">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -249,6 +249,16 @@
                                                 <action selector="assertSynthesiaConfig:" target="-2" id="QL1-Y3-Uaf"/>
                                             </connections>
                                         </button>
+                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="p7C-ac-pfZ">
+                                            <rect key="frame" x="17" y="102" width="444" height="135"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <textFieldCell key="cell" alignment="left" id="2XS-50-1v6">
+                                                <font key="font" metaFont="system" size="11"/>
+                                                <string key="title">Synthesia has to be configured the way this little helper expects. For being able to configure Synthesia, we need to manipulate a file. That file is called "multiDevice.xml" and you will need to select it in the file dialog popping up when clicking on the button below. Go ahead, confirm your selection by clicking on "Open". Komplete Synthesia will then make sure that Synthesia is configured correctly when it comes to the lighting control output.</string>
+                                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
                                     </subviews>
                                 </view>
                             </tabViewItem>
