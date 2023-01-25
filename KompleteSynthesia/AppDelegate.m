@@ -8,7 +8,6 @@
 #import "AppDelegate.h"
 #import "MIDI2HIDController.h"
 #import "LogViewController.h"
-#import "SynthesiaController.h"
 #import "PreferencesWindowController.h"
 
 @interface AppDelegate ()

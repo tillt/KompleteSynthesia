@@ -10,9 +10,6 @@
 #import <CoreMIDI/CoreMIDI.h>
 #import <CoreServices/CoreServices.h>
 #import "LogViewController.h"
-#import "HIDController.h"
-#import "USBController.h"
-#import "MIDIController.h"
 #import "SynthesiaController.h"
 
 const CGKeyCode kVK_ANSI_Z = 0x06;
@@ -56,6 +53,9 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 ///
 /// TODO: Fully implement MK1 support. Sorry, too lazy and no way to test.
 ///
+///
+
+
 @implementation MIDI2HIDController {
     LogViewController* log;
     MIDIController* midi;
@@ -63,6 +63,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     USBController* usb;
 
     unsigned char keyStates[255];
+    unsigned char colorMap[kColorMapSize];
 }
 
 - (id)initWithLogController:(LogViewController*)lc error:(NSError**)error
@@ -71,29 +72,49 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     if (self) {
         log = lc;
 
+        NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+
+        [userDefaults registerDefaults:@{@"kColorMapUnpressed": @(kKeyColorUnpressed)}];
+        colorMap[kColorMapUnpressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapUnpressed"];
+
+        [userDefaults registerDefaults:@{@"kColorMapPressed": @(kKeyColorPressed)}];
+        colorMap[kColorMapPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapPressed"];
+
+        [userDefaults registerDefaults:@{@"kColorMapLeft": @(kKompleteKontrolColorBlue)}];
+        colorMap[kColorMapLeft] = (unsigned char)[userDefaults integerForKey:@"kColorMapLeft"];
+
+        [userDefaults registerDefaults:@{@"kColorMapLeftThumb": @(kKompleteKontrolColorLightBlue)}];
+        colorMap[kColorMapLeftThumb] = (unsigned char)[userDefaults integerForKey:@"kColorMapLeftThumb"];
+
+        [userDefaults registerDefaults:@{@"kColorMapLeftPressed": @(kKompleteKontrolColorBrightBlue)}];
+        colorMap[kColorMapLeftPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapLeftPressed"];
+
+        [userDefaults registerDefaults:@{@"kColorMapRight": @(kKompleteKontrolColorGreen)}];
+        colorMap[kColorMapRight] = (unsigned char)[userDefaults integerForKey:@"kColorMapRight"];
+
+        [userDefaults registerDefaults:@{@"kColorMapRightThumb": @(kKompleteKontrolColorLightGreen)}];
+        colorMap[kColorMapRightThumb] = (unsigned char)[userDefaults integerForKey:@"kColorMapRightThumb"];
+
+        [userDefaults registerDefaults:@{@"kColorMapRightPressed": @(kKompleteKontrolColorBrightGreen)}];
+        colorMap[kColorMapRightPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapRightPressed"];
+
         if ([self reset:error] == NO) {
             return nil;
         }
     }
+    
     return self;
 }
 
-#define USB_DEVICE_SHIZZLE
+- (unsigned char*)colors
+{
+    return colorMap;
+}
+
+//#define USB_DEVICE_SHIZZLE
 
 - (BOOL)reset:(NSError**)error
 {
-    hid = [[HIDController alloc] initWithDelegate:self error:error];
-    if (hid == nil) {
-        return NO;
-    }
-    [log logLine:[NSString stringWithFormat:@"detected %@ HID device", hid.deviceName]];
-    [self lightsDefault];
-
-    midi = [[MIDIController alloc] initWithDelegate:self error:error];
-    if (midi == nil) {
-        return NO;
-    }
-
 #ifdef USB_DEVICE_SHIZZLE
     usb = [[USBController alloc] initWithDelegate:self error:error];
     if (usb == nil) {
@@ -102,8 +123,20 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
 #endif
 
-    
-    //[hid lightsSwoop];
+    hid = [[HIDController alloc] initWithDelegate:self error:error];
+    if (hid == nil) {
+        return NO;
+    }
+    [log logLine:[NSString stringWithFormat:@"detected %@ HID device", hid.deviceName]];
+
+    [self lightsDefault];
+
+    midi = [[MIDIController alloc] initWithDelegate:self error:error];
+    if (midi == nil) {
+        return NO;
+    }
+
+    [hid lightsSwooshTo:colorMap[kColorMapUnpressed]];
 
     return YES;
 }
@@ -126,27 +159,27 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 - (unsigned char)lightColorWithState:(unsigned char)state
 {
     if ((state & kKeyStateMaskOn) == 0x00) {
-        return kKeyColorUnpressed;
+        return colorMap[kColorMapUnpressed];
     }
     unsigned char color = kKeyColorUnpressed;
     if ((state & kKeyStateMaskHand) == kKeyStateLeft) {
         if (state & kKeyStateMaskUser) {
-            color = kKompleteKontrolColorBrightBlue;
+            color = colorMap[kColorMapLeftPressed];
         } else if ((state & kKeyStateMaskThumb) == kKeyStateMaskThumb) {
-            color = kKompleteKontrolColorLightBlue;
+            color = colorMap[kColorMapLeftThumb];
         } else {
-            color = kKompleteKontrolColorBlue;
+            color = colorMap[kColorMapLeft];
         }
     } else if ((state & kKeyStateMaskHand) == kKeyStateRight) {
         if (state & kKeyStateMaskUser) {
-            color = kKompleteKontrolColorBrightGreen;
+            color = colorMap[kColorMapRightPressed];
         } else if ((state & kKeyStateMaskThumb) == kKeyStateMaskThumb) {
-            color = kKompleteKontrolColorLightGreen;
+            color = colorMap[kColorMapRightThumb];
         } else {
-            color = kKompleteKontrolColorGreen;
+            color = colorMap[kColorMapRight];
         }
     } else if (state & kKeyStateMaskUser) {
-        color = kKeyColorPressed;
+        color = colorMap[kColorMapPressed];
     }
     return color;
 }
@@ -154,7 +187,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 - (void)lightsDefault
 {
     memset(keyStates, 0, sizeof(keyStates));
-    [hid lightsDefault];
+    [hid lightKeysWithColor:colorMap[kColorMapUnpressed]];
 }
 
 /// The Synthesia lighting loopback interface expects the Synthesia "Per Channel"  lighting protocol:

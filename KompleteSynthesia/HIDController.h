@@ -54,10 +54,8 @@ enum {
 - (id)initWithDelegate:(id)delegate error:(NSError**)error;
 - (void)lightKey:(int)note color:(unsigned char)color;
 - (void)lightsOff;
-- (void)lightsDefault;
-- (void)lightsSwoop;
-- (void)lightsSwoosh;
-- (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error;
+- (void)lightKeysWithColor:(unsigned char)color;
+- (void)lightsSwooshTo:(unsigned char)color;
 - (void)receivedReport:(unsigned char*)report;
 - (void)deviceRemoved;
 - (unsigned char)keyColor:(int)note;

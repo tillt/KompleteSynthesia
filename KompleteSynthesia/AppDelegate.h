@@ -6,8 +6,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
-
-@protocol SynthesiaControllerDelegate;
+#import "SynthesiaController.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSMenuDelegate, SynthesiaControllerDelegate>
 

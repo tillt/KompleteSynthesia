@@ -54,7 +54,7 @@ For finding out about the detected controller, click on the icon which will show
     - Synthesia isn't setup the way we need it - we need "Finger-based channel" lighting
     - Make sure you followed the [Setup](#setup) documentation
 
-- All Keyboard LEDs show blue lights
+- All Keyboard LEDs show blue lights (right hand)
     - Did you possibly push the "Instance" button?
         - On macOS the NI component listening for controller button pushes does re-initialize the controller into a mode incompatible with KompleteSynthesia
     - Are you running any other NI applications while running KompleteSynthesia?

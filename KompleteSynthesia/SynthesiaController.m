@@ -80,7 +80,6 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 {
     self = [super init];
     if (self) {
-        needsConfigurationPatch = YES;
         _delegate = delegate;
         log = logViewController;
         [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
@@ -134,6 +133,8 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
         NSLog(@"Error %@", *error);
         return NO;
     }
+    needsConfigurationPatch = YES;
+    
     NSXMLParser* parser = [[NSXMLParser alloc] initWithData:data];
     [parser setDelegate:self];
     if ([parser parse] == NO) {

@@ -20,16 +20,21 @@
 /// Detects a Komplete Kontrol S-series controller. Listens for any incoming button presses and forwards them
 /// to the delegate.
 
-const uint8_t kKompleteKontrolColorRed = 0x04;          //
+const uint8_t kKompleteKontrolKeyStateLightOff = 0x00;
+
+// We have 16 colors, accross the rainbow, with 4 levels of intensity.
+// Additionally, there is white (sort of), again with 4 levels of intensity.
+const uint8_t kKompleteKontrolColorRed = 0x04;
 const uint8_t kKompleteKontrolColorOrange = 0x08;
-const uint8_t kKompleteKontrolColorYellow = 0x0E;
-const uint8_t kKompleteKontrolColorGreen = 0x1C;        //
-const uint8_t kKompleteKontrolColorBlue = 0x28;         //
+const uint8_t kKompleteKontrolColorYellow = 0x10;
+const uint8_t kKompleteKontrolColorGreen = 0x1C;
+const uint8_t kKompleteKontrolColorBlue = 0x2C;
+const uint8_t kKompleteKontrolColorPurple = 0x34;
+const uint8_t kKompleteKontrolColorPink = 0x38;
+const uint8_t kKompleteKontrolColorWhite = 0x44;
 
-const uint8_t kKompleteKontrolColorWhite = 0x7c;        //
-
-const uint8_t kKompleteKontrolColorMask = 0xfc;         //
-const uint8_t kKompleteKontrolIntensityMask = 0x03;     //
+const uint8_t kKompleteKontrolColorMask = 0xfc;
+const uint8_t kKompleteKontrolIntensityMask = 0x03;
 
 const uint8_t kKompleteKontrolIntensityLow = 0x00;
 const uint8_t kKompleteKontrolIntensityMedium = 0x01;
@@ -44,12 +49,12 @@ const uint8_t kKompleteKontrolColorBrightGreen = kKompleteKontrolColorGreen | kK
 
 const uint8_t kKompleteKontrolColorLightYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityHigh;
 
+const uint8_t kKompleteKontrolColorLightOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityHigh;
+const uint8_t kKompleteKontrolColorBrightOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityBright;
+
 const uint8_t kKompleteKontrolColorLightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityHigh;
 const uint8_t kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityBright;
 
-
-// Some funky colors.
-const uint8_t kKompleteKontrolColorsSwoop[4] = { 0x04, 0x08, 0x0e, 0x12 };
 
 // Quote from https://www.native-instruments.com/forum/threads/programming-the-guide-lights.320806/
 // By @jasonbrent:
@@ -116,15 +121,11 @@ const uint8_t kKompleteKontrolButtonIndexStrip15 = 59;
 const uint8_t kKompleteKontrolButtonIndexStrip20 = 64;
 const uint8_t kKompleteKontrolButtonIndexStrip24 = 68;
 
-const uint8_t kKeyColorUnpressed = kKompleteKontrolColorWhite;
-//const uint8_t kKeyColorUnpressed = kKompleteKontrolColorBlue;
-
-//const uint8_t kKeyColorUnpressed = kKompleteKontrolColorMask;
-//const uint8_t kKeyColorPressed = kKompleteKontrolColorLightYellow;
-//const uint8_t kKeyColorPressed = kKompleteKontrolColorLightBlue;
-const uint8_t kKeyColorPressed = kKompleteKontrolColorBrightWhite;
+const uint8_t kKeyColorUnpressed = kKompleteKontrolColorOrange;
+const uint8_t kKeyColorPressed = kKompleteKontrolColorLightOrange;
 
 const float kLightsSwoopDelay = 0.01;
+const float kLightsSwooshTick = 0.02;
 const float kLightsSwooshDelay = 0.4;
 
 const size_t kInputBufferSize = 64;
@@ -161,10 +162,10 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     [controller deviceRemoved];
 }
 
+
 @interface HIDController ()
 @property (assign, nonatomic) unsigned char* keys;
 @property (assign, nonatomic) unsigned char* buttons;
-
 @end
 
 @implementation HIDController {
@@ -358,16 +359,11 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
         int product = [HIDController productIDWithDevice:devices[i]];
 
-        for (NSNumber* key in [supportedDevices allKeys]) {
-            if (product != key.intValue) {
-                continue;
-            }
-
-            _keyCount = [supportedDevices[key][@"keys"] intValue];
-            _mk2Controller = [supportedDevices[key][@"mk2"] boolValue];
-            _keyOffset = [supportedDevices[key][@"offset"] intValue];
+        if ([supportedDevices objectForKey:@(product)] != nil) {
+            _keyCount = [supportedDevices[@(product)][@"keys"] intValue];
+            _mk2Controller = [supportedDevices[@(product)][@"mk2"] boolValue];
+            _keyOffset = [supportedDevices[@(product)][@"offset"] intValue];
             lightGuideUpdateMessage[0] = _mk2Controller ? kCommandLightGuideUpdateMK2 : kCommandLightGuideUpdateMK1;
-
             _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
             return devices[i];
         }
@@ -475,64 +471,97 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
 - (void)lightsOff
 {
-    memset(_keys, 0x00, kKompleteKontrolLightGuideKeyMapSize);
+    [self lightKeysWithColor:kKompleteKontrolKeyStateLightOff];
+}
+
+- (void)lightKeysWithColor:(unsigned char)color
+{
+    memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
     [self updateLightGuideMap:nil];
 }
 
-- (void)lightsDefault
+static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsigned char endState)
 {
-    memset(_keys, kKeyColorUnpressed, kKompleteKontrolLightGuideKeyMapSize);
-    [self updateLightGuideMap:nil];
+    if (lightUp == NO && keyState == kKompleteKontrolKeyStateLightOff) {
+        return keyState;
+    }
+    if (lightUp == YES && keyState == endState) {
+        return keyState;
+    }
+
+    const unsigned char keyColor = keyState & kKompleteKontrolColorMask;
+    unsigned char keyIntensity = keyState & kKompleteKontrolIntensityMask;
+
+    if (lightUp == NO && keyIntensity == 0) {
+        return kKompleteKontrolKeyStateLightOff;
+    }
+        
+    if (lightUp == NO) {
+        --keyIntensity;
+    } else {
+        ++keyIntensity;
+    }
+
+    if (lightUp == YES && keyIntensity > kKompleteKontrolIntensityBright) {
+        return endState;
+    }
+
+    return keyColor | keyIntensity;
 }
 
-- (void)lightsSwoop
+- (void)lightsSwooshTo:(unsigned char)unpressedKeyState
 {
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        for (int key = 0;key < self.keyCount - 3;key++) {
-            self.keys[key]   = kKompleteKontrolColorsSwoop[0];
-            self.keys[key+1] = kKompleteKontrolColorsSwoop[1];
-            self.keys[key+2] = kKompleteKontrolColorsSwoop[2];
-            self.keys[key+3] = kKompleteKontrolColorsSwoop[3];
-            [self updateLightGuideMap:nil];
+        const int midIndex = self.keyCount / 2;
 
-            [NSThread sleepForTimeInterval:kLightsSwoopDelay];
+        // Total number of ticks this animation will be using.
+        const unsigned int lastTick = midIndex * midIndex;
+        // Animation tick to start fading into final state.
+        const unsigned int fadeTick = lastTick - (midIndex + 4);
 
-            self.keys[key] = kKeyColorUnpressed;
-            self.keys[key+1] = kKeyColorUnpressed;
-            self.keys[key+2] = kKeyColorUnpressed;
-            self.keys[key+3] = kKeyColorUnpressed;
-            [self updateLightGuideMap:nil];
-        }
+        BOOL needsUpdate = YES;
+        for (unsigned int tick=0;tick < lastTick;tick++) {
+            unsigned int index = tick % midIndex;
 
-        for (int key = self.keyCount - 3;key > 0;key--) {
-            self.keys[key]   = kKompleteKontrolColorsSwoop[3];
-            self.keys[key+1] = kKompleteKontrolColorsSwoop[2];
-            self.keys[key+2] = kKompleteKontrolColorsSwoop[1];
-            self.keys[key+3] = kKompleteKontrolColorsSwoop[0];
-            [self updateLightGuideMap:nil];
+            BOOL rainbow = YES;
 
-            [NSThread sleepForTimeInterval:kLightsSwoopDelay];
-
-            self.keys[key] = kKeyColorUnpressed;
-            self.keys[key+1] = kKeyColorUnpressed;
-            self.keys[key+2] = kKeyColorUnpressed;
-            self.keys[key+3] = kKeyColorUnpressed;
-            [self updateLightGuideMap:nil];
-        }
-    });
-}
-
-// FIXME: work in progress
-- (void)lightsSwoosh
-{
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        int midIndex = self.keyCount / 2;
-#define LERP(a,b,t) (a + t * (b - a))
-        const unsigned int steps = 255;
-        for (unsigned int step = 0;step < steps;step++) {
-            self.keys[midIndex] = LERP(0, 255, (float)step / steps);
-            [self updateLightGuideMap:nil];
-            [NSThread sleepForTimeInterval:kLightsSwooshDelay];
+            if (tick >= fadeTick) {
+                rainbow = self.keys[index] != unpressedKeyState;
+            }
+            if (rainbow) {
+                // Rainbow scrolling.
+                unsigned int intensity = self.keys[index] & kKompleteKontrolIntensityMask;
+                unsigned int offset = tick / midIndex;
+                unsigned int colorCode = (((index + offset) % 16) + 1) << 2;
+                colorCode = MIN(colorCode, kKompleteKontrolColorMask);
+                if (tick < lastTick - midIndex)  {
+                    intensity = 0;
+                }
+                self.keys[index] = colorCode | intensity;
+                self.keys[self.keyCount - index] = colorCode | intensity;
+                
+                if (index == 0) {
+                    needsUpdate = YES;
+                }
+            }
+            if (tick >= fadeTick)  {
+                // Fade into final state.
+                unsigned int index = tick - fadeTick;
+                for(unsigned int w = 0;w < 8;w++) {
+                    if (index >= w) {
+                        const int i = MIN(index - w, midIndex);
+                        self.keys[midIndex + i] = dimmedKeyState(self.keys[midIndex + i], YES, unpressedKeyState);
+                        self.keys[midIndex - i] = dimmedKeyState(self.keys[midIndex - i], YES, unpressedKeyState);
+                    }
+                }
+                needsUpdate = YES;
+            }
+            if (needsUpdate) {
+                [self updateLightGuideMap:nil];
+                [NSThread sleepForTimeInterval:kLightsSwooshTick];
+                
+                needsUpdate = NO;
+            }
         }
     });
 }
