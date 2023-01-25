@@ -1,4 +1,6 @@
-For looping back the MIDI lighting data from Synthesia into KompleteSynthesia, we need a virtual MIDI interface.
+# Komplete Synthesia: Setup Guide
+
+For looping back the MIDI lighting data from Synthesia into KompleteSynthesia, we need a virtual MIDI interface. 
 
 ## Creating the virtual MIDI interface
 
@@ -27,6 +29,14 @@ We now add a new, named port by clicking on that small `+` within the `Ports` se
 Now click on `Apply`. We have now created a named port on the `IAC Driver` MIDI interface. We can now go ahead and configure Synthesia to make use of it.
 
 ## Configuring Synthesia
+
+You have two options here, a semi automatic configuration by KompleteSynthesia, or manual configuration.
+
+### Automated
+
+For the automated variant, simply start KompleteSynthesia, it will help you patch the Synthesia configuration. If for some reason you need to repeat this automated configuration, use the "Settings" option from the application menu, then click on the "Synthesia"-tab.
+
+### Manual
 
 Open the `Settings` from within Synthesia. Both, Input and Output sections should now show the `IAC Driver LoopBe` port.
 
