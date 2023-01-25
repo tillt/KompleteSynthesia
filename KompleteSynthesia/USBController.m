@@ -37,7 +37,7 @@ const uint32_t kPID_S61MK2 = 0x1620;
 const uint32_t kPID_S88MK2 = 0x1630;
 
 @implementation USBController {
-    IOUSBDeviceInterface** device;
+    IOUSBDeviceInterface942** device;
     IOUSBInterfaceInterface800** interface;
     uint8_t endpointCount;
     uint8_t endpointAddresses[32];
@@ -54,11 +54,11 @@ const uint32_t kPID_S88MK2 = 0x1630;
     self = [super init];
     if (self) {
         _delegate = delegate;
-        device = [self detectKeyboardController:error];
+        device = [self detectDevice:error];
         if (device == NULL) {
             return nil;
         }
-        if ([self initKeyboardController:error] == NO) {
+        if ([self openDevice:error] == NO) {
             return nil;
         }
         NSImage* image = [NSImage imageNamed:@"test"];
@@ -127,7 +127,6 @@ const uint32_t kPID_S88MK2 = 0x1630;
 
 - (IOReturn)endpoints
 {
-    // Retrieve the total number of endpoints on this interface.
     IOReturn ret = (*interface)->GetNumEndpoints(interface, &endpointCount);
     if (ret != kIOReturnSuccess) {
         NSLog(@"GetNumEndpoints failed");
@@ -135,7 +134,6 @@ const uint32_t kPID_S88MK2 = 0x1630;
     }
     assert(endpointCount <= 32);
 
-    // iterate through pipe references.
     for (int i = 1 ; i <= endpointCount ; i++) {
         UInt8 direction;
         UInt8 number;
@@ -167,8 +165,8 @@ const uint32_t kPID_S88MK2 = 0x1630;
         return ret;
     }
 
-    IOCFPlugInInterface **pluginInterface = NULL;
     SInt32 score;
+    IOCFPlugInInterface **pluginInterface = NULL;
     ret = IOCreatePlugInInterfaceForService(usbInterface,
                                             kIOUSBInterfaceUserClientTypeID,
                                             kIOCFPlugInInterfaceID,
@@ -227,7 +225,6 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
 
 - (BOOL)endpoint:(uint8_t)ep pipeRef:(uint8_t*)pipep
 {
-    NSLog(@"converting ep address 0x%02x to pipeRef", ep);
     for (int8_t i = 0 ; i < endpointCount; i++) {
         if (endpointAddresses[i] == ep) {
             *pipep = i + 1;
@@ -235,7 +232,6 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
             return YES;
         }
     }
-    // No pipe found with the correct endpoint address
     NSLog(@"no pipeRef found with endpoint address 0x%02x", ep);
     return NO;
 }
@@ -275,75 +271,12 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
                                          (__bridge void *)self);
     if (ret != kIOReturnSuccess) {
         NSLog(@"(*interface)->WritePipeAsync failed");
-        return ret;
     }
     
     return ret;
 }
 
-- (BOOL)initKeyboardController:(NSError**)error
-{
-    IOReturn ret = (*device)->USBDeviceOpen(device);
-    if (ret != kIOReturnSuccess) {
-        NSLog(@"USBDeviceOpen failed");
-        if (error) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
-                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-            };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-        }
-        return NO;
-    }
-    
-    IOUSBConfigurationDescriptorPtr desc = NULL;
-    uint8_t config_index = 0;
-    
-    ret = (*device)->GetConfigurationDescriptorPtr(device, config_index, &desc);
-    if (ret != kIOReturnSuccess) {
-        NSLog(@"GetConfigurationDescriptorPtr failed");
-        if (error) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
-                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-            };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-        }
-        return NO;
-    }
-    
-    ret = [self openDeviceInterface:3];
-    if (ret != kIOReturnSuccess) {
-        if (error) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
-                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-            };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-        }
-        return NO;
-    }
-
-    ret = [self endpoints];
-    if (ret != kIOReturnSuccess) {
-        if (error) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
-                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-            };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-        }
-        return NO;
-    }
-
-    return YES;
-}
-
-- (IOUSBDeviceInterface**)detectKeyboardController:(NSError**)error
+- (IOUSBDeviceInterface**)detectDevice:(NSError**)error
 {
     // FIXME: offset wont be used on this level - lets see what else we need here...
     NSDictionary* supportedDevices = @{
@@ -413,25 +346,93 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
             (*dev)->Release(dev);
             continue;
         }
-        
-        for (NSNumber* key in [supportedDevices allKeys]) {
-            if (value != key.intValue) {
-                continue;
-            }
-            _keyCount = [supportedDevices[key][@"keys"] intValue];
-            _mk2Controller = [supportedDevices[key][@"mk2"] boolValue];
+
+        if ([supportedDevices objectForKey:@(value)] != nil) {
+            _keyCount = [supportedDevices[@(value)][@"keys"] intValue];
+            _mk2Controller = [supportedDevices[@(value)][@"mk2"] boolValue];
             _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
+            IOObjectRelease(iter);
             return dev;
         }
+
         (*dev)->Release(dev);
     }
     IOObjectRelease(iter);
     return nil;
 }
 
+- (BOOL)openDevice:(NSError**)error
+{
+    IOReturn ret = (*device)->USBDeviceOpen(device);
+    if (ret != kIOReturnSuccess) {
+        NSLog(@"USBDeviceOpen failed");
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                             [USBController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
+        return NO;
+    }
+    
+    IOUSBConfigurationDescriptorPtr desc = NULL;
+    uint8_t config_index = 0;
+    
+    ret = (*device)->GetConfigurationDescriptorPtr(device, config_index, &desc);
+    if (ret != kIOReturnSuccess) {
+        NSLog(@"GetConfigurationDescriptorPtr failed");
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                             [USBController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
+        return NO;
+    }
+    
+    ret = [self openDeviceInterface:3];
+    if (ret != kIOReturnSuccess) {
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                             [USBController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
+        return NO;
+    }
+
+    ret = [self endpoints];
+    if (ret != kIOReturnSuccess) {
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                             [USBController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
+        return NO;
+    }
+
+    return YES;
+}
+
 + (NSImage*)KKImageFromNSImage:(NSImage*)image
 {
     // Reduce the color information to an NSImage that is 16bitRBG (no alpha).
+    // This isnt it though -- pretty sure we need RGB565.
+    // FIXME: Kill this conversion and do it by hand as suggested in this commented code.
+    /*
+       // RGB888 to RGB565 in a quick and dirty way.
+       uint16_t r,g,b;
+       uint16_t ret = ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | ((b & 0xf8) >> 3);
+    */
     NSImageRep* rep = [[image representations] objectAtIndex:0];
     const float width = rep.pixelsWide;
     const float height = rep.pixelsHigh;
