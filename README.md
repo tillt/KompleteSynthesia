@@ -14,6 +14,10 @@ Additionally supports jogwheel and play button for starting and stopping a sessi
 
 ![In Action](site/images/ButtonsAndLightGuide.png)
 
+Chose your favorite lightguide colors or work with the defaults.
+
+![Lightguide Setup](site/images/Setup_Dialog.png)
+
 ## Setup
 
 You first need to configure your system and Synthesia to support our way of routing the lighting information to KompleteSynthesia. Please follow [SETUP.md](SETUP.md).
