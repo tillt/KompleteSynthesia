@@ -10,13 +10,15 @@
 
 #import "ColorField.h"
 
+/// Provides the functionality of a palette selector.
+
+const CGFloat kBorderSize = 7.0;
+
 @interface PaletteViewController ()
 
 @end
 
 @implementation PaletteViewController
-{
-}
 
 - (void)viewDidLoad
 {
@@ -25,8 +27,8 @@
     const int tileCountHorizontal = 4;
     const int tileCountVertical = 18;
     
-    const CGFloat width = self.view.frame.size.width - 14.0;
-    const CGFloat height = self.view.frame.size.height - 14.0;
+    const CGFloat width = self.view.frame.size.width - (kBorderSize * 2);
+    const CGFloat height = self.view.frame.size.height - (kBorderSize * 2);
     CGSize tileSize = CGSizeMake(floorf(width / tileCountHorizontal),
                                  floorf(height / tileCountVertical));
 
@@ -38,8 +40,8 @@
             const unsigned char keyColor = (index / 4) + 1;
             assert(keyColor <= 17);
             const unsigned char selectableKeyState = (keyColor << 2) | keyIntensity;
-            ColorField* colorField = [[ColorField alloc] initWithFrame:CGRectMake(self.view.frame.size.width - (((w + 1) * tileSize.width) + 7.0),
-                                                                                  self.view.frame.size.height - (((h + 1) * tileSize.height) + 7.0),
+            ColorField* colorField = [[ColorField alloc] initWithFrame:CGRectMake(self.view.frame.size.width - (((w + 1) * tileSize.width) + kBorderSize),
+                                                                                  self.view.frame.size.height - (((h + 1) * tileSize.height) + kBorderSize),
                                                                                   tileSize.width,
                                                                                   tileSize.height)];
             colorField.keyState = selectableKeyState;
@@ -51,8 +53,8 @@
         }
     }
 
-    ColorField* colorField = [[ColorField alloc] initWithFrame:CGRectMake(7.0,
-                                                                          7.0,
+    ColorField* colorField = [[ColorField alloc] initWithFrame:CGRectMake(kBorderSize,
+                                                                          kBorderSize,
                                                                           tileSize.width,
                                                                           tileSize.height)];
     colorField.keyState = 0;

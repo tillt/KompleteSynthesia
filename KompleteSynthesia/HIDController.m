@@ -24,6 +24,9 @@ const uint8_t kKompleteKontrolKeyStateLightOff = 0x00;
 
 // We have 16 colors, accross the rainbow, with 4 levels of intensity.
 // Additionally, there is white (sort of), again with 4 levels of intensity.
+const size_t kKompleteKontrolColorCount = 17;
+const size_t kKompleteKontrolColorIntensityLevelCount = 4;
+
 const uint8_t kKompleteKontrolColorRed = 0x04;
 const uint8_t kKompleteKontrolColorOrange = 0x08;
 const uint8_t kKompleteKontrolColorYellow = 0x10;
@@ -122,12 +125,12 @@ enum {
     kKompleteKontrolButtonIndexStrip24 = 68,
 };
 
+// Funky defaults - users might hate me - but I like orange, eat it!
 const uint8_t kKeyColorUnpressed = kKompleteKontrolColorOrange;
 const uint8_t kKeyColorPressed = kKompleteKontrolColorLightOrange;
 
-const float kLightsSwoopDelay = 0.01;
-const float kLightsSwooshTick = 0.02;
-const float kLightsSwooshDelay = 0.4;
+const float kLightsSwooshTick = 1.0f / 24.0;
+//const float kLightsSwooshTick = 1.0f ;
 
 const size_t kInputBufferSize = 64;
 
@@ -175,6 +178,45 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     // FIXME: This may need double-buffering, not sure.
     unsigned char inputBuffer[kInputBufferSize];
     IOHIDDeviceRef device;
+}
+
++ (NSColor*)colorWithKeyState:(const unsigned char)keyState
+{
+    if (keyState < kKompleteKontrolColorIntensityLevelCount) {
+        return [NSColor blackColor];
+    }
+  
+    const int intensityShift = 5;
+    const int intensityDivider = intensityShift + 3;
+    const unsigned char colorIndex = ((keyState >> 2) - 1) % kKompleteKontrolColorCount;
+    const unsigned char colorIntensity = (keyState & kKompleteKontrolIntensityMask) + intensityShift;
+
+    // TODO: This is just a very rough, initial approximation of the actual palette of the S-series controllers.
+    const unsigned char palette[17][3] = {
+        { 0xFF, 0x00, 0x00 },   // 0: red
+        { 0xFF, 0x3F, 0x00 },   // 1:
+        { 0xFF, 0x7F, 0x00 },   // 2: orange
+        { 0xFF, 0xCF, 0x00 },   // 3: orange-yellow
+        { 0xFF, 0xFF, 0x00 },   // 4: yellow
+        { 0x7F, 0xFF, 0x00 },   // 5: green-yellow
+        { 0x00, 0xFF, 0x00 },   // 6: green
+        { 0x00, 0xFF, 0x7F },   // 7:
+        { 0x00, 0xFF, 0xFF },   // 8:
+        { 0x00, 0x7F, 0xFF },   // 9:
+        { 0x00, 0x00, 0xFF },   // 10: blue
+        { 0x3F, 0x00, 0xFF },   // 11:
+        { 0x7F, 0x00, 0xFF },   // 12: purple
+        { 0xFF, 0x00, 0xFF },   // 13: pink
+        { 0xFF, 0x00, 0x7F },   // 14:
+        { 0xFF, 0x00, 0x3F },   // 15:
+        { 0xFF, 0xFF, 0xFF }    // 16: white
+    };
+    
+    // FIXME: This intensity simulation only really works for white - racist shit!
+    return [NSColor colorWithRed:(((float)palette[colorIndex][0] / 255.0f) * colorIntensity) / intensityDivider
+                           green:(((float)palette[colorIndex][1] / 255.0f) * colorIntensity) / intensityDivider
+                            blue:(((float)palette[colorIndex][2] / 255.0f) * colorIntensity) / intensityDivider
+                           alpha:1.0f];
 }
 
 - (id)initWithDelegate:(id)delegate error:(NSError**)error
@@ -483,11 +525,8 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
 static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsigned char endState)
 {
-    if (lightUp == NO && keyState == endState) {
-        return keyState;
-    }
-    if (lightUp == YES && keyState == endState) {
-        return keyState;
+    if (keyState == endState) {
+        return endState;
     }
 
     const unsigned char keyColor = keyState & kKompleteKontrolColorMask;
@@ -516,63 +555,62 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
         const int midIndex = self.keyCount / 2;
 
         // Total number of ticks this animation will be using.
-        const unsigned int lastTick = midIndex * midIndex;
+        const unsigned int rainbowDuration = 10;
+        const unsigned int fadeDuration = midIndex;
+        const unsigned int totalDuration = rainbowDuration + fadeDuration;
+        const unsigned long int lastTick = midIndex * totalDuration;
         // Animation tick to start fading into final state.
-        const unsigned int fadeTick = lastTick - (midIndex + 4);
+        const unsigned long int fadeTick = midIndex * rainbowDuration;
 
-        BOOL needsUpdate = YES;
+        const unsigned char rainbowIntensity = kKompleteKontrolIntensityMedium;
         
-        for (unsigned int key=0;key < self.keyCount;key++) {
-            self.keys[key] = (self.keys[key] & 0xFC) | 0x3;
+        // No color but some intensity - in preparation of the rainbow.
+        for (unsigned int key = 0;key < self.keyCount;key++) {
+            self.keys[key] = rainbowIntensity;
         }
         
-        for (unsigned int tick=0;tick < lastTick;tick++) {
-            unsigned int index = tick % midIndex;
+        const BOOL lightsUp = (unpressedKeyState & kKompleteKontrolIntensityMask) >= rainbowIntensity;
 
-            BOOL rainbow = YES;
-
-            if (tick >= fadeTick) {
-                rainbow = self.keys[index] != unpressedKeyState;
-            }
-            if (rainbow) {
-                // Rainbow scrolling.
-                unsigned int intensity = self.keys[index] & kKompleteKontrolIntensityMask;
-                unsigned int offset = tick / midIndex;
-                unsigned int colorCode = (((index + offset) % 16) + 1) << 2;
-                colorCode = MIN(colorCode, kKompleteKontrolColorMask);
-                if (tick < lastTick - midIndex)  {
-                    intensity = 0;
-                }
-                self.keys[index] = colorCode | intensity;
-                self.keys[self.keyCount - index] = colorCode | intensity;
-                
-                if (index == 0) {
-                    needsUpdate = YES;
-                }
-            }
+        for (unsigned long int tick=0;tick < lastTick;tick++) {
+            const unsigned int keyIndex = tick % (midIndex + 1);
             if (tick >= fadeTick)  {
                 // Fade into final state.
-                unsigned int index = tick - fadeTick;
-                for(unsigned int w = 0;w < 8;w++) {
-                    if (index >= w) {
-                        const int i = MIN(index - w, midIndex);
-                        self.keys[midIndex + i] = dimmedKeyState(self.keys[midIndex + i],
-                                                                 unpressedKeyState != kKompleteKontrolKeyStateLightOff,
-                                                                 unpressedKeyState);
-                        self.keys[midIndex - i] = dimmedKeyState(self.keys[midIndex - i],
-                                                                 unpressedKeyState != kKompleteKontrolKeyStateLightOff,
-                                                                 unpressedKeyState);
-                    }
+                const unsigned int keysPerShade = 4;
+                const unsigned long normalizedTick = tick - fadeTick;
+                const unsigned long round = normalizedTick / midIndex;
+                if (keyIndex < round * keysPerShade) {
+                    self.keys[midIndex + keyIndex] = dimmedKeyState(self.keys[midIndex + keyIndex],
+                                                                    lightsUp,
+                                                                    unpressedKeyState);
+                    self.keys[midIndex - keyIndex] = dimmedKeyState(self.keys[midIndex - keyIndex],
+                                                                    lightsUp,
+                                                                    unpressedKeyState);
                 }
-                needsUpdate = YES;
             }
-            if (needsUpdate) {
+            // Don't touch lights that reached final state.
+            if (self.keys[keyIndex] != unpressedKeyState || tick < fadeTick) {
+                // Rainbow scrolling.
+                const unsigned long round = tick / midIndex;
+                const unsigned int keysPerColor = 4;
+                const unsigned int rollStepsPerRound = 4;
+                const unsigned long phase = (keyIndex + (round * rollStepsPerRound)) / keysPerColor;
+                // Exclude the last color in the palette, white.
+                const unsigned int colorIndex = phase % (kKompleteKontrolColorCount - 1);
+                unsigned int colorCode = (colorIndex + 1) << 2;
+                colorCode = MIN(colorCode, kKompleteKontrolColorMask);
+                const unsigned int intensity = self.keys[keyIndex] & kKompleteKontrolIntensityMask;
+                self.keys[keyIndex] = colorCode | intensity;
+                self.keys[(self.keyCount - 1) - keyIndex] = colorCode | intensity;
+            }
+            // Once we are starting a new round of shading, we can display the old one.
+            if (keyIndex == 0) {
                 [self updateLightGuideMap:nil];
                 [NSThread sleepForTimeInterval:kLightsSwooshTick];
-                
-                needsUpdate = NO;
             }
         }
+        // FIXME: This shouldnt be needed - but it is right now.
+        // Assert final state on all keys - if the above left some garbage.
+        [self lightKeysWithColor:unpressedKeyState];
     });
 }
 

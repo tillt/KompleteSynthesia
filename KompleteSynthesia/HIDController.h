@@ -6,6 +6,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <Appkit/Appkit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -20,6 +21,9 @@ extern const unsigned char kKompleteKontrolColorRed;
 
 extern const uint8_t kKeyColorUnpressed;
 extern const uint8_t kKeyColorPressed;
+
+extern const size_t kKompleteKontrolColorCount;
+extern const size_t kKompleteKontrolColorIntensityLevelCount;
 
 enum {
     KKBUTTON_PLAY,
@@ -48,6 +52,8 @@ enum {
 @property (nonatomic, assign) int keyOffset;
 @property (nonatomic, assign) unsigned int keyCount;
 @property (nonatomic, weak) id<HIDControllerDelegate> delegate;
+
++ (NSColor*)colorWithKeyState:(const unsigned char)keyState;
 
 - (id)initWithDelegate:(id)delegate error:(NSError**)error;
 - (void)lightKey:(int)note color:(unsigned char)color;

@@ -19,8 +19,6 @@ NS_ASSUME_NONNULL_BEGIN
 // FIXME: System provided attributes might be a better choice.
 @property (nonatomic, assign) BOOL rounded;
 
-+ (NSColor*)colorWithKeyState:(const unsigned char)keyState;
-
 @end
 
 NS_ASSUME_NONNULL_END
