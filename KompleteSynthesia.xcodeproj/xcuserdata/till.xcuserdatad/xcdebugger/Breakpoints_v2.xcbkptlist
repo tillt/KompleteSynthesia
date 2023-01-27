@@ -23,16 +23,32 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "39203D17-FAD7-4652-897A-564D9C9C7D9A"
+            uuid = "B7CB7E7D-F4D8-414B-BB58-F3062E308DE3"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "KompleteSynthesia/HIDController.m"
+            filePath = "KompleteSynthesia/MIDI2HIDController.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "326"
-            endingLineNumber = "326"
-            landmarkName = "-receivedReport:"
+            startingLineNumber = "386"
+            endingLineNumber = "386"
+            landmarkName = "-receivedEvent:value:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F4841C35-DAA0-4AFA-892D-AD8A8249EA85"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "KompleteSynthesia/MIDI2HIDController.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "388"
+            endingLineNumber = "388"
+            landmarkName = "-receivedEvent:value:"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

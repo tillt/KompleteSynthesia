@@ -6,22 +6,15 @@
 //
 
 #import "MIDI2HIDController.h"
+
 #import <CoreFoundation/CoreFoundation.h>
 #import <CoreMIDI/CoreMIDI.h>
 #import <CoreServices/CoreServices.h>
+#import <Carbon/Carbon.h>
+
 #import "LogViewController.h"
 #import "SynthesiaController.h"
 
-const CGKeyCode kVK_ANSI_Z = 0x06;
-const CGKeyCode kVK_ANSI_X = 0x07;
-const CGKeyCode kVK_Return = 0x24;
-const CGKeyCode kVK_Space = 0x31;
-const CGKeyCode kVK_PageUp = 0x74;
-const CGKeyCode kVK_F1 = 0x7A;
-const CGKeyCode kVK_F2 = 0x78;
-const CGKeyCode kVK_F3 = 0x63;
-const CGKeyCode kVK_F4 = 0x76;
-const CGKeyCode kVK_PageDown = 0x79;
 const CGKeyCode kVK_ArrowLeft = 0x7B;
 const CGKeyCode kVK_ArrowRight = 0x7C;
 const CGKeyCode kVK_ArrowDown = 0x7D;
@@ -387,6 +380,13 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         case KKBUTTON_SCROLL:
             [log logLine:@"SCROLL -> sending mouse WHEEL"];
             [SynthesiaController triggerVirtualMouseWheelEvent:-value];
+            break;
+        case KKBUTTON_VOLUME:
+            if (value > 0) {
+                [SynthesiaController triggerVirtualAuxKeyEvents:0];
+            } else if (value < 0) {
+                [SynthesiaController triggerVirtualAuxKeyEvents:1];
+            }
             break;
     }
 }

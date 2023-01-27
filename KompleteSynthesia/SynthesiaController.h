@@ -23,13 +23,14 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)synthesiaRunning;
 + (BOOL)synthesiaHasFocus;
 + (void)triggerVirtualKeyEvents:(CGKeyCode)keyCode;
++ (void)triggerVirtualAuxKeyEvents:(uint32_t)keyCode;
 + (void)triggerVirtualMouseWheelEvent:(int)distance;
 
 + (NSString*)status;
 
 - (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate error:(NSError**)error;
 - (BOOL)assertMultiDeviceConfig:(NSError**)error message:(NSString*_Nullable *_Nullable)message;
-
+//- (void)adjustVolumeByDelta:(int)delta;
 @end
 
 NS_ASSUME_NONNULL_END

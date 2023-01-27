@@ -62,6 +62,39 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     CFRelease(up);
 }
 
++ (void)triggerVirtualAuxKeyEvents:(uint32_t)key
+{
+    NSEventModifierFlags flags = 0xa00;
+    uint32_t data1 = (key << 16) | (uint32_t)flags;
+    
+    NSEvent* ev = [NSEvent otherEventWithType:NSEventTypeSystemDefined
+                                     location:NSMakePoint(0.0f, 0.0f)
+                                modifierFlags:flags
+                                    timestamp:0
+                                 windowNumber:0
+                                      context:nil
+                                      subtype:8
+                                        data1:data1
+                                        data2:-1];
+    
+    CGEventPost(kCGHIDEventTap, ev.CGEvent);
+    
+    flags = 0xb00;
+    data1 = (key << 16) | (uint32_t)flags;
+    
+    ev = [NSEvent otherEventWithType:NSEventTypeSystemDefined
+                             location:NSMakePoint(0.0f, 0.0f)
+                        modifierFlags:flags
+                            timestamp:0
+                         windowNumber:0
+                              context:nil
+                              subtype:8
+                                data1:data1
+                                data2:-1];
+
+    CGEventPost(kCGHIDEventTap, ev.CGEvent);
+}
+
 + (void)triggerVirtualMouseWheelEvent:(int)distance
 {
     NSLog(@"sending virtual mouse wheel event with delta:%d", distance);

@@ -134,7 +134,7 @@ const float kLightsSwooshTick = 1.0f / 24.0;
 
 const size_t kInputBufferSize = 64;
 
-//#define DEBUG_HID_INPUT
+#define DEBUG_HID_INPUT
 
 static void HIDInputCallback(void* context,
                              IOReturn result,
@@ -308,10 +308,8 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         NSLog(@"ignoring report %02Xh", report[0]);
         return;
     }
-
-    static int lastValue = 0;
-    
-    int delta = report[30] - lastValue;
+    static int lastJogWheelValue = 0;
+    int delta = report[30] - lastJogWheelValue;
     if (delta == 15) {
         delta = -1;
     } else if (delta == -15) {
@@ -320,7 +318,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     if (delta != 0) {
         [_delegate receivedEvent:KKBUTTON_SCROLL value:delta];
     }
-    lastValue = report[30];
+    lastJogWheelValue = report[30];
     
     // TODO: Consider making use of some clever mapping for slicker code.
     if (report[1] == 0x10) {
@@ -373,6 +371,18 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     }
     if (report[6] == 0x0C) {
         [_delegate receivedEvent:KKBUTTON_ENTER value:0];
+        return;
+    }
+    if (report[7] == 0x01) {
+        static int lastVolumeKnobValue = INTMAX_C(16);
+        const int newValue = *(int*)&report[24];
+        if (lastVolumeKnobValue != INTMAX_C(16)) {
+            int delta = newValue - lastVolumeKnobValue;
+            if (delta != 0) {
+                [_delegate receivedEvent:KKBUTTON_VOLUME value:delta];
+            }
+        }
+        lastVolumeKnobValue = newValue;
         return;
     }
 }
