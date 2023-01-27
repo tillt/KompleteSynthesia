@@ -56,9 +56,8 @@
    
     // Hide application icon.
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
-    
+
     self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
-    
     self.statusItem.button.action = @selector(showStatusMenu:);
     [self.statusItem.button sendActionOn:NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown];
     
@@ -89,7 +88,12 @@
     _preferences.synthesia = _synthesia;
     _preferences.midi2hid = _midi2hidController;
     NSWindow* window = [_preferences window];
-    [window makeKeyAndOrderFront:self];
+    
+    // We need to do some trickery here as the Application itself has no window. Not sure
+    // if this really works in all cases but it does for me, so far.
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    [window makeKeyAndOrderFront:sender];
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:NO];
 }
 
 - (void)showStatusMenu:(id)sender
