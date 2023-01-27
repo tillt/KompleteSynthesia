@@ -15,10 +15,15 @@
 		BB49B3B9295CC8AF00D18605 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = BB49B3B8295CC8AF00D18605 /* main.m */; };
 		BB49B3C3295CC91000D18605 /* LogViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB49B3C1295CC91000D18605 /* LogViewController.m */; };
 		BB49B3C4295CC91000D18605 /* LogViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB49B3C2295CC91000D18605 /* LogViewController.xib */; };
+		BB76A1A4297B333D00A869D8 /* PreferencesWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB76A1A2297B333D00A869D8 /* PreferencesWindowController.m */; };
+		BB76A1A5297B333D00A869D8 /* PreferencesWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB76A1A3297B333D00A869D8 /* PreferencesWindowController.xib */; };
+		BB7AB63E298042530081B05E /* ColorField.m in Sources */ = {isa = PBXBuildFile; fileRef = BB7AB63D298042530081B05E /* ColorField.m */; };
+		BB7AB64229807A700081B05E /* PaletteViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB7AB64029807A700081B05E /* PaletteViewController.m */; };
+		BB7AB64329807A700081B05E /* PaletteViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB7AB64129807A700081B05E /* PaletteViewController.xib */; };
+		BB7AB6482981E6690081B05E /* SETUP.md in Resources */ = {isa = PBXBuildFile; fileRef = BB7AB6472981E6690081B05E /* SETUP.md */; };
 		BB8570FA2971935B0004218B /* SynthesiaController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB8570F92971935B0004218B /* SynthesiaController.m */; };
-		BB8570FC2971AD980004218B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = BB8570FB2971AD980004218B /* README.md */; };
-		BB8570FE2971ED4B0004218B /* SETUP.md in Resources */ = {isa = PBXBuildFile; fileRef = BB8570FD2971ED4A0004218B /* SETUP.md */; };
 		BBA0166929611D1D0018B2DB /* MIDI2HIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */; };
+		BBB5EFAF29738E6F00C1BAC3 /* USBController.m in Sources */ = {isa = PBXBuildFile; fileRef = BBB5EFAE29738E6F00C1BAC3 /* USBController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,12 +42,22 @@
 		BB49B3C0295CC91000D18605 /* LogViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LogViewController.h; sourceTree = "<group>"; };
 		BB49B3C1295CC91000D18605 /* LogViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LogViewController.m; sourceTree = "<group>"; };
 		BB49B3C2295CC91000D18605 /* LogViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LogViewController.xib; sourceTree = "<group>"; };
+		BB76A1A1297B333D00A869D8 /* PreferencesWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PreferencesWindowController.h; sourceTree = "<group>"; };
+		BB76A1A2297B333D00A869D8 /* PreferencesWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PreferencesWindowController.m; sourceTree = "<group>"; };
+		BB76A1A3297B333D00A869D8 /* PreferencesWindowController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PreferencesWindowController.xib; sourceTree = "<group>"; };
+		BB7AB63C298042520081B05E /* ColorField.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ColorField.h; sourceTree = "<group>"; };
+		BB7AB63D298042530081B05E /* ColorField.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ColorField.m; sourceTree = "<group>"; };
+		BB7AB63F29807A700081B05E /* PaletteViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PaletteViewController.h; sourceTree = "<group>"; };
+		BB7AB64029807A700081B05E /* PaletteViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PaletteViewController.m; sourceTree = "<group>"; };
+		BB7AB64129807A700081B05E /* PaletteViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PaletteViewController.xib; sourceTree = "<group>"; };
+		BB7AB6462981E6520081B05E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+		BB7AB6472981E6690081B05E /* SETUP.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = SETUP.md; sourceTree = SOURCE_ROOT; };
 		BB8570F82971935B0004218B /* SynthesiaController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SynthesiaController.h; sourceTree = "<group>"; };
 		BB8570F92971935B0004218B /* SynthesiaController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SynthesiaController.m; sourceTree = "<group>"; };
-		BB8570FB2971AD980004218B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
-		BB8570FD2971ED4A0004218B /* SETUP.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = SETUP.md; sourceTree = SOURCE_ROOT; };
 		BBA0166729611D1D0018B2DB /* MIDI2HIDController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MIDI2HIDController.h; sourceTree = "<group>"; };
 		BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MIDI2HIDController.m; sourceTree = "<group>"; };
+		BBB5EFAD29738E6F00C1BAC3 /* USBController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = USBController.h; sourceTree = "<group>"; };
+		BBB5EFAE29738E6F00C1BAC3 /* USBController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = USBController.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,25 +93,51 @@
 				BB31821A2967C85F005EB410 /* Info.plist */,
 				BB49B3B0295CC8AE00D18605 /* AppDelegate.h */,
 				BB49B3B1295CC8AE00D18605 /* AppDelegate.m */,
-				BB49B3C0295CC91000D18605 /* LogViewController.h */,
-				BB49B3C1295CC91000D18605 /* LogViewController.m */,
+				BB7AB64429807A980081B05E /* Documentation */,
+				BB7AB6452981E1680081B05E /* UI */,
 				BBA0166729611D1D0018B2DB /* MIDI2HIDController.h */,
 				BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */,
 				BB3182172967A037005EB410 /* HIDController.h */,
 				BB3182182967A037005EB410 /* HIDController.m */,
+				BBB5EFAD29738E6F00C1BAC3 /* USBController.h */,
+				BBB5EFAE29738E6F00C1BAC3 /* USBController.m */,
 				BB31821429679983005EB410 /* MIDIController.h */,
 				BB31821529679983005EB410 /* MIDIController.m */,
 				BB8570F82971935B0004218B /* SynthesiaController.h */,
 				BB8570F92971935B0004218B /* SynthesiaController.m */,
-				BB49B3C2295CC91000D18605 /* LogViewController.xib */,
-				BB49B3B3295CC8AF00D18605 /* Assets.xcassets */,
-				BB49B3B5295CC8AF00D18605 /* MainMenu.xib */,
 				BB49B3B8295CC8AF00D18605 /* main.m */,
 				BB49B3BA295CC8AF00D18605 /* KompleteSynthesia.entitlements */,
-				BB8570FB2971AD980004218B /* README.md */,
-				BB8570FD2971ED4A0004218B /* SETUP.md */,
 			);
 			path = KompleteSynthesia;
+			sourceTree = "<group>";
+		};
+		BB7AB64429807A980081B05E /* Documentation */ = {
+			isa = PBXGroup;
+			children = (
+				BB7AB6472981E6690081B05E /* SETUP.md */,
+				BB7AB6462981E6520081B05E /* README.md */,
+			);
+			name = Documentation;
+			sourceTree = "<group>";
+		};
+		BB7AB6452981E1680081B05E /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				BB49B3B5295CC8AF00D18605 /* MainMenu.xib */,
+				BB49B3B3295CC8AF00D18605 /* Assets.xcassets */,
+				BB49B3C0295CC91000D18605 /* LogViewController.h */,
+				BB49B3C1295CC91000D18605 /* LogViewController.m */,
+				BB49B3C2295CC91000D18605 /* LogViewController.xib */,
+				BB76A1A1297B333D00A869D8 /* PreferencesWindowController.h */,
+				BB76A1A2297B333D00A869D8 /* PreferencesWindowController.m */,
+				BB76A1A3297B333D00A869D8 /* PreferencesWindowController.xib */,
+				BB7AB63F29807A700081B05E /* PaletteViewController.h */,
+				BB7AB64029807A700081B05E /* PaletteViewController.m */,
+				BB7AB64129807A700081B05E /* PaletteViewController.xib */,
+				BB7AB63C298042520081B05E /* ColorField.h */,
+				BB7AB63D298042530081B05E /* ColorField.m */,
+			);
+			name = UI;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -156,10 +197,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB7AB6482981E6690081B05E /* SETUP.md in Resources */,
 				BB49B3C4295CC91000D18605 /* LogViewController.xib in Resources */,
+				BB76A1A5297B333D00A869D8 /* PreferencesWindowController.xib in Resources */,
 				BB49B3B4295CC8AF00D18605 /* Assets.xcassets in Resources */,
-				BB8570FC2971AD980004218B /* README.md in Resources */,
-				BB8570FE2971ED4B0004218B /* SETUP.md in Resources */,
+				BB7AB64329807A700081B05E /* PaletteViewController.xib in Resources */,
 				BB49B3B7295CC8AF00D18605 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -171,12 +213,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BBB5EFAF29738E6F00C1BAC3 /* USBController.m in Sources */,
 				BB8570FA2971935B0004218B /* SynthesiaController.m in Sources */,
+				BB7AB63E298042530081B05E /* ColorField.m in Sources */,
 				BB49B3B9295CC8AF00D18605 /* main.m in Sources */,
 				BB3182192967A037005EB410 /* HIDController.m in Sources */,
+				BB7AB64229807A700081B05E /* PaletteViewController.m in Sources */,
 				BB31821629679983005EB410 /* MIDIController.m in Sources */,
 				BB49B3B2295CC8AE00D18605 /* AppDelegate.m in Sources */,
 				BB49B3C3295CC91000D18605 /* LogViewController.m in Sources */,
+				BB76A1A4297B333D00A869D8 /* PreferencesWindowController.m in Sources */,
 				BBA0166929611D1D0018B2DB /* MIDI2HIDController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -329,7 +375,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.21;
+				MARKETING_VERSION = 0.40;
 				PRODUCT_BUNDLE_IDENTIFIER = tillt.KompleteSynthesia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -362,7 +408,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.21;
+				MARKETING_VERSION = 0.40;
 				PRODUCT_BUNDLE_IDENTIFIER = tillt.KompleteSynthesia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

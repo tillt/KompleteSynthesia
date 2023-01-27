@@ -35,7 +35,7 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
 
 + (NSString*)OSStatusString:(int)status
 {
-    char fourcc[8];
+    char fourcc[8] = {};
     NSString* message;
 
     // See if it appears to be a 4-char-code.
@@ -58,6 +58,8 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     self = [super init];
     if (self) {
         _delegate = delegate;
+        portLight = 0;
+        portKeyboard = 0;
         
         OSStatus status = MIDIClientCreateWithBlock((CFStringRef)@"KompleteSynthesia",
                                                     &client,
@@ -209,14 +211,12 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
                 }
                 connectedToKeyboard = YES;
             }
-            if (connectedToKeyboard &&
-                connectedToLightLoopback) {
-                connected = YES;
-                return YES;
-            }
         }
     }
-    return NO;
+    if (connectedToLightLoopback) {
+        connected = YES;
+    }
+    return connected;
 }
 
 - (void)receivedMIDIEvents:(const MIDIEventList*)eventList interface:(unsigned char)interface
@@ -233,13 +233,11 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
                 unsigned char param1 = (packet->words[w] & 0x0000FF00) >> 8;
                 unsigned char param2 = packet->words[w] & 0x000000FF;
 
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self.delegate receivedMIDIEvent:cvStatus
-                                             channel:channel
-                                              param1:param1
-                                              param2:param2
-                                           interface:interface];
-                });
+                [self.delegate receivedMIDIEvent:cvStatus
+                                         channel:channel
+                                          param1:param1
+                                          param2:param2
+                                       interface:interface];
             }
         }
         packet = MIDIEventPacketNext(packet);

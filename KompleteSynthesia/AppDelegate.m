@@ -8,7 +8,7 @@
 #import "AppDelegate.h"
 #import "MIDI2HIDController.h"
 #import "LogViewController.h"
-#import "SynthesiaController.h"
+#import "PreferencesWindowController.h"
 
 @interface AppDelegate ()
 
@@ -16,6 +16,7 @@
 @property (nonatomic, strong) MIDI2HIDController* midi2hidController;
 @property (nonatomic, strong) LogViewController* logViewController;
 @property (nonatomic, strong) SynthesiaController* synthesia;
+@property (nonatomic, strong) PreferencesWindowController* preferences;
 
 @property (nonatomic, strong) NSPopover *popover;
 @property (nonatomic, strong) NSMenu *statusMenu;
@@ -27,21 +28,36 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
-    
     NSError* error = nil;
-    _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController error:&error];
+
+    _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
+
+    _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
+                                                               delegate:self
+                                                                  error:&error];
+    if (_synthesia == nil) {
+        [[NSAlert alertWithError:error] runModal];
+        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+        return;
+    }
+
+    _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController
+                                                                   delegate:self
+                                                                      error:&error];
     if (_midi2hidController == nil) {
         [[NSAlert alertWithError:error] runModal];
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;
     }
     
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults registerDefaults:@{@"forward_buttons_to_synthesia_only": @(YES)}];
+    _midi2hidController.forwardButtonsToSynthesiaOnly = [userDefaults boolForKey:@"forward_buttons_to_synthesia_only"];
+   
     // Hide application icon.
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
-    
+
     self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
-    
     self.statusItem.button.action = @selector(showStatusMenu:);
     [self.statusItem.button sendActionOn:NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown];
     
@@ -53,6 +69,8 @@
     [menu addItemWithTitle:_midi2hidController.hidStatus action:nil keyEquivalent:@""];
     [menu addItemWithTitle:[SynthesiaController status] action:nil keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
+    [menu addItemWithTitle:@"Settings" action:@selector(preferences:) keyEquivalent:@""];
+    [menu addItem:[NSMenuItem separatorItem]];
     [menu addItemWithTitle:@"Reset" action:@selector(reset:) keyEquivalent:@""];
     [menu addItemWithTitle:@"Show Log" action:@selector(showLog:) keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
@@ -60,8 +78,22 @@
     
     menu.delegate = self;
     self.statusMenu = menu;
+}
+
+- (void)preferences:(id)sender
+{
+    if (_preferences == nil) {
+        _preferences = [[PreferencesWindowController alloc] initWithWindowNibName:@"PreferencesWindowController"];
+    }
+    _preferences.synthesia = _synthesia;
+    _preferences.midi2hid = _midi2hidController;
+    NSWindow* window = [_preferences window];
     
-    _synthesia = [[SynthesiaController alloc] initWithDelegate:self];
+    // We need to do some trickery here as the Application itself has no window. Not sure
+    // if this really works in all cases but it does for me, so far.
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    [window makeKeyAndOrderFront:sender];
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:NO];
 }
 
 - (void)showStatusMenu:(id)sender
@@ -103,6 +135,7 @@
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
+    [_midi2hidController teardown];
 }
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
@@ -114,9 +147,10 @@
 
 - (void)synthesiaStateUpdate:(NSString*)status
 {
-    assert(self.statusMenu.itemArray.count > 1);
-    NSMenuItem* item = self.statusMenu.itemArray[1];
-    item.title = status;
+    if(self.statusMenu.itemArray.count > 1) {
+        NSMenuItem* item = self.statusMenu.itemArray[1];
+        item.title = status;
+    }
 }
 
 @end
