@@ -42,6 +42,7 @@
     }
 
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController
+                                                                   delegate:self
                                                                       error:&error];
     if (_midi2hidController == nil) {
         [[NSAlert alertWithError:error] runModal];

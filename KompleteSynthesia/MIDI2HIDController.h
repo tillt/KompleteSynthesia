@@ -26,6 +26,10 @@ enum {
 
 @class LogViewController;
 
+@protocol MIDI2HIDControllerDelegate <NSObject>
+- (void)preferences:(id)sender;
+@end
+
 @interface MIDI2HIDController : NSObject <MIDIControllerDelegate, HIDControllerDelegate>
 
 @property (copy, nonatomic) NSString* hidStatus;
@@ -34,7 +38,9 @@ enum {
 @property (assign, nonatomic) BOOL forwardButtonsToSynthesiaOnly;
 @property (assign, nonatomic) unsigned char* colors;
 
-- (id)initWithLogController:(LogViewController*)lc error:(NSError**)error;
+@property (nonatomic, weak) id<MIDI2HIDControllerDelegate> delegate;
+
+- (id)initWithLogController:(LogViewController*)lc delegate:(id)delegate error:(NSError**)error;
 - (BOOL)reset:(NSError**)error;
 - (void)teardown;
 - (void)lightsDefault;

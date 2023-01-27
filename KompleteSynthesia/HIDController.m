@@ -249,6 +249,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         _buttons[kKompleteKontrolButtonIndexFunction2] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIndexFunction3] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIndexFunction4] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIndexSetup] = kKompleteKontrolColorBrightWhite;
 
         if ([self updateButtonLightMap:error] == NO) {
             return nil;
@@ -342,16 +343,20 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         [_delegate receivedEvent:KKBUTTON_PLAY value:0];
         return;
     }
-    if (report[6] == 0x44) {
-        [_delegate receivedEvent:KKBUTTON_DOWN value:0];
-        return;
-    }
     if (report[3] == 0x80) {
         [_delegate receivedEvent:KKBUTTON_PAGE_LEFT value:0];
         return;
     }
     if (report[3] == 0x20) {
         [_delegate receivedEvent:KKBUTTON_PAGE_RIGHT value:0];
+        return;
+    }
+    if (report[5] == 0x08) {
+        [_delegate receivedEvent:KKBUTTON_SETUP value:0];
+        return;
+    }
+    if (report[6] == 0x44) {
+        [_delegate receivedEvent:KKBUTTON_DOWN value:0];
         return;
     }
     if (report[6] == 0x24) {

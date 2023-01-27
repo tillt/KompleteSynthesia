@@ -66,11 +66,13 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     unsigned char colorMap[kColorMapSize];
 }
 
-- (id)initWithLogController:(LogViewController*)lc error:(NSError**)error
+- (id)initWithLogController:(LogViewController*)lc delegate:(id)delegate error:(NSError**)error
 {
     self = [super init];
     if (self) {
         log = lc;
+        
+        _delegate = delegate;
 
         NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
 
@@ -318,6 +320,14 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
 - (void)receivedEvent:(const int)event value:(int)value
 {
+    // The SETUP button shall work in all cases as it is not intended to control Synthesia
+    // but KompleteSynthesia.
+    if (event == KKBUTTON_SETUP) {
+        [log logLine:@"SETUP -> opening setup"];
+        [_delegate preferences:self];
+        return;
+    }
+    
     if  (_forwardButtonsToSynthesiaOnly) {
         if (![SynthesiaController synthesiaHasFocus]) {
             [log logLine:@"Synthesia not in foreground"];
@@ -379,7 +389,6 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             [SynthesiaController triggerVirtualMouseWheelEvent:-value];
             break;
     }
-
 }
 
 @end

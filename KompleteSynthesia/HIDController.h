@@ -38,6 +38,7 @@ enum {
     KKBUTTON_FUNCTION2,
     KKBUTTON_FUNCTION3,
     KKBUTTON_FUNCTION4,
+    KKBUTTON_SETUP,
     KKBUTTON_SCROLL
 };
 @protocol HIDControllerDelegate <NSObject>
