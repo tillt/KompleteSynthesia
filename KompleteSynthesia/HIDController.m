@@ -556,27 +556,30 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
 
         // Total number of ticks this animation will be using.
         const unsigned int rainbowDuration = 10;
-        const unsigned int fadeDuration = midIndex;
-        const unsigned int totalDuration = rainbowDuration + fadeDuration;
+        const unsigned int fadeInDuration = midIndex;
+        const unsigned int fadeOutDuration = midIndex;
+        const unsigned int totalDuration = rainbowDuration + fadeInDuration + fadeOutDuration;
         const unsigned long int lastTick = midIndex * totalDuration;
         // Animation tick to start fading into final state.
-        const unsigned long int fadeTick = midIndex * rainbowDuration;
+        const unsigned long int fadeOutTick = midIndex * (rainbowDuration + fadeInDuration);
+        const unsigned long int rainbowTick = midIndex * fadeInDuration;
 
         const unsigned char rainbowIntensity = kKompleteKontrolIntensityMedium;
+
+        // We start dark for groovy effects...
+        [self lightsOff];
         
-        // No color but some intensity - in preparation of the rainbow.
-        for (unsigned int key = 0;key < self.keyCount;key++) {
-            self.keys[key] = rainbowIntensity;
-        }
-        
+        // Depending on the users selection for the unpressed key state color, we need
+        // to ramp up or down the intensity for the fade into the final key state color.
         const BOOL lightsUp = (unpressedKeyState & kKompleteKontrolIntensityMask) >= rainbowIntensity;
 
+        // Animate!
         for (unsigned long int tick=0;tick < lastTick;tick++) {
             const unsigned int keyIndex = tick % (midIndex + 1);
-            if (tick >= fadeTick)  {
+            if (tick >= fadeOutTick)  {
                 // Fade into final state.
                 const unsigned int keysPerShade = 4;
-                const unsigned long normalizedTick = tick - fadeTick;
+                const unsigned long normalizedTick = tick - fadeOutTick;
                 const unsigned long round = normalizedTick / midIndex;
                 if (keyIndex < round * keysPerShade) {
                     self.keys[midIndex + keyIndex] = dimmedKeyState(self.keys[midIndex + keyIndex],
@@ -587,8 +590,21 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
                                                                     unpressedKeyState);
                 }
             }
+            if (tick < rainbowTick)  {
+                // Fade into rainbow.
+                const unsigned int keysPerShade = 4;
+                const unsigned long round = tick / midIndex;
+                if (keyIndex < round * keysPerShade) {
+                    self.keys[keyIndex] = dimmedKeyState(self.keys[keyIndex],
+                                                         YES,
+                                                         (self.keys[keyIndex] & 0xfc) | rainbowIntensity);
+                    self.keys[(self.keyCount - 1) - keyIndex] = dimmedKeyState(self.keys[(self.keyCount - 1) - keyIndex],
+                                                                               YES,
+                                                                               (self.keys[(self.keyCount - 1) - keyIndex] & 0xfc) | rainbowIntensity);
+                }
+            }
             // Don't touch lights that reached final state.
-            if (self.keys[keyIndex] != unpressedKeyState || tick < fadeTick) {
+            if ((self.keys[keyIndex] != unpressedKeyState && tick < fadeOutTick) && self.keys[keyIndex] > 0x00) {
                 // Rainbow scrolling.
                 const unsigned long round = tick / midIndex;
                 const unsigned int keysPerColor = 4;

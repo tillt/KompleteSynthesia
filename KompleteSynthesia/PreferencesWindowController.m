@@ -121,6 +121,12 @@
         }
     } else {
         [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"initial_synthesia_config_assert_done"];
+        if (message != nil) {
+            NSAlert* alert = [NSAlert new];
+            alert.messageText = message;
+            alert.alertStyle = NSAlertStyleInformational;
+            [alert runModal];
+        }
     }
 }
 

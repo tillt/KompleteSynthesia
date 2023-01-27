@@ -15,7 +15,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 
 @implementation SynthesiaController {
     BOOL needsConfigurationPatch;
-    BOOL dataformatExpected;
+    BOOL dataFormatExpected;
     LogViewController* log;
 }
 
@@ -83,7 +83,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     if (self) {
         _delegate = delegate;
         log = logViewController;
-        dataformatExpected = NO;
+        dataFormatExpected = NO;
         needsConfigurationPatch = YES;
 
         [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
@@ -129,12 +129,12 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 - (BOOL)assertMultiDeviceConfig:(NSError**)error message:(NSString*_Nullable *_Nullable)message
 {
     NSOpenPanel* panel = [NSOpenPanel openPanel];
-    panel.title = @"Locate Synthesia setup";
+    panel.title = @"Locate Synthesia configuration file";
     panel.message = @"Please locate and select the Synthesia 'multiDevice.xml' configuration file and activate 'Open' below!";
     panel.directoryURL = [NSURL fileURLWithFileSystemRepresentation:"~/Library/Application Support/Synthesia/multiDevice.xml" isDirectory:NO relativeToURL:nil];
     if ([panel runModal] != NSModalResponseOK) {
         NSLog(@"user canceled file selection");
-        *message = @"User canceled the file selection";
+        *message = @"User canceled the file selection.";
         return NO;
     }
 
@@ -146,18 +146,25 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
         return NO;
     }
     needsConfigurationPatch = YES;
-    
+    dataFormatExpected = NO;
+
     NSXMLParser* parser = [[NSXMLParser alloc] initWithData:data];
     [parser setDelegate:self];
+    
     if ([parser parse] == NO) {
         *error = [parser parserError];
         NSLog(@"Error %@", *error);
         return NO;
     }
-    [log logLine:@"parsed Synthesia configuration"];
 
+    if (dataFormatExpected == NO) {
+        *message = @"Synthesia configuration file does not seem to be valid - did you select the right file?";
+        [log logLine:*message];
+        return NO;
+    }
+    
     if (!needsConfigurationPatch) {
-        *message = @"configuration seems fine as is, no patch needed";
+        *message = @"Synthesia configuration file seems fine as is, no patch needed.";
         [log logLine:*message];
         return YES;
     }
@@ -194,7 +201,8 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
         return NO;
     }
 
-    [log logLine:@"patched Synthesia configuration"];
+    *message = @"Synthesia configuration file patched.";
+    [log logLine:*message];
 
     return YES;
 }
@@ -204,6 +212,13 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 - (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName attributes:(NSDictionary *)attributeDict
 {
     if ([elementName isEqualToString:@"OutputDevice"]) {
+        // We have parsed a valid XML file and that does contain an element called "OutputDevice".
+        // That is hopefully good enough for us to assume that this file is what we hope it to be.
+        // Total minefield that we open here -- could lead to all kinds of catastrophic results
+        // if the user selected some crap. This code should really be re-written or nuked entirely.
+        // This semi-"automated" patching seems super risky while the benefit isnt clear to me.
+        // Hope it helps...
+        dataFormatExpected = YES;
         if ([attributeDict[@"name"] compare:@"IAC Driver LoopBe"] == NSOrderedSame) {
             if ([attributeDict objectForKey:@"enabled"] == nil || [attributeDict[@"enabled"] boolValue] != YES) {
                 NSLog(@"device is not enabled, we need to patch!");

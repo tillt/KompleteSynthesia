@@ -129,8 +129,6 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     }
     [log logLine:[NSString stringWithFormat:@"detected %@ HID device", hid.deviceName]];
 
-    [self lightsDefault];
-
     midi = [[MIDIController alloc] initWithDelegate:self error:error];
     if (midi == nil) {
         return NO;
