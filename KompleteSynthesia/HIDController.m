@@ -130,11 +130,10 @@ const uint8_t kKeyColorUnpressed = kKompleteKontrolColorOrange;
 const uint8_t kKeyColorPressed = kKompleteKontrolColorLightOrange;
 
 const float kLightsSwooshTick = 1.0f / 24.0;
-//const float kLightsSwooshTick = 1.0f ;
 
 const size_t kInputBufferSize = 64;
 
-#define DEBUG_HID_INPUT
+//#define DEBUG_HID_INPUT
 
 static void HIDInputCallback(void* context,
                              IOReturn result,
@@ -302,6 +301,13 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     [_delegate deviceRemoved];
 }
 
+typedef struct {
+    const unsigned char index;
+    const unsigned char value;
+
+    const unsigned int identifier;
+} EventReport;
+
 - (void)receivedReport:(unsigned char*)report
 {
     if (report[0] != 0x01) {
@@ -316,70 +322,43 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         delta = 1;
     }
     if (delta != 0) {
-        [_delegate receivedEvent:KKBUTTON_SCROLL value:delta];
+        [_delegate receivedEvent:KKBUTTON_SCROLL
+                           value:delta];
     }
     lastJogWheelValue = report[30];
     
-    // TODO: Consider making use of some clever mapping for slicker code.
-    if (report[1] == 0x10) {
-        [_delegate receivedEvent:KKBUTTON_FUNCTION1 value:0];
-        return;
+    EventReport keyEvents[] = {
+        { 1, 0x10, KKBUTTON_FUNCTION1 },
+        { 1, 0x20, KKBUTTON_FUNCTION2 },
+        { 1, 0x40, KKBUTTON_FUNCTION3 },
+        { 1, 0x80, KKBUTTON_FUNCTION4 },
+        { 2, 0x10, KKBUTTON_PLAY },
+        { 3, 0x80, KKBUTTON_PAGE_LEFT },
+        { 3, 0x20, KKBUTTON_PAGE_RIGHT },
+        { 5, 0x08, KKBUTTON_SETUP },
+        { 6, 0x44, KKBUTTON_DOWN },
+        { 6, 0x24, KKBUTTON_UP },
+        { 6, 0x14, KKBUTTON_LEFT },
+        { 6, 0x84, KKBUTTON_RIGHT },
+        { 6, 0x0C, KKBUTTON_ENTER },
+    };
+    
+    for (int i=0;i < (sizeof(keyEvents) / sizeof(EventReport));i++) {
+        if (report[keyEvents[i].index] == keyEvents[i].value) {
+            [_delegate receivedEvent:keyEvents[i].identifier
+                               value:0];
+            return;
+        }
     }
-    if (report[1] == 0x20) {
-        [_delegate receivedEvent:KKBUTTON_FUNCTION2 value:0];
-        return;
-    }
-    if (report[1] == 0x40) {
-        [_delegate receivedEvent:KKBUTTON_FUNCTION3 value:0];
-        return;
-    }
-    if (report[1] == 0x80) {
-        [_delegate receivedEvent:KKBUTTON_FUNCTION4 value:0];
-        return;
-    }
-    if (report[2] == 0x10) {
-        [_delegate receivedEvent:KKBUTTON_PLAY value:0];
-        return;
-    }
-    if (report[3] == 0x80) {
-        [_delegate receivedEvent:KKBUTTON_PAGE_LEFT value:0];
-        return;
-    }
-    if (report[3] == 0x20) {
-        [_delegate receivedEvent:KKBUTTON_PAGE_RIGHT value:0];
-        return;
-    }
-    if (report[5] == 0x08) {
-        [_delegate receivedEvent:KKBUTTON_SETUP value:0];
-        return;
-    }
-    if (report[6] == 0x44) {
-        [_delegate receivedEvent:KKBUTTON_DOWN value:0];
-        return;
-    }
-    if (report[6] == 0x24) {
-        [_delegate receivedEvent:KKBUTTON_UP value:0];
-        return;
-    }
-    if (report[6] == 0x14) {
-        [_delegate receivedEvent:KKBUTTON_LEFT value:0];
-        return;
-    }
-    if (report[6] == 0x84) {
-        [_delegate receivedEvent:KKBUTTON_RIGHT value:0];
-        return;
-    }
-    if (report[6] == 0x0C) {
-        [_delegate receivedEvent:KKBUTTON_ENTER value:0];
-        return;
-    }
+    
     if (report[7] == 0x01) {
         static int lastVolumeKnobValue = INTMAX_C(16);
         const int newValue = *(int*)&report[24];
         if (lastVolumeKnobValue != INTMAX_C(16)) {
             int delta = newValue - lastVolumeKnobValue;
             if (delta != 0) {
-                [_delegate receivedEvent:KKBUTTON_VOLUME value:delta];
+                [_delegate receivedEvent:KKBUTTON_VOLUME
+                                   value:delta];
             }
         }
         lastVolumeKnobValue = newValue;
@@ -433,7 +412,9 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
             NSLocalizedDescriptionKey : @"No Native Instruments controller detected",
             NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
         };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                     code:-1
+                                 userInfo:userInfo];
     }
 
     free(devices);
@@ -455,7 +436,9 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
                                              [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:ret
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -463,7 +446,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     memset(inputBuffer, 0, kInputBufferSize);
     IOHIDDeviceScheduleWithRunLoop(device, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
     IOHIDDeviceRegisterInputReportCallback(device, inputBuffer, sizeof(inputBuffer), HIDInputCallback, (__bridge void*)self);
-        
+    
     ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, kKompleteKontrolInit[0], kKompleteKontrolInit, sizeof(kKompleteKontrolInit));
     if (ret != kIOReturnSuccess) {
         if (error != nil) {
@@ -472,7 +455,9 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
                                              [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:ret
+                                     userInfo:userInfo];
         }
         return NO;
     }

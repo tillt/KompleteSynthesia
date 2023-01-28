@@ -64,6 +64,8 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 
 + (void)triggerVirtualAuxKeyEvents:(uint32_t)key
 {
+    NSLog(@"sending virtual aux key events with keyCode:%d", key);
+
     NSEventModifierFlags flags = 0xa00;
     uint32_t data1 = (key << 16) | (uint32_t)flags;
     

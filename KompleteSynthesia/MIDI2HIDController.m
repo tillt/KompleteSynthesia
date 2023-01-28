@@ -383,8 +383,10 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             break;
         case KKBUTTON_VOLUME:
             if (value > 0) {
+                [log logLine:@"VOLUME -> sending volume up"];
                 [SynthesiaController triggerVirtualAuxKeyEvents:0];
             } else if (value < 0) {
+                [log logLine:@"VOLUME -> sending volume down"];
                 [SynthesiaController triggerVirtualAuxKeyEvents:1];
             }
             break;
