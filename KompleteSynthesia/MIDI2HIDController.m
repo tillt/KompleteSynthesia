@@ -106,7 +106,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     return colorMap;
 }
 
-//#define USB_DEVICE_SHIZZLE
+#define USB_DEVICE_SHIZZLE
 
 - (BOOL)reset:(NSError**)error
 {
@@ -130,6 +130,13 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     }
 
     [hid lightsSwooshTo:colorMap[kColorMapUnpressed]];
+
+#ifdef USB_DEVICE_SHIZZLE
+    NSImage* image = [NSImage imageNamed:@"test"];
+    if ([usb drawImage:image screen:0 x:0 y:0 error:error] == NO) {
+        return NO;
+    }
+#endif
 
     return YES;
 }

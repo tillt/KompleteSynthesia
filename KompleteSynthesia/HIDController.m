@@ -428,6 +428,8 @@ typedef struct {
 {
     IOHIDDeviceRegisterRemovalCallback(device, HIDDeviceRemovedCallback, (__bridge void*)self);
     
+    // This would fail if we were not entitled to access USB devices - the result would be
+    // "not permitted".
     IOReturn ret = IOHIDDeviceOpen(device, kIOHIDOptionsTypeNone);
     if (ret != kIOReturnSuccess) {
         if (error != nil) {
@@ -491,19 +493,25 @@ typedef struct {
                                          [USBController descriptionWithIOReturn:ret]],
             NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
         };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                     code:ret
+                                 userInfo:userInfo];
     }
     return NO;
 }
 
 - (BOOL)updateLightGuideMap:(NSError**)error
 {
-    return [self setReport:lightGuideUpdateMessage length:sizeof(lightGuideUpdateMessage) error:error];
+    return [self setReport:lightGuideUpdateMessage
+                    length:sizeof(lightGuideUpdateMessage)
+                     error:error];
 }
 
 - (BOOL)updateButtonLightMap:(NSError**)error
 {
-    return [self setReport:buttonLightingUpdateMessage length:sizeof(buttonLightingUpdateMessage) error:error];
+    return [self setReport:buttonLightingUpdateMessage
+                    length:sizeof(buttonLightingUpdateMessage)
+                     error:error];
 }
 
 - (void)lightKey:(int)key color:(unsigned char)color

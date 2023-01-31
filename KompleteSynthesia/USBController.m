@@ -12,6 +12,7 @@
 #import <IOKit/IOKitLib.h>
 #import <IOKit/usb/IOUSBLib.h>
 
+#import <Accelerate/Accelerate.h>
 #import <CoreGraphics/CoreGraphics.h>
 #import <CoreImage/CoreImage.h>
 
@@ -38,7 +39,7 @@ const uint32_t kPID_S88MK2 = 0x1630;
 
 @implementation USBController {
     IOUSBDeviceInterface942** device;
-    IOUSBInterfaceInterface800** interface;
+    IOUSBInterfaceInterface942** interface;
     uint8_t endpointCount;
     uint8_t endpointAddresses[32];
 }
@@ -54,15 +55,10 @@ const uint32_t kPID_S88MK2 = 0x1630;
     self = [super init];
     if (self) {
         _delegate = delegate;
-        device = [self detectDevice:error];
-        if (device == NULL) {
+        if ([self detectDevice:error] == NULL) {
             return nil;
         }
         if ([self openDevice:error] == NO) {
-            return nil;
-        }
-        NSImage* image = [NSImage imageNamed:@"test"];
-        if ([self drawImage:image screen:0 x:0 y:0 error:error] == NO) {
             return nil;
         }
     }
@@ -83,15 +79,15 @@ const uint32_t kPID_S88MK2 = 0x1630;
 
 + (BOOL)ioRegistryValueNumber:(io_service_t)service name:(CFStringRef)property type:(CFNumberType)type target:(void*)p
 {
-    Boolean success = 0;
+    BOOL success = NO;
     CFTypeRef cfNumber = IORegistryEntryCreateCFProperty(service, property, kCFAllocatorDefault, 0);
     if (cfNumber) {
         if (CFGetTypeID(cfNumber) == CFNumberGetTypeID()) {
-            success = CFNumberGetValue(cfNumber, type, p);
+            success = CFNumberGetValue(cfNumber, type, p) != 0;
         }
         CFRelease (cfNumber);
     }
-    return (success != 0);
+    return success;
 }
 
 - (IOReturn)interface:(io_service_t*)usbInterfacep atIndex:(uint8_t)number
@@ -277,18 +273,18 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     return ret;
 }
 
-- (IOUSBDeviceInterface**)detectDevice:(NSError**)error
+- (IOUSBDeviceInterface942**)detectDevice:(NSError**)error
 {
     // FIXME: offset wont be used on this level - lets see what else we need here...
     NSDictionary* supportedDevices = @{
-        @(kPID_S25MK1): @{ @"keys": @(25), @"mk2": @NO, @"offset": @(-21) },
-        @(kPID_S49MK1): @{ @"keys": @(49), @"mk2": @NO, @"offset": @(-36) },
-        @(kPID_S61MK1): @{ @"keys": @(61), @"mk2": @NO, @"offset": @(-36) },
-        @(kPID_S88MK1): @{ @"keys": @(88), @"mk2": @NO, @"offset": @(-21) },
+        @(kPID_S25MK1): @{ @"keys": @(25), @"mk2": @NO },
+        @(kPID_S49MK1): @{ @"keys": @(49), @"mk2": @NO },
+        @(kPID_S61MK1): @{ @"keys": @(61), @"mk2": @NO },
+        @(kPID_S88MK1): @{ @"keys": @(88), @"mk2": @NO },
 
-        @(kPID_S49MK2): @{ @"keys": @(49), @"mk2": @YES, @"offset": @(-36) },
-        @(kPID_S61MK2): @{ @"keys": @(61), @"mk2": @YES, @"offset": @(-36) },
-        @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES, @"offset": @(-21) },
+        @(kPID_S49MK2): @{ @"keys": @(49), @"mk2": @YES },
+        @(kPID_S61MK2): @{ @"keys": @(61), @"mk2": @YES },
+        @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES },
     };
 
     io_registry_entry_t entry = 0;
@@ -298,7 +294,7 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
         return nil;
     }
 
-    kern_return_t ret;
+    IOReturn ret;
     io_iterator_t iter = 0;
 
     ret = IORegistryEntryCreateIterator(entry, kIOUSBPlane, kIORegistryIterateRecursively, &iter);
@@ -309,53 +305,68 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     io_service_t service = 0;
 
     while ((service = IOIteratorNext(iter))) {
-        IOCFPlugInInterface  **plug = NULL;
-        IOUSBDeviceInterface **dev = NULL;
-        io_string_t path;
+        IOCFPlugInInterface** plug = NULL;
         SInt32 score = 0;
-        IOReturn ioret;
-
-        ret = IOCreatePlugInInterfaceForService(service, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &plug, &score);
+        // Note that the `IOReturn` type is an alias for `kern_return_t` - we can use them
+        // interchangeably for convenience reasons - may not be the best style though.
+        //
+        // This would fail if the user did not allow for this application to access
+        // USB devices as requested via our entitlements.
+        ret = IOCreatePlugInInterfaceForService(service,
+                                                kIOUSBDeviceUserClientTypeID,
+                                                kIOCFPlugInInterfaceID,
+                                                &plug,
+                                                &score);
         IOObjectRelease(service);
+        
         if (ret != KERN_SUCCESS || plug == NULL) {
+            NSLog(@"IOCreatePlugInInterfaceForService failed");
+            if (error) {
+                NSDictionary *userInfo = @{
+                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                                 [USBController descriptionWithIOReturn:ret]],
+                    NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+                };
+                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+            }
             continue;
         }
 
-        ioret = (*plug)->QueryInterface(plug, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID), (void *)&dev);
+        IOUSBDeviceInterface942** dev = NULL;
+        
+        ret = (*plug)->QueryInterface(plug, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID942), (void *)&dev);
         (*plug)->Release(plug);
-        if (ioret != kIOReturnSuccess || dev == NULL) {
+        if (ret != kIOReturnSuccess || dev == NULL) {
+            NSLog(@"QueryInterface failed");
             continue;
         }
 
-        if (IORegistryEntryGetPath(service, kIOServicePlane, path) != KERN_SUCCESS) {
+        unsigned short valueWord = 0;
+        if ((*dev)->GetDeviceVendor(dev, &valueWord) != kIOReturnSuccess) {
+            NSLog(@"GetDeviceVendor failed");
             (*dev)->Release(dev);
             continue;
         }
 
-        u_int16_t value = 0;
-        if ((*dev)->GetDeviceVendor(dev, &value) != kIOReturnSuccess) {
+        if (valueWord != kVendorID_NativeInstruments) {
             (*dev)->Release(dev);
             continue;
         }
 
-        if (value != kVendorID_NativeInstruments) {
+        if ((*dev)->GetDeviceProduct(dev, &valueWord) != kIOReturnSuccess) {
+            NSLog(@"GetDeviceProduct failed");
             (*dev)->Release(dev);
             continue;
         }
 
-        if ((*dev)->GetDeviceProduct(dev, &value) != kIOReturnSuccess) {
-            (*dev)->Release(dev);
-            continue;
-        }
-
-        if ([supportedDevices objectForKey:@(value)] != nil) {
-            _keyCount = [supportedDevices[@(value)][@"keys"] intValue];
-            _mk2Controller = [supportedDevices[@(value)][@"mk2"] boolValue];
+        if ([supportedDevices objectForKey:@(valueWord)] != nil) {
+            _keyCount = [supportedDevices[@(valueWord)][@"keys"] intValue];
+            _mk2Controller = [supportedDevices[@(valueWord)][@"mk2"] boolValue];
             _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
             IOObjectRelease(iter);
+            device = dev;
             return dev;
         }
-
         (*dev)->Release(dev);
     }
     IOObjectRelease(iter);
@@ -364,6 +375,8 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
 
 - (BOOL)openDevice:(NSError**)error
 {
+    assert(device);
+    assert(*device);
     IOReturn ret = (*device)->USBDeviceOpen(device);
     if (ret != kIOReturnSuccess) {
         NSLog(@"USBDeviceOpen failed");
@@ -424,68 +437,96 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     return YES;
 }
 
-+ (NSImage*)KKImageFromNSImage:(NSImage*)image
+
+typedef struct {
+    unsigned short* imageData;
+    unsigned short width;
+    unsigned short height;
+} NIImage;
+
++ (void)NIImageFromNSImage:(NSImage*)source destination:(NIImage*)destination
 {
-    // Reduce the color information to an NSImage that is 16bitRBG (no alpha).
-    // This isnt it though -- pretty sure we need RGB565.
-    // FIXME: Kill this conversion and do it by hand as suggested in this commented code.
-    /*
-       // RGB888 to RGB565 in a quick and dirty way.
-       uint16_t r,g,b;
-       uint16_t ret = ((r & 0xf8) << 8) | ((g & 0xfc) << 3) | ((b & 0xf8) >> 3);
-    */
-    NSImageRep* rep = [[image representations] objectAtIndex:0];
+    vImage_CGImageFormat RGBA8888Format =
+    {
+        .bitsPerComponent = 8,
+        .bitsPerPixel = 32,
+        .bitmapInfo = kCGBitmapByteOrderDefault | kCGImageAlphaNoneSkipLast,
+        .colorSpace = NULL,
+    };
+    vImage_CGImageFormat RGB565Format =
+    {
+        .bitsPerComponent = 5,
+        .bitsPerPixel = 16,
+        .bitmapInfo = kCGBitmapByteOrder16Little | kCGImageAlphaNone,
+        .colorSpace = RGBA8888Format.colorSpace,
+    };
+
+    NSImageRep* rep = [[source representations] objectAtIndex:0];
     const float width = rep.pixelsWide;
     const float height = rep.pixelsHigh;
+    CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider([source CGImageForProposedRect:NULL context:NULL hints:NULL]));
 
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(NULL, width, height, 5, width * 2, colorSpace, kCGImageAlphaNoneSkipFirst);
-    CGColorSpaceRelease(colorSpace);
+    vImage_Error err = kvImageNoError;
+    vImageConverterRef converter = vImageConverter_CreateWithCGImageFormat(&RGBA8888Format,
+                                                                           &RGB565Format,
+                                                                           NULL,
+                                                                           kvImageNoFlags,
+                                                                           &err);
+    
+    vImage_Buffer v_src = { (void*)CFDataGetBytePtr(raw), height, width, width * 4 };
+    vImage_Buffer v_dest = { destination->imageData, height, width, width * 2 };
+    err = vImageConvert_AnyToAny( converter, &v_src, &v_dest, NULL, kvImageNoFlags );
 
-    CGInterpolationQuality quality = kCGInterpolationHigh;
-    CGContextSetInterpolationQuality(context, quality);
-
-    CGImageSourceRef source = CGImageSourceCreateWithData((CFDataRef)[image TIFFRepresentation], NULL);
-    CGImageRef srcImage =  CGImageSourceCreateImageAtIndex(source, 0, NULL);
-
-    CGContextDrawImage(context, CGRectMake(0, 0, width, height), srcImage);
-    CGImageRelease(srcImage);
-    CGImageRef dst = CGBitmapContextCreateImage(context);
-    CGContextRelease(context);
-
-   return [[NSImage alloc] initWithCGImage:dst size:NSMakeSize(width, height)];
+    size_t imageWords = width * height;
+    for (int i = 0;i < imageWords;i++) {
+        destination->imageData[i] = ntohs(destination->imageData[i]);
+    }
 }
+
 
 - (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
 {
-    NSImage* bitmap = [USBController KKImageFromNSImage:image];
-
     NSImageRep* rep = [[image representations] objectAtIndex:0];
     const float width = rep.pixelsWide;
     const float height = rep.pixelsHigh;
+
+    
+    NIImage convertedImage = {
+        malloc(width * height * 2),
+        width,
+        height
+    };
+    
+    [USBController NIImageFromNSImage:image destination:&convertedImage];
 
     NSMutableData* stream = [NSMutableData data];
 
     const unsigned char commandBlob1[] = { 0x84, 0x00, screen, 0x60, 0x00, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob1 length:sizeof(commandBlob1)];
 
-    const uint16_t rect[] = { x, y, width, height };
+    const uint16_t rect[] = { ntohs(x), ntohs(y), ntohs(width), ntohs(height) };
     [stream appendBytes:&rect length:sizeof(rect)];
 
     const unsigned char commandBlob2[] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob2 length:sizeof(commandBlob2)];
     
-    CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider([bitmap CGImageForProposedRect:NULL context:NULL hints:NULL]));
+    //CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider([bitmap CGImageForProposedRect:NULL context:NULL hints:NULL]));
 
     // Pretty sure that hardware expects 32bit boundary data.
-    size_t imageSize = [(__bridge NSData*)raw length];
+    size_t imageSize = width * height * 2;
+    //size_t imageSize = [(__bridge NSData*)raw length];
     uint16_t imageLongs = (imageSize >> 2);
     
     assert(imageLongs == (width * height)/2);
     // FIXME: This may explode - watch your image sizes used for the transfer!
-    //assert((imageLongs << 2) == imageSize);
-    [stream appendBytes:&imageLongs length:sizeof(imageLongs)];
-    [stream appendData:(__bridge NSData*)raw];
+    assert((imageLongs << 2) == imageSize);
+    uint16_t writtenLongs = ntohs(imageLongs);
+    [stream appendBytes:&writtenLongs length:sizeof(writtenLongs)];
+    //[stream appendData:(__bridge NSData*)raw];
+    [stream appendBytes:convertedImage.imageData length:imageSize];
+    
+    //NSData* rawData = (__bridge NSData*)raw;
+    free(convertedImage.imageData);
 
     const unsigned char commandBlob3[] = { 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob3 length:sizeof(commandBlob3)];

@@ -166,7 +166,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     panel.title = @"Locate Synthesia configuration file";
     panel.message = @"Please locate and select the Synthesia 'multiDevice.xml' configuration file and activate 'Open' below!";
-    panel.directoryURL = [NSURL fileURLWithFileSystemRepresentation:"~/Library/Application Support/Synthesia/multiDevice.xml" isDirectory:NO relativeToURL:nil];
+    panel.directoryURL = [NSURL fileURLWithFileSystemRepresentation:"~/Library/Application Support/Synthesia" isDirectory:YES relativeToURL:nil];
     if ([panel runModal] != NSModalResponseOK) {
         NSLog(@"user canceled file selection");
         *message = @"User canceled the file selection.";
