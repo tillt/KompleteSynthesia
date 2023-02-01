@@ -132,12 +132,21 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     [hid lightsSwooshTo:colorMap[kColorMapUnpressed]];
 
 #ifdef USB_DEVICE_SHIZZLE
-    NSImage* image = [NSImage imageNamed:@"test"];
-    if ([usb drawImage:image screen:0 x:0 y:0 error:error] == NO) {
-        return NO;
-    }
-#endif
+    [usb clearScreen:0 error:nil];
+    [usb clearScreen:1 error:nil];
 
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        for (int i=0; i < 62;i++) {
+            NSString* frameName = [NSString stringWithFormat:@"frame_%02d_delay-0.06s", i];
+            NSImage* image = [NSImage imageNamed:frameName];
+            if ([usb drawImage:image screen:0 x:0 y:0 error:nil] == NO) {
+                return;
+            }
+            [NSThread sleepForTimeInterval:0.06f];
+        }
+        [usb clearScreen:0 error:nil];
+    });
+#endif
     return YES;
 }
 

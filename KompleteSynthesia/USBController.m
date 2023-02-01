@@ -282,9 +282,9 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
         @(kPID_S61MK1): @{ @"keys": @(61), @"mk2": @NO },
         @(kPID_S88MK1): @{ @"keys": @(88), @"mk2": @NO },
 
-        @(kPID_S49MK2): @{ @"keys": @(49), @"mk2": @YES },
-        @(kPID_S61MK2): @{ @"keys": @(61), @"mk2": @YES },
-        @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES },
+        @(kPID_S49MK2): @{ @"keys": @(49), @"mk2": @YES, @"width": @(480), @"height": @(272) },
+        @(kPID_S61MK2): @{ @"keys": @(61), @"mk2": @YES, @"width": @(480), @"height": @(272) },
+        @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES, @"width": @(480), @"height": @(272) },
     };
 
     io_registry_entry_t entry = 0;
@@ -363,6 +363,11 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
             _keyCount = [supportedDevices[@(valueWord)][@"keys"] intValue];
             _mk2Controller = [supportedDevices[@(valueWord)][@"mk2"] boolValue];
             _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
+            if (_mk2Controller == YES) {
+                _screenSize = CGSizeMake([supportedDevices[@(valueWord)][@"width"] intValue],
+                                         [supportedDevices[@(valueWord)][@"height"] intValue]);
+                _screenCount = 2;
+            }
             IOObjectRelease(iter);
             device = dev;
             return dev;
@@ -437,11 +442,10 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     return YES;
 }
 
-
 typedef struct {
-    unsigned short* imageData;
     unsigned short width;
     unsigned short height;
+    unsigned short* data;
 } NIImage;
 
 + (void)NIImageFromNSImage:(NSImage*)source destination:(NIImage*)destination
@@ -457,13 +461,19 @@ typedef struct {
     {
         .bitsPerComponent = 5,
         .bitsPerPixel = 16,
-        .bitmapInfo = kCGBitmapByteOrder16Little | kCGImageAlphaNone,
+        .bitmapInfo = kCGBitmapByteOrder16Big | kCGImageAlphaNone,
         .colorSpace = RGBA8888Format.colorSpace,
     };
 
     NSImageRep* rep = [[source representations] objectAtIndex:0];
-    const float width = rep.pixelsWide;
-    const float height = rep.pixelsHigh;
+    destination->width = rep.pixelsWide;
+    destination->height = rep.pixelsHigh;
+    destination->data = malloc(destination->width * 2 * destination->height);
+
+    destination->width = rep.pixelsWide;
+    destination->height = rep.pixelsHigh;
+    destination->data = malloc(destination->width * 2 * destination->height);
+
     CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider([source CGImageForProposedRect:NULL context:NULL hints:NULL]));
 
     vImage_Error err = kvImageNoError;
@@ -473,65 +483,43 @@ typedef struct {
                                                                            kvImageNoFlags,
                                                                            &err);
     
-    vImage_Buffer v_src = { (void*)CFDataGetBytePtr(raw), height, width, width * 4 };
-    vImage_Buffer v_dest = { destination->imageData, height, width, width * 2 };
-    err = vImageConvert_AnyToAny( converter, &v_src, &v_dest, NULL, kvImageNoFlags );
+    vImage_Buffer sourceBuffer = { (void*)CFDataGetBytePtr(raw), destination->height, destination->width, destination->width * 4 };
+    vImage_Buffer destinationBuffer = { destination->data, destination->height, destination->width, destination->width * 2 };
 
-    size_t imageWords = width * height;
-    for (int i = 0;i < imageWords;i++) {
-        destination->imageData[i] = ntohs(destination->imageData[i]);
-    }
+    vImageConvert_AnyToAny(converter,
+                           &sourceBuffer,
+                           &destinationBuffer,
+                           NULL,
+                           kvImageNoFlags);
 }
 
-
-- (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
+- (BOOL)drawNIImage:(NIImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
 {
-    NSImageRep* rep = [[image representations] objectAtIndex:0];
-    const float width = rep.pixelsWide;
-    const float height = rep.pixelsHigh;
-
-    
-    NIImage convertedImage = {
-        malloc(width * height * 2),
-        width,
-        height
-    };
-    
-    [USBController NIImageFromNSImage:image destination:&convertedImage];
-
     NSMutableData* stream = [NSMutableData data];
 
     const unsigned char commandBlob1[] = { 0x84, 0x00, screen, 0x60, 0x00, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob1 length:sizeof(commandBlob1)];
 
-    const uint16_t rect[] = { ntohs(x), ntohs(y), ntohs(width), ntohs(height) };
+    const uint16_t rect[] = { ntohs(x), ntohs(y), ntohs(image->width), ntohs(image->height) };
     [stream appendBytes:&rect length:sizeof(rect)];
 
     const unsigned char commandBlob2[] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob2 length:sizeof(commandBlob2)];
     
-    //CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider([bitmap CGImageForProposedRect:NULL context:NULL hints:NULL]));
-
     // Pretty sure that hardware expects 32bit boundary data.
-    size_t imageSize = width * height * 2;
-    //size_t imageSize = [(__bridge NSData*)raw length];
+    size_t imageSize = image->width * image->height * 2;
     uint16_t imageLongs = (imageSize >> 2);
     
-    assert(imageLongs == (width * height)/2);
+    assert(imageLongs == (image->width * image->height)/2);
     // FIXME: This may explode - watch your image sizes used for the transfer!
     assert((imageLongs << 2) == imageSize);
     uint16_t writtenLongs = ntohs(imageLongs);
     [stream appendBytes:&writtenLongs length:sizeof(writtenLongs)];
-    //[stream appendData:(__bridge NSData*)raw];
-    [stream appendBytes:convertedImage.imageData length:imageSize];
-    
-    //NSData* rawData = (__bridge NSData*)raw;
-    free(convertedImage.imageData);
+
+    [stream appendBytes:image->data length:imageSize];
 
     const unsigned char commandBlob3[] = { 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob3 length:sizeof(commandBlob3)];
-
-    assert([stream writeToFile: @"tmp/test.data" atomically:NO]);
 
     IOReturn ret = [self bulkWriteData:stream endpoint:3];
     if (ret == kIOReturnSuccess) {
@@ -549,6 +537,27 @@ typedef struct {
     }
     
     return NO;
+}
+
+- (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
+{
+    NIImage convertedImage;
+    [USBController NIImageFromNSImage:image destination:&convertedImage];
+    BOOL ret =  [self drawNIImage:&convertedImage screen:screen x:x y:y error:error];
+    free(convertedImage.data);
+    return ret;
+}
+
+- (BOOL)clearScreen:(uint8_t)screen error:(NSError**)error
+{
+    NIImage image = {
+        _screenSize.width,
+        _screenSize.height,
+        calloc(_screenSize.width * _screenSize.height, 2)
+    };
+    BOOL ret = [self drawNIImage:&image screen:screen x:0 y:0 error:error];
+    free(image.data);
+    return ret;
 }
 
 @end

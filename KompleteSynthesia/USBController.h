@@ -32,12 +32,15 @@ extern const uint32_t kPID_S88MK2;
 @property (nonatomic, copy) NSString* deviceName;
 @property (nonatomic, copy) NSString* status;
 @property (nonatomic, assign) unsigned int keyCount;
+@property (nonatomic, assign) CGSize screenSize;
+@property (nonatomic, assign) unsigned int screenCount;
 @property (nonatomic, assign) BOOL mk2Controller;
 
 + (NSString*)descriptionWithIOReturn:(IOReturn)code;
 
 - (id)initWithDelegate:(id)delegate error:(NSError**)error;
 - (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error;
+- (BOOL)clearScreen:(uint8_t)screen error:(NSError**)error;
 
 @end
 
