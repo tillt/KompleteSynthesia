@@ -21,6 +21,7 @@
 		BB7AB64229807A700081B05E /* PaletteViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB7AB64029807A700081B05E /* PaletteViewController.m */; };
 		BB7AB64329807A700081B05E /* PaletteViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB7AB64129807A700081B05E /* PaletteViewController.xib */; };
 		BB8570FA2971935B0004218B /* SynthesiaController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB8570F92971935B0004218B /* SynthesiaController.m */; };
+		BB8A5B9C298C45BB0076066D /* VideoController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB8A5B9B298C45BB0076066D /* VideoController.m */; };
 		BBA0166929611D1D0018B2DB /* MIDI2HIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */; };
 		BBB5EFAF29738E6F00C1BAC3 /* USBController.m in Sources */ = {isa = PBXBuildFile; fileRef = BBB5EFAE29738E6F00C1BAC3 /* USBController.m */; };
 		BBE086C22989965900DC59B3 /* CoreMIDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBE086C12989965900DC59B3 /* CoreMIDI.framework */; };
@@ -55,6 +56,8 @@
 		BB7AB6472981E6690081B05E /* SETUP.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = SETUP.md; sourceTree = SOURCE_ROOT; };
 		BB8570F82971935B0004218B /* SynthesiaController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SynthesiaController.h; sourceTree = "<group>"; };
 		BB8570F92971935B0004218B /* SynthesiaController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SynthesiaController.m; sourceTree = "<group>"; };
+		BB8A5B9A298C45BB0076066D /* VideoController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoController.h; sourceTree = "<group>"; };
+		BB8A5B9B298C45BB0076066D /* VideoController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VideoController.m; sourceTree = "<group>"; };
 		BBA0166729611D1D0018B2DB /* MIDI2HIDController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MIDI2HIDController.h; sourceTree = "<group>"; };
 		BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MIDI2HIDController.m; sourceTree = "<group>"; };
 		BBB5EFAD29738E6F00C1BAC3 /* USBController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = USBController.h; sourceTree = "<group>"; };
@@ -111,6 +114,8 @@
 				BB31821529679983005EB410 /* MIDIController.m */,
 				BB8570F82971935B0004218B /* SynthesiaController.h */,
 				BB8570F92971935B0004218B /* SynthesiaController.m */,
+				BB8A5B9A298C45BB0076066D /* VideoController.h */,
+				BB8A5B9B298C45BB0076066D /* VideoController.m */,
 				BB49B3B8295CC8AF00D18605 /* main.m */,
 				BB49B3BA295CC8AF00D18605 /* KompleteSynthesia.entitlements */,
 			);
@@ -230,6 +235,7 @@
 				BBB5EFAF29738E6F00C1BAC3 /* USBController.m in Sources */,
 				BB8570FA2971935B0004218B /* SynthesiaController.m in Sources */,
 				BB7AB63E298042530081B05E /* ColorField.m in Sources */,
+				BB8A5B9C298C45BB0076066D /* VideoController.m in Sources */,
 				BB49B3B9295CC8AF00D18605 /* main.m in Sources */,
 				BB3182192967A037005EB410 /* HIDController.m in Sources */,
 				BB7AB64229807A700081B05E /* PaletteViewController.m in Sources */,

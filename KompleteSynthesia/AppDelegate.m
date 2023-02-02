@@ -8,12 +8,14 @@
 #import "AppDelegate.h"
 #import "MIDI2HIDController.h"
 #import "LogViewController.h"
+#import "VideoController.h"
 #import "PreferencesWindowController.h"
 
 @interface AppDelegate ()
 
 @property (nonatomic, strong) IBOutlet NSWindow *window;
 @property (nonatomic, strong) MIDI2HIDController* midi2hidController;
+@property (nonatomic, strong) VideoController* videoController;
 @property (nonatomic, strong) LogViewController* logViewController;
 @property (nonatomic, strong) SynthesiaController* synthesia;
 @property (nonatomic, strong) PreferencesWindowController* preferences;
@@ -40,7 +42,15 @@
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;
     }
-
+    
+    _videoController = [[VideoController alloc] initWithLogViewController:_logViewController
+                                                                    error:&error];
+    if (_videoController == nil) {
+        [[NSAlert alertWithError:error] runModal];
+        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+        return;
+    }
+   
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController
                                                                    delegate:self
                                                                       error:&error];
@@ -78,6 +88,10 @@
     
     menu.delegate = self;
     self.statusMenu = menu;
+    
+    if ([SynthesiaController synthesiaRunning] == NO) {
+        [_midi2hidController boostrapSynthesia];
+    }
 }
 
 - (void)preferences:(id)sender
@@ -105,10 +119,13 @@
 - (void)reset:(id)sender
 {
     NSError* error = nil;
-    if ([_midi2hidController reset:&error] == NO) {
+    if ([_videoController reset:&error] == NO) {
+        [[NSAlert alertWithError:error] runModal];
+    }
+
+    if ([_midi2hidController resetWithSwoosh:YES error:&error] == NO) {
         [[NSAlert alertWithError:error] runModal];
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
-        return;
     }
 }
 
@@ -135,6 +152,7 @@
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
+    [_videoController stopMirroringAndWait:YES];
     [_midi2hidController teardown];
 }
 
@@ -151,6 +169,8 @@
         NSMenuItem* item = self.statusMenu.itemArray[1];
         item.title = status;
     }
+    
+    [_midi2hidController synthesiaStateUpdate:status];
 }
 
 @end

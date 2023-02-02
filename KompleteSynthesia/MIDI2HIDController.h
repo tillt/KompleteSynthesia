@@ -9,6 +9,7 @@
 #import "HIDController.h"
 #import "USBController.h"
 #import "MIDIController.h"
+#import "SynthesiaController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -25,12 +26,14 @@ enum {
 };
 
 @class LogViewController;
+@class SynthesiaController;
 
 @protocol MIDI2HIDControllerDelegate <NSObject>
 - (void)preferences:(id)sender;
+- (void)reset:(id)sender;
 @end
 
-@interface MIDI2HIDController : NSObject <MIDIControllerDelegate, HIDControllerDelegate>
+@interface MIDI2HIDController : NSObject <MIDIControllerDelegate, HIDControllerDelegate, SynthesiaControllerDelegate>
 
 @property (copy, nonatomic) NSString* hidStatus;
 @property (copy, nonatomic) NSString* midiStatus;
@@ -40,10 +43,14 @@ enum {
 
 @property (nonatomic, weak) id<MIDI2HIDControllerDelegate> delegate;
 
-- (id)initWithLogController:(LogViewController*)lc delegate:(id)delegate error:(NSError**)error;
-- (BOOL)reset:(NSError**)error;
+- (id)initWithLogController:(LogViewController*)lc
+                   delegate:(id)delegate
+                      error:(NSError**)error;
+
+- (BOOL)resetWithSwoosh:(BOOL)swoosh error:(NSError**)error;
 - (void)teardown;
 - (void)lightsDefault;
+- (void)boostrapSynthesia;
 
 @end
 

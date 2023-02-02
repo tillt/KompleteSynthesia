@@ -10,6 +10,7 @@
 #import "LogViewController.h"
 
 NSString* kSynthesiaApplicationName = @"Synthesia";
+NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
 
 /// Tries to locate Synthesia among the running applications and informs the delegate when the state changed.
 
@@ -29,11 +30,71 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
     return @"No Synthesia";
 }
 
++ (int)synthesiaWindowNumber
+{
+    CFArrayRef list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,kCGNullWindowID);
+    NSArray* windows = (__bridge NSArray*)list;
+    for(NSDictionary* window in windows)
+    {
+        NSString* currentWindowTitle = window[(NSString*)kCGWindowOwnerName];
+        CGRect currentBounds;
+        CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)window[(NSString*)kCGWindowBounds], &currentBounds);
+        
+        if ([currentWindowTitle compare:@"Synthesia"] != NSOrderedSame) {
+            continue;
+        }
+        NSLog(@"\"%s\" size=%gx%g id=%d\n", currentWindowTitle.UTF8String,
+                                            currentBounds.size.width,
+                                            currentBounds.size.height,
+                                            [window[(NSString *)kCGWindowNumber] intValue]);
+        CFRelease(list);
+        return [window[(NSString*)kCGWindowNumber] intValue];
+    }
+    CFRelease(list);
+    return 0;
+}
+
+//- (NIImage*)synthesiaScreen
+//{
+//    NSApplication* application;
+//    [application windowWithWindowNumber:<#(NSInteger)#>]
+//
+//    CGImageRef windowImage = CGWindowListCreateImage(CGRectNull,
+//                                                     kCGWindowListOptionIncludingWindow,
+//                                                     windowID,
+//                                                     kCGWindowImageBoundsIgnoreFraming);
+//}
+
 + (BOOL)synthesiaRunning
 {
     NSArray* apps = [[NSWorkspace sharedWorkspace] runningApplications];
     for (NSRunningApplication* app in apps) {
         if ([app.localizedName compare:kSynthesiaApplicationName] == NSOrderedSame) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
++ (void)runSynthesiaWithCompletion:(void(^)(void))completion
+{
+    NSWorkspaceOpenConfiguration* configuration = [NSWorkspaceOpenConfiguration new];
+    [configuration setPromptsUserIfNeeded: YES];
+    [[NSWorkspace sharedWorkspace] openApplicationAtURL:[NSURL fileURLWithPath:kSynthesiaApplicationPath]
+                                          configuration:configuration
+                                      completionHandler:^(NSRunningApplication* app, NSError* error){
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
+    }];
+}
+
++ (BOOL)activateSynthesia
+{
+    NSArray* apps = [[NSWorkspace sharedWorkspace] runningApplications];
+    for (NSRunningApplication* app in apps) {
+        if ([app.localizedName compare:kSynthesiaApplicationName] == NSOrderedSame) {
+            [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
             return YES;
         }
     }
@@ -100,7 +161,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 + (void)triggerVirtualMouseWheelEvent:(int)distance
 {
     NSLog(@"sending virtual mouse wheel event with delta:%d", distance);
-    
+
     CGEventRef ourEvent = CGEventCreate(NULL);
     CGPoint point = CGEventGetLocation(ourEvent);
     CFRelease(ourEvent);
@@ -120,7 +181,7 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
         log = logViewController;
         dataFormatExpected = NO;
         needsConfigurationPatch = YES;
-
+        
         [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
                                                                selector:@selector(synthesiaMayHaveChangedStatus:)
                                                                    name:NSWorkspaceDidActivateApplicationNotification

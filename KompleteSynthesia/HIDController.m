@@ -21,9 +21,10 @@
 /// to the delegate.
 
 const uint8_t kKompleteKontrolKeyStateLightOff = 0x00;
+const uint8_t kKompleteKontrolButtonLightOff = 0x00;
 
-// We have 16 colors, accross the rainbow, with 4 levels of intensity.
-// Additionally, there is white (sort of), again with 4 levels of intensity.
+// We have 16 colors accross the rainbow, with 4 levels of intensity.
+// Additionally there is white (sort of), again with 4 levels of intensity.
 const size_t kKompleteKontrolColorCount = 17;
 const size_t kKompleteKontrolColorIntensityLevelCount = 4;
 
@@ -75,55 +76,6 @@ const uint8_t kCommandButtonLightsUpdate = 0x80;
 const size_t kKompleteKontrolButtonsMessageSize = 80;
 const size_t kKompleteKontrolButtonsMapSize = kKompleteKontrolButtonsMessageSize - 1;
 
-// Button light indezes.
-enum {
-    kKompleteKontrolButtonIndexM = 0,
-    kKompleteKontrolButtonIndexS = 1,
-    kKompleteKontrolButtonIndexFunction1 = 2,
-    kKompleteKontrolButtonIndexFunction2 = 3,
-    kKompleteKontrolButtonIndexFunction3 = 4,
-    kKompleteKontrolButtonIndexFunction4 = 5,
-    kKompleteKontrolButtonIndexFunction5 = 6,
-    kKompleteKontrolButtonIndexFunction6 = 7,
-    kKompleteKontrolButtonIndexFunction7 = 8,
-    kKompleteKontrolButtonIndexFunction8 = 9,
-    kKompleteKontrolButtonIndexKnobLeft = 10,
-    kKompleteKontrolButtonIndexKnobUp = 11,
-    kKompleteKontrolButtonIndexKnobDown = 12,
-    kKompleteKontrolButtonIndexKnobRight = 13,
-    kKompleteKontrolButtonIndexScaleEdit = 15,
-    kKompleteKontrolButtonIndexArpEdit = 16,
-    kKompleteKontrolButtonIndexUndoRedo = 18,
-    kKompleteKontrolButtonIndexQuantize = 19,
-    kKompleteKontrolButtonIndexPattern = 21,
-    kKompleteKontrolButtonIndexPresetUp = 22,
-    kKompleteKontrolButtonIndexTrack = 23,
-    kKompleteKontrolButtonIndexLoop = 24,
-    kKompleteKontrolButtonIndexMetro = 25,
-    kKompleteKontrolButtonIndexTempo = 26,
-    kKompleteKontrolButtonIndexPresetDown = 27,
-    kKompleteKontrolButtonIndexKeyMode = 28,
-    kKompleteKontrolButtonIndexPlay = 29,
-    kKompleteKontrolButtonIndexRecord = 30,
-    kKompleteKontrolButtonIndexStop = 31,
-    kKompleteKontrolButtonIndexPageLeft = 32,
-    kKompleteKontrolButtonIndexPageRight = 33,
-    kKompleteKontrolButtonIndexClear = 34,
-    kKompleteKontrolButtonIndexBrowser = 35,
-    kKompleteKontrolButtonIndexPlugin = 36,
-    kKompleteKontrolButtonIndexMixer = 37,
-    kKompleteKontrolButtonIndexInstance = 38,
-    kKompleteKontrolButtonIndexMIDI = 39,
-    kKompleteKontrolButtonIndexSetup = 40,
-    kKompleteKontrolButtonIndexFixedVel = 41,
-    kKompleteKontrolButtonIndexUnused1 = 42,
-    kKompleteKontrolButtonIndexUnused2 = 43,
-    kKompleteKontrolButtonIndexStrip1 = 44,
-    kKompleteKontrolButtonIndexStrip10 = 54,
-    kKompleteKontrolButtonIndexStrip15 = 59,
-    kKompleteKontrolButtonIndexStrip20 = 64,
-    kKompleteKontrolButtonIndexStrip24 = 68,
-};
 
 // Funky defaults - users might hate me - but I like orange, eat it!
 const uint8_t kKeyColorUnpressed = kKompleteKontrolColorOrange;
@@ -133,7 +85,7 @@ const float kLightsSwooshTick = 1.0f / 24.0;
 
 const size_t kInputBufferSize = 64;
 
-//#define DEBUG_HID_INPUT
+#define DEBUG_HID_INPUT
 
 static void HIDInputCallback(void* context,
                              IOReturn result,
@@ -167,8 +119,6 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
 
 @interface HIDController ()
-@property (assign, nonatomic) unsigned char* keys;
-@property (assign, nonatomic) unsigned char* buttons;
 @end
 
 @implementation HIDController {
@@ -237,18 +187,19 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
         _buttons = &buttonLightingUpdateMessage[1];
         memset(_buttons, 0, kKompleteKontrolButtonsMapSize);
-        _buttons[kKompleteKontrolButtonIndexPlay] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexKnobDown] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexKnobUp] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexKnobLeft] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexKnobRight] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexPageLeft] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexPageRight] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexFunction1] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexFunction2] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexFunction3] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexFunction4] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIndexSetup] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdPlay] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdJogDown] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdJogUp] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdJogLeft] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdJogRight] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdPageLeft] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdPageRight] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdFunction1] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdFunction2] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdFunction3] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdFunction4] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdSetup] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdClear] = kKompleteKontrolColorBrightWhite;
 
         if ([self updateButtonLightMap:error] == NO) {
             return nil;
@@ -260,6 +211,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 - (void)dealloc
 {
     if (device != 0) {
+        IOHIDDeviceUnscheduleFromRunLoop(device, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
         IOHIDDeviceClose(device, kIOHIDOptionsTypeNone);
     }
 }
@@ -322,27 +274,31 @@ typedef struct {
         delta = 1;
     }
     if (delta != 0) {
-        [_delegate receivedEvent:KKBUTTON_SCROLL
+        [_delegate receivedEvent:kKompleteKontrolButtonIdJogScroll
                            value:delta];
     }
     lastJogWheelValue = report[30];
-    
+
     EventReport keyEvents[] = {
-        { 1, 0x10, KKBUTTON_FUNCTION1 },
-        { 1, 0x20, KKBUTTON_FUNCTION2 },
-        { 1, 0x40, KKBUTTON_FUNCTION3 },
-        { 1, 0x80, KKBUTTON_FUNCTION4 },
-        { 2, 0x10, KKBUTTON_PLAY },
-        { 3, 0x80, KKBUTTON_PAGE_LEFT },
-        { 3, 0x20, KKBUTTON_PAGE_RIGHT },
-        { 5, 0x08, KKBUTTON_SETUP },
-        { 6, 0x44, KKBUTTON_DOWN },
-        { 6, 0x24, KKBUTTON_UP },
-        { 6, 0x14, KKBUTTON_LEFT },
-        { 6, 0x84, KKBUTTON_RIGHT },
-        { 6, 0x0C, KKBUTTON_ENTER },
+        { 1, 0x10, kKompleteKontrolButtonIdFunction1 },
+        { 1, 0x20, kKompleteKontrolButtonIdFunction2 },
+        { 1, 0x40, kKompleteKontrolButtonIdFunction3 },
+        { 1, 0x80, kKompleteKontrolButtonIdFunction4 },
+        { 2, 0x10, kKompleteKontrolButtonIdPlay },
+        { 3, 0x80, kKompleteKontrolButtonIdPageLeft },
+        { 3, 0x20, kKompleteKontrolButtonIdPageRight },
+        { 4, 0x04, kKompleteKontrolButtonIdScene },
+        { 4, 0x20, kKompleteKontrolButtonIdClear },
+        { 5, 0x02, kKompleteKontrolButtonIdPlugin },
+        { 5, 0x08, kKompleteKontrolButtonIdSetup },
+        { 6, 0x14, kKompleteKontrolButtonIdJogLeft },
+        { 6, 0x24, kKompleteKontrolButtonIdJogUp },
+        { 6, 0x44, kKompleteKontrolButtonIdJogDown },
+        { 6, 0x84, kKompleteKontrolButtonIdJogRight },
+        { 6, 0x0C, kKompleteKontrolButtonIdJogPress },
     };
     
+    // FIXME: This shouldnt be a loop - have a proper map instead.
     for (int i=0;i < (sizeof(keyEvents) / sizeof(EventReport));i++) {
         if (report[keyEvents[i].index] == keyEvents[i].value) {
             [_delegate receivedEvent:keyEvents[i].identifier
@@ -357,7 +313,7 @@ typedef struct {
         if (lastVolumeKnobValue != INTMAX_C(16)) {
             int delta = newValue - lastVolumeKnobValue;
             if (delta != 0) {
-                [_delegate receivedEvent:KKBUTTON_VOLUME
+                [_delegate receivedEvent:kKompleteKontrolButtonIdKnob8
                                    value:delta];
             }
         }
@@ -518,6 +474,11 @@ typedef struct {
 {
     _keys[key] = color;
     [self updateLightGuideMap:nil];
+}
+
+- (void)lightButton:(int)button color:(unsigned char)color
+{
+    _buttons[button] = color;
 }
 
 - (void)lightsOff

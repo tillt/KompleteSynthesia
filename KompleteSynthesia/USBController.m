@@ -11,18 +11,18 @@
 
 #import <IOKit/IOKitLib.h>
 #import <IOKit/usb/IOUSBLib.h>
-
-#import <Accelerate/Accelerate.h>
-#import <CoreGraphics/CoreGraphics.h>
-#import <CoreImage/CoreImage.h>
-
-#import <AppKit/AppKit.h>
-
 /*
 killall -9 NIHardwareAgent
+
 killall -9 NIHostIntegrationAgent
+
 killall -9 NTKDaemon
-*/
+
+ 
+/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app/Contents/MacOS/NIHostIntegrationAgent
+/Library/Application Support/Native Instruments/Hardware/NIHardwareAgent.app/Contents/MacOS/NIHardwareAgent
+ 
+ */
 
 const uint32_t kVendorID_NativeInstruments = 0x17CC;
 
@@ -50,17 +50,19 @@ const uint32_t kPID_S88MK2 = 0x1630;
                               encoding:NSStringEncodingConversionAllowLossy];
 }
 
-- (id)initWithDelegate:(id)delegate error:(NSError**)error
+- (id)initWithError:(NSError**)error
 {
     self = [super init];
     if (self) {
-        _delegate = delegate;
+        _connected = NO;
         if ([self detectDevice:error] == NULL) {
             return nil;
         }
+        NSLog(@"detected %@ USB device", _deviceName);
         if ([self openDevice:error] == NO) {
             return nil;
         }
+        NSLog(@"USB controller fully connected - up and running");
     }
     return self;
 }
@@ -75,6 +77,11 @@ const uint32_t kPID_S88MK2 = 0x1630;
         (*device)->USBDeviceClose(device);
         (*device)->Release(device);
     }
+}
+
+- (NSString*)status
+{
+    return ((device != NULL) & (interface != NULL)) ? _deviceName : @"disconnected";
 }
 
 + (BOOL)ioRegistryValueNumber:(io_service_t)service name:(CFStringRef)property type:(CFNumberType)type target:(void*)p
@@ -214,7 +221,7 @@ const uint32_t kPID_S88MK2 = 0x1630;
 static void asyncCallback (void *refcon, IOReturn result, void *arg0)
 {
     //USBController* caller = (__bridge USBController*)refcon;
-    NSLog(@"bulk transfer complete");
+    //NSLog(@"bulk transfer complete");
     if (result != kIOReturnSuccess) {
         NSLog(@"async transfer failed");
     }
@@ -225,7 +232,6 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     for (int8_t i = 0 ; i < endpointCount; i++) {
         if (endpointAddresses[i] == ep) {
             *pipep = i + 1;
-            NSLog(@"pipe %d matches", *pipep);
             return YES;
         }
     }
@@ -233,12 +239,19 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     return NO;
 }
 
-- (IOReturn)bulkWriteData:(NSData*)data endpoint:(int)endpointNumber
+- (BOOL)bulkWriteData:(NSData*)data endpoint:(int)endpointNumber error:(NSError**)error
 {
     uint8_t pipeRef;
     if ([self endpoint:endpointNumber pipeRef:&pipeRef] == NO) {
         NSLog(@"endpoint doesnt exist");
-        return kIOReturnIOError;
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey: @"USB Error: endpoint does not exist",
+                NSLocalizedRecoverySuggestionErrorKey: @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:1 userInfo:userInfo];
+        }
+        return NO;
     }
     
     uint8_t transferType, direction, number, interval;
@@ -252,7 +265,15 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
                                                    &interval);
     if (ret != kIOReturnSuccess) {
         NSLog(@"GetPipeProperties failed");
-        return ret;
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                             [USBController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
+        return NO;
     }
 
     assert(transferType == kUSBBulk);
@@ -268,9 +289,18 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
                                          (__bridge void *)self);
     if (ret != kIOReturnSuccess) {
         NSLog(@"(*interface)->WritePipeAsync failed");
+        if (error) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                                             [USBController descriptionWithIOReturn:ret]],
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+        }
+        return NO;
     }
     
-    return ret;
+    return YES;
 }
 
 - (IOUSBDeviceInterface942**)detectDevice:(NSError**)error
@@ -282,9 +312,9 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
         @(kPID_S61MK1): @{ @"keys": @(61), @"mk2": @NO },
         @(kPID_S88MK1): @{ @"keys": @(88), @"mk2": @NO },
 
-        @(kPID_S49MK2): @{ @"keys": @(49), @"mk2": @YES, @"width": @(480), @"height": @(272) },
-        @(kPID_S61MK2): @{ @"keys": @(61), @"mk2": @YES, @"width": @(480), @"height": @(272) },
-        @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES, @"width": @(480), @"height": @(272) },
+        @(kPID_S49MK2): @{ @"keys": @(49), @"mk2": @YES },
+        @(kPID_S61MK2): @{ @"keys": @(61), @"mk2": @YES },
+        @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES },
     };
 
     io_registry_entry_t entry = 0;
@@ -363,11 +393,6 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
             _keyCount = [supportedDevices[@(valueWord)][@"keys"] intValue];
             _mk2Controller = [supportedDevices[@(valueWord)][@"mk2"] boolValue];
             _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
-            if (_mk2Controller == YES) {
-                _screenSize = CGSizeMake([supportedDevices[@(valueWord)][@"width"] intValue],
-                                         [supportedDevices[@(valueWord)][@"height"] intValue]);
-                _screenCount = 2;
-            }
             IOObjectRelease(iter);
             device = dev;
             return dev;
@@ -380,10 +405,12 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
 
 - (BOOL)openDevice:(NSError**)error
 {
+    _connected = NO;
+
     assert(device);
     assert(*device);
     IOReturn ret = (*device)->USBDeviceOpen(device);
-    if (ret != kIOReturnSuccess) {
+    if (ret != kIOReturnSuccess && ret != kIOReturnExclusiveAccess) {
         NSLog(@"USBDeviceOpen failed");
         if (error) {
             NSDictionary *userInfo = @{
@@ -438,126 +465,10 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
         }
         return NO;
     }
+    
+    _connected = YES;
 
     return YES;
-}
-
-typedef struct {
-    unsigned short width;
-    unsigned short height;
-    unsigned short* data;
-} NIImage;
-
-+ (void)NIImageFromNSImage:(NSImage*)source destination:(NIImage*)destination
-{
-    vImage_CGImageFormat RGBA8888Format =
-    {
-        .bitsPerComponent = 8,
-        .bitsPerPixel = 32,
-        .bitmapInfo = kCGBitmapByteOrderDefault | kCGImageAlphaNoneSkipLast,
-        .colorSpace = NULL,
-    };
-    vImage_CGImageFormat RGB565Format =
-    {
-        .bitsPerComponent = 5,
-        .bitsPerPixel = 16,
-        .bitmapInfo = kCGBitmapByteOrder16Big | kCGImageAlphaNone,
-        .colorSpace = RGBA8888Format.colorSpace,
-    };
-
-    NSImageRep* rep = [[source representations] objectAtIndex:0];
-    destination->width = rep.pixelsWide;
-    destination->height = rep.pixelsHigh;
-    destination->data = malloc(destination->width * 2 * destination->height);
-
-    destination->width = rep.pixelsWide;
-    destination->height = rep.pixelsHigh;
-    destination->data = malloc(destination->width * 2 * destination->height);
-
-    CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider([source CGImageForProposedRect:NULL context:NULL hints:NULL]));
-
-    vImage_Error err = kvImageNoError;
-    vImageConverterRef converter = vImageConverter_CreateWithCGImageFormat(&RGBA8888Format,
-                                                                           &RGB565Format,
-                                                                           NULL,
-                                                                           kvImageNoFlags,
-                                                                           &err);
-    
-    vImage_Buffer sourceBuffer = { (void*)CFDataGetBytePtr(raw), destination->height, destination->width, destination->width * 4 };
-    vImage_Buffer destinationBuffer = { destination->data, destination->height, destination->width, destination->width * 2 };
-
-    vImageConvert_AnyToAny(converter,
-                           &sourceBuffer,
-                           &destinationBuffer,
-                           NULL,
-                           kvImageNoFlags);
-}
-
-- (BOOL)drawNIImage:(NIImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
-{
-    NSMutableData* stream = [NSMutableData data];
-
-    const unsigned char commandBlob1[] = { 0x84, 0x00, screen, 0x60, 0x00, 0x00, 0x00, 0x00 };
-    [stream appendBytes:commandBlob1 length:sizeof(commandBlob1)];
-
-    const uint16_t rect[] = { ntohs(x), ntohs(y), ntohs(image->width), ntohs(image->height) };
-    [stream appendBytes:&rect length:sizeof(rect)];
-
-    const unsigned char commandBlob2[] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    [stream appendBytes:commandBlob2 length:sizeof(commandBlob2)];
-    
-    // Pretty sure that hardware expects 32bit boundary data.
-    size_t imageSize = image->width * image->height * 2;
-    uint16_t imageLongs = (imageSize >> 2);
-    
-    assert(imageLongs == (image->width * image->height)/2);
-    // FIXME: This may explode - watch your image sizes used for the transfer!
-    assert((imageLongs << 2) == imageSize);
-    uint16_t writtenLongs = ntohs(imageLongs);
-    [stream appendBytes:&writtenLongs length:sizeof(writtenLongs)];
-
-    [stream appendBytes:image->data length:imageSize];
-
-    const unsigned char commandBlob3[] = { 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };
-    [stream appendBytes:commandBlob3 length:sizeof(commandBlob3)];
-
-    IOReturn ret = [self bulkWriteData:stream endpoint:3];
-    if (ret == kIOReturnSuccess) {
-        NSLog(@"transferred image");
-        return YES;
-    }
-
-    if (error) {
-        NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                         [USBController descriptionWithIOReturn:ret]],
-            NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-        };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-    }
-    
-    return NO;
-}
-
-- (BOOL)drawImage:(NSImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
-{
-    NIImage convertedImage;
-    [USBController NIImageFromNSImage:image destination:&convertedImage];
-    BOOL ret =  [self drawNIImage:&convertedImage screen:screen x:x y:y error:error];
-    free(convertedImage.data);
-    return ret;
-}
-
-- (BOOL)clearScreen:(uint8_t)screen error:(NSError**)error
-{
-    NIImage image = {
-        _screenSize.width,
-        _screenSize.height,
-        calloc(_screenSize.width * _screenSize.height, 2)
-    };
-    BOOL ret = [self drawNIImage:&image screen:screen x:0 y:0 error:error];
-    free(image.data);
-    return ret;
 }
 
 @end

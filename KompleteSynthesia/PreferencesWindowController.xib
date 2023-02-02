@@ -44,11 +44,11 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IYA-Ho-9yy">
-                                            <rect key="frame" x="67" y="110" width="341" height="34"/>
+                                            <rect key="frame" x="118" y="110" width="238" height="34"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="check" title="Forward button events only when Synthesia is in foreground" bezelStyle="regularSquare" imagePosition="left" inset="2" id="cCF-lR-49o">
+                                            <buttonCell key="cell" type="check" title="Control events activate Synthesia" bezelStyle="regularSquare" imagePosition="left" inset="2" id="cCF-lR-49o">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                                <font key="font" metaFont="system" size="11"/>
+                                                <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
                                             <connections>
                                                 <action selector="fowardingValueChanged:" target="-2" id="YZk-dv-wMI"/>
@@ -57,7 +57,7 @@
                                     </subviews>
                                 </view>
                             </tabViewItem>
-                            <tabViewItem label="Key Colors" identifier="" image="NSColorPanel" id="vzw-DZ-lO5">
+                            <tabViewItem label="Lightguide Colors" identifier="" image="NSColorPanel" id="vzw-DZ-lO5">
                                 <view key="view" id="pVQ-3p-pPu">
                                     <rect key="frame" x="10" y="33" width="476" height="240"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -66,7 +66,7 @@
                                             <rect key="frame" x="117" y="216" width="191" height="16"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" title="Default....................................................." id="hH8-ct-eGq">
-                                                <font key="font" metaFont="system" size="11"/>
+                                                <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -75,7 +75,7 @@
                                             <rect key="frame" x="117" y="187" width="191" height="16"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" title="Pressed key....................................................." id="Gfo-FI-Aix">
-                                                <font key="font" metaFont="system" size="11"/>
+                                                <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -84,7 +84,7 @@
                                             <rect key="frame" x="117" y="158" width="191" height="16"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" title="Left hand....................................................." id="BG4-Ky-Dln">
-                                                <font key="font" metaFont="system" size="11"/>
+                                                <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -93,7 +93,7 @@
                                             <rect key="frame" x="117" y="129" width="191" height="16"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" title="Left hand thumb....................................................." id="mfB-Qd-myk">
-                                                <font key="font" metaFont="system" size="11"/>
+                                                <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -102,7 +102,7 @@
                                             <rect key="frame" x="117" y="100" width="191" height="16"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" title="Left hand pressed....................................................." id="L2a-xq-SDH">
-                                                <font key="font" metaFont="system" size="11"/>
+                                                <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -111,7 +111,7 @@
                                             <rect key="frame" x="117" y="71" width="191" height="16"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" title="Right hand....................................................." id="zaZ-IN-xC9">
-                                                <font key="font" metaFont="system" size="11"/>
+                                                <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -120,7 +120,7 @@
                                             <rect key="frame" x="117" y="42" width="191" height="16"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" title="Right hand thumb....................................................." id="wxR-GL-M3V">
-                                                <font key="font" metaFont="system" size="11"/>
+                                                <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -129,7 +129,7 @@
                                             <rect key="frame" x="117" y="13" width="191" height="16"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" title="Right hand pressed....................................................." id="oh4-Kv-ZVE">
-                                                <font key="font" metaFont="system" size="11"/>
+                                                <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
@@ -242,8 +242,8 @@
                                             <rect key="frame" x="17" y="117" width="442" height="120"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" refusesFirstResponder="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="justified" drawsBackground="YES" id="Ugf-z2-gIM">
-                                                <font key="font" metaFont="system" size="11"/>
-                                                <mutableString key="title">Synthesia has to be configured the way this little helper expects. This can be done manually, by following the steps described in the 'SETUP' documentation chapter.  This function is providing a semi-automated way of configuring Synthesia. For being able to configure Synthesia, this Application needs to manipulate a file. That file is called 'multiDevice.xml' and you will need to select it in the file dialog popping up when clicking on the button below. Go ahead, confirm your selection by clicking on 'Open'. Komplete Synthesia will then make sure that Synthesia is configured correctly when it comes to the lighting control output.</mutableString>
+                                                <font key="font" metaFont="smallSystem"/>
+                                                <string key="title">Synthesia has to be configured the way this little helper expects. This can be done manually, by following the steps described in the 'SETUP' documentation chapter.  This function is providing a semi-automated way of configuring Synthesia. For being able to configure Synthesia, this Application needs to manipulate a file. That file is called 'multiDevice.xml' and you will need to select it in the file dialog popping up when clicking on the button below. Go ahead, confirm your selection by clicking on 'Open'. Komplete Synthesia will then make sure that Synthesia is configured correctly when it comes to the lighting control output.</string>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="displayP3"/>
                                             </textFieldCell>
@@ -253,7 +253,7 @@
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="push" title="Repair light configuration in Synthesia" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Rou-M1-HAc">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="system" size="11"/>
+                                                <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
                                             <connections>
                                                 <action selector="assertSynthesiaConfig:" target="-2" id="QL1-Y3-Uaf"/>

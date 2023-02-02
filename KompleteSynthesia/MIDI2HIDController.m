@@ -13,7 +13,6 @@
 #import <Carbon/Carbon.h>
 
 #import "LogViewController.h"
-#import "SynthesiaController.h"
 
 const CGKeyCode kVK_ArrowLeft = 0x7B;
 const CGKeyCode kVK_ArrowRight = 0x7C;
@@ -48,12 +47,10 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 ///
 ///
 
-
 @implementation MIDI2HIDController {
     LogViewController* log;
     MIDIController* midi;
     HIDController* hid;
-    USBController* usb;
 
     unsigned char keyStates[255];
     unsigned char colorMap[kColorMapSize];
@@ -64,7 +61,6 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     self = [super init];
     if (self) {
         log = lc;
-        
         _delegate = delegate;
 
         NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
@@ -93,7 +89,9 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         [userDefaults registerDefaults:@{@"kColorMapRightPressed": @(kKompleteKontrolColorBrightGreen)}];
         colorMap[kColorMapRightPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapRightPressed"];
 
-        if ([self reset:error] == NO) {
+        [self synthesiaStateUpdate:@""];
+        
+        if ([self resetWithSwoosh:NO error:error] == NO) {
             return nil;
         }
     }
@@ -106,18 +104,8 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     return colorMap;
 }
 
-#define USB_DEVICE_SHIZZLE
-
-- (BOOL)reset:(NSError**)error
+- (BOOL)resetWithSwoosh:(BOOL)swoosh error:(NSError**)error
 {
-#ifdef USB_DEVICE_SHIZZLE
-    usb = [[USBController alloc] initWithDelegate:self error:error];
-    if (usb == nil) {
-        return NO;
-    }
-    [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
-#endif
-
     hid = [[HIDController alloc] initWithDelegate:self error:error];
     if (hid == nil) {
         return NO;
@@ -131,22 +119,6 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
     [hid lightsSwooshTo:colorMap[kColorMapUnpressed]];
 
-#ifdef USB_DEVICE_SHIZZLE
-    [usb clearScreen:0 error:nil];
-    [usb clearScreen:1 error:nil];
-
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        for (int i=0; i < 62;i++) {
-            NSString* frameName = [NSString stringWithFormat:@"frame_%02d_delay-0.06s", i];
-            NSImage* image = [NSImage imageNamed:frameName];
-            if ([usb drawImage:image screen:0 x:0 y:0 error:nil] == NO) {
-                return;
-            }
-            [NSThread sleepForTimeInterval:0.06f];
-        }
-        [usb clearScreen:0 error:nil];
-    });
-#endif
     return YES;
 }
 
@@ -320,93 +292,142 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     [log logLine:@"HID device removed"];
     
     NSError* error = nil;
-    if ([self reset:&error] == NO) {
+    if ([self resetWithSwoosh:NO error:&error] == NO) {
         [[NSAlert alertWithError:error] runModal];
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;
     }
 }
 
+- (void)boostrapSynthesia
+{
+    [SynthesiaController runSynthesiaWithCompletion:^{
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            // Wait for the Synthesia window to come up.
+            int timeoutMs = 1000;
+            while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
+                [NSThread sleepForTimeInterval:0.01f];
+                timeoutMs -= 10;
+            };
+            if (timeoutMs <= 0) {
+                NSLog(@"timeout waiting for Synthesia's application window");
+                return;
+            }
+            // Reset the VideoController.
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate reset:self];
+            });
+        });
+    }];
+}
+
 - (void)receivedEvent:(const int)event value:(int)value
 {
-    // The SETUP button shall work in all cases as it is not intended to control Synthesia
+    // These buttons shall work in all cases as it they do not intended to control Synthesia
     // but KompleteSynthesia.
-    if (event == KKBUTTON_SETUP) {
-        [log logLine:@"SETUP -> opening setup"];
-        [_delegate preferences:self];
-        return;
+    switch(event) {
+        case kKompleteKontrolButtonIdSetup:
+            [log logLine:@"SETUP -> opening setup"];
+            [_delegate preferences:self];
+            break;
+        case kKompleteKontrolButtonIdClear:
+            [log logLine:@"CLEAR -> reset"];
+            [_delegate reset:self];
+            break;
+        case kKompleteKontrolButtonIdScene:
+            [log logLine:@"SCENE -> starting Synthesia"];
+            [self boostrapSynthesia];
+            break;
     }
-    
+
     if  (_forwardButtonsToSynthesiaOnly) {
-        if (![SynthesiaController synthesiaHasFocus]) {
-            [log logLine:@"Synthesia not in foreground"];
+        if ([SynthesiaController activateSynthesia] == NO) {
+            NSLog(@"synthesia not active");
             return;
         }
     }
 
     switch(event) {
-        case KKBUTTON_PLAY:
+        case kKompleteKontrolButtonIdPlay:
             [log logLine:@"PLAY button -> sending SPACE key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_Space];
             break;
-        case KKBUTTON_ENTER:
-            [log logLine:@"ENTER -> sending RETURN key"];
+        case kKompleteKontrolButtonIdJogPress:
+            [log logLine:@"JOG PRESS -> sending RETURN key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_Return];
             break;
-        case KKBUTTON_LEFT:
-            [log logLine:@"CURSOR LEFT -> sending ARROW LEFT key"];
+        case kKompleteKontrolButtonIdJogLeft:
+            [log logLine:@"JOG LEFT -> sending ARROW LEFT key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowLeft];
             break;
-        case KKBUTTON_RIGHT:
-            [log logLine:@"CURSOR RIGHT -> sending ARROW RIGHT key"];
+        case kKompleteKontrolButtonIdJogRight:
+            [log logLine:@"JOG RIGHT -> sending ARROW RIGHT key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowRight];
             break;
-        case KKBUTTON_UP:
-            [log logLine:@"CURSOR UP -> sending ARROW UP key"];
+        case kKompleteKontrolButtonIdJogUp:
+            [log logLine:@"JOG UP -> sending ARROW UP key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowUp];
             break;
-        case KKBUTTON_PAGE_LEFT:
+        case kKompleteKontrolButtonIdPageLeft:
             [log logLine:@"PAGE LEFT -> sending PAGE UP key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_ANSI_Z];
             break;
-        case KKBUTTON_PAGE_RIGHT:
+        case kKompleteKontrolButtonIdPageRight:
             [log logLine:@"PAGE RIGHT -> sending PAGE DOWN key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_ANSI_X];
             break;
-        case KKBUTTON_DOWN:
-            [log logLine:@"CURSOR DOWN -> sending ARROW DOWN key"];
+        case kKompleteKontrolButtonIdJogDown:
+            [log logLine:@"JOG DOWN -> sending ARROW DOWN key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowDown];
             break;
-        case KKBUTTON_FUNCTION1:
-            [log logLine:@"FUNCTION1 -> sending F1 key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_F1];
+        case kKompleteKontrolButtonIdFunction1:
+            [log logLine:@"FUNCTION1 -> sending ESCAPE key"];
+            [SynthesiaController triggerVirtualKeyEvents:kVK_Escape];
             break;
-        case KKBUTTON_FUNCTION2:
+        case kKompleteKontrolButtonIdFunction2:
             [log logLine:@"FUNCTION2 -> sending F2 key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_F2];
             break;
-        case KKBUTTON_FUNCTION3:
+        case kKompleteKontrolButtonIdFunction3:
             [log logLine:@"FUNCTION3 -> sending F3 key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_F3];
             break;
-        case KKBUTTON_FUNCTION4:
+        case kKompleteKontrolButtonIdFunction4:
             [log logLine:@"FUNCTION4 -> sending F4 key"];
             [SynthesiaController triggerVirtualKeyEvents:kVK_F4];
             break;
-        case KKBUTTON_SCROLL:
-            [log logLine:@"SCROLL -> sending mouse WHEEL"];
+        case kKompleteKontrolButtonIdJogScroll:
+            [log logLine:@"JOG SCROLL -> sending mouse WHEEL"];
             [SynthesiaController triggerVirtualMouseWheelEvent:-value];
             break;
-        case KKBUTTON_VOLUME:
+        case kKompleteKontrolButtonIdKnob8:
             if (value > 0) {
-                [log logLine:@"VOLUME -> sending volume up"];
+                [log logLine:@"KNOB8 -> sending volume up"];
                 [SynthesiaController triggerVirtualAuxKeyEvents:0];
             } else if (value < 0) {
-                [log logLine:@"VOLUME -> sending volume down"];
+                [log logLine:@"KNOB8 -> sending volume down"];
                 [SynthesiaController triggerVirtualAuxKeyEvents:1];
             }
             break;
     }
+}
+
+#pragma mark HIDControllerDelegate
+
+- (void)synthesiaStateUpdate:(NSString*)status
+{
+    BOOL synthesiaRunning = [SynthesiaController synthesiaRunning];
+
+    [hid lightButton:kKompleteKontrolButtonIdScene
+               color:synthesiaRunning ? kKompleteKontrolButtonLightOff : kKompleteKontrolColorBrightWhite];
+
+    [hid lightButton:kKompleteKontrolButtonIdFunction1
+               color:synthesiaRunning ? kKompleteKontrolColorBrightWhite : kKompleteKontrolButtonLightOff];
+
+    [hid lightButton:kKompleteKontrolButtonIdClear
+               color:synthesiaRunning ? kKompleteKontrolColorBrightWhite : kKompleteKontrolButtonLightOff];
+    
+    [hid updateButtonLightMap:nil];
 }
 
 @end
