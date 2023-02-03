@@ -31,6 +31,7 @@ const int kHeaderHeight = 26;
     atomic_int stopMirroring;
     atomic_int mirrorActive;
     NSMutableData* stream;
+    dispatch_queue_t queue;
 }
 
 - (id)initWithLogViewController:(LogViewController*)lc error:(NSError**)error
@@ -52,9 +53,10 @@ const int kHeaderHeight = 26;
             _screenSize = CGSizeMake(480.0f, 272.0f);
             tempBuffer = malloc(_screenSize.width * 4 * _screenSize.height);
             resizeBuffer = malloc(_screenSize.width * 4 * _screenSize.height);
-
-            // width * height * 2 + commands
-            stream = [[NSMutableData alloc] initWithCapacity:261156];
+            // width * height * 2 (261120) + commands (36)
+            stream = [[NSMutableData alloc] initWithCapacity:(_screenSize.width * 2 * _screenSize.height) + 36];
+            
+            queue = dispatch_queue_create("tillt.KompleteSynthesia.usbbulk", DISPATCH_QUEUE_SERIAL);
 
             for (int i=0;i < _screenCount;i++) {
                 if (screenBuffer[i] == NULL) {
@@ -73,6 +75,7 @@ const int kHeaderHeight = 26;
 - (void)stopMirroringAndWait:(BOOL)wait
 {
     atomic_fetch_or(&stopMirroring, 1);
+
     if (wait == YES) {
         while (mirrorActive != 0) {
             [NSThread sleepForTimeInterval:0.01f];
@@ -83,6 +86,7 @@ const int kHeaderHeight = 26;
 - (BOOL)startMirroring
 {
     atomic_fetch_and(&stopMirroring, 0);
+
     if ([self clearScreen:0 error:nil] == NO) {
         return NO;
     }
@@ -92,6 +96,9 @@ const int kHeaderHeight = 26;
         NSLog(@"Synthesia window not found");
         return NO;
     }
+
+    [log logLine:@"Starting window mirroring"];
+
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         atomic_fetch_or(&mirrorActive, 1);
 
@@ -101,17 +108,12 @@ const int kHeaderHeight = 26;
                 NSLog(@"window disappeared, lets stop this");
                 goto doneMirroring;
             }
-
-            if ([self drawCGImage:original screen:0 x:0 y:0 error:nil] == NO) {
-                CGImageRelease(original);
-                NSLog(@"device disappeared, lets stop this");
-                goto doneMirroring;
-            }
-            
+            [self drawCGImage:original screen:0 x:0 y:0 error:nil];
             CGImageRelease(original);
             
             [NSThread sleepForTimeInterval:kRefreshDelay];
         };
+
     doneMirroring:
         [self clearScreen:0 error:nil];
         atomic_fetch_and(&mirrorActive, 0);
@@ -123,7 +125,8 @@ const int kHeaderHeight = 26;
 - (BOOL)reset:(NSError**)error
 {
     if ([SynthesiaController synthesiaRunning] == NO) {
-        NSLog(@"we need synthesia running for grabbing its video");
+        [log logLine:@"We need synthesia running for grabbing its video"];
+
         if (error != nil) {
             NSDictionary *userInfo = @{
                 NSLocalizedDescriptionKey : @"Can't mirror application window",
@@ -143,21 +146,20 @@ const int kHeaderHeight = 26;
     
     [self clearScreen:1 error:nil];
 
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        for (int i=0; i < 62;i++) {
-            NSString* frameName = [NSString stringWithFormat:@"frame_%02d_delay-0.06s", i];
-            NSImage* image = [NSImage imageNamed:frameName];
-            CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
-            if ([self drawCGImage:cgi screen:1 x:0 y:0 error:nil] == NO) {
-                return;
-            }
-            [NSThread sleepForTimeInterval:0.06f];
-        }
-        [self clearScreen:1 error:nil];
-    });
+//    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+//        for (int i=0; i < 62;i++) {
+//            NSString* frameName = [NSString stringWithFormat:@"frame_%02d_delay-0.06s", i];
+//            NSImage* image = [NSImage imageNamed:frameName];
+//            CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
+//            [self drawCGImage:cgi screen:1 x:0 y:0 error:nil];
+//            [NSThread sleepForTimeInterval:0.06f];
+//        }
+//        [self clearScreen:1 error:nil];
+//    });
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         [self stopMirroringAndWait:YES];
+
         dispatch_async(dispatch_get_main_queue(), ^{
             [self startMirroring];
         });
@@ -249,9 +251,6 @@ const int kHeaderHeight = 26;
     const uint16_t rect[] = { htons(x), htons(y), htons(image->width), htons(image->height) };
     [stream appendBytes:&rect length:sizeof(rect)];
 
-    const unsigned char commandBlob2[] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    [stream appendBytes:commandBlob2 length:sizeof(commandBlob2)];
-    
     // Pretty sure that hardware expects 32bit boundary data.
     size_t imageSize = image->width * image->height * 2;
     uint16_t imageLongs = (imageSize >> 2);
@@ -262,10 +261,15 @@ const int kHeaderHeight = 26;
     uint16_t writtenLongs = htons(imageLongs);
     [stream appendBytes:&writtenLongs length:sizeof(writtenLongs)];
 
+    const unsigned char commandBlob2[] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    [stream appendBytes:commandBlob2 length:sizeof(commandBlob2)];
+
     [stream appendBytes:image->data length:imageSize];
 
     const unsigned char commandBlob3[] = { 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob3 length:sizeof(commandBlob3)];
+
+    //dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
 
     BOOL ret = [usb bulkWriteData:stream endpoint:3 error:error];
 
