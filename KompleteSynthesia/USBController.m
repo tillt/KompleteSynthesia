@@ -241,6 +241,7 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
 
 - (BOOL)bulkWriteData:(NSData*)data endpoint:(int)endpointNumber error:(NSError**)error
 {
+    assert(data.length > 0);
     uint8_t pipeRef;
     if ([self endpoint:endpointNumber pipeRef:&pipeRef] == NO) {
         NSLog(@"endpoint doesnt exist");
@@ -351,14 +352,14 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
         
         if (ret != KERN_SUCCESS || plug == NULL) {
             NSLog(@"IOCreatePlugInInterfaceForService failed");
-            if (error) {
-                NSDictionary *userInfo = @{
-                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                                 [USBController descriptionWithIOReturn:ret]],
-                    NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-                };
-                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-            }
+//            if (error) {
+//                NSDictionary *userInfo = @{
+//                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+//                                                 [USBController descriptionWithIOReturn:ret]],
+//                    NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
+//                };
+//                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+//            }
             continue;
         }
 
@@ -400,6 +401,18 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
         (*dev)->Release(dev);
     }
     IOObjectRelease(iter);
+
+    NSLog(@"No Native Instruments keyboard controller USB device detected");
+    if (error != nil) {
+        NSDictionary *userInfo = @{
+            NSLocalizedDescriptionKey : @"No Native Instruments controller detected",
+            NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
+        };
+        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                     code:-1
+                                 userInfo:userInfo];
+    }
+
     return nil;
 }
 

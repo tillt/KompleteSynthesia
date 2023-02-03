@@ -54,17 +54,6 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
     return 0;
 }
 
-//- (NIImage*)synthesiaScreen
-//{
-//    NSApplication* application;
-//    [application windowWithWindowNumber:<#(NSInteger)#>]
-//
-//    CGImageRef windowImage = CGWindowListCreateImage(CGRectNull,
-//                                                     kCGWindowListOptionIncludingWindow,
-//                                                     windowID,
-//                                                     kCGWindowImageBoundsIgnoreFraming);
-//}
-
 + (BOOL)synthesiaRunning
 {
     NSArray* apps = [[NSWorkspace sharedWorkspace] runningApplications];
