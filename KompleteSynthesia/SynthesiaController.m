@@ -54,15 +54,20 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
     return 0;
 }
 
-+ (BOOL)synthesiaRunning
++ (BOOL)applicationIsRunning:(NSString*)name
 {
     NSArray* apps = [[NSWorkspace sharedWorkspace] runningApplications];
     for (NSRunningApplication* app in apps) {
-        if ([app.localizedName compare:kSynthesiaApplicationName] == NSOrderedSame) {
+        if ([app.localizedName compare:name] == NSOrderedSame) {
             return YES;
         }
     }
     return NO;
+}
+
++ (BOOL)synthesiaRunning
+{
+    return [SynthesiaController applicationIsRunning:kSynthesiaApplicationName];
 }
 
 + (void)runSynthesiaWithCompletion:(void(^)(void))completion

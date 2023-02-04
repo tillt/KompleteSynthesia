@@ -26,13 +26,66 @@
 
 @end
 
-@implementation AppDelegate
+enum {
+    kAlienHardwareAgent = 0,
+    kAlienHostIntegration,
+    kAlienDaemon,
+    kAlienItemCount
+};
+
+@implementation AppDelegate {
+    BOOL restartAlien[kAlienItemCount];
+}
+
++ (BOOL)terminateApp:(NSString*)name
+{
+    NSArray* apps = [[NSWorkspace sharedWorkspace] runningApplications];
+    for (NSRunningApplication* app in apps) {
+        if ([app.localizedName compare:name] == NSOrderedSame) {
+            NSLog(@"found and trying to kill...");
+            return [app forceTerminate];
+        }
+    }
+    return NO;
+}
+
+NSString* kHardwareAgentName = @"NIHardwareAgent.app";
+NSString* kHardwareAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHardwareAgent.app";
+
+NSString* kHostIntegrationAgentName = @"NIHostIntegrationAgent.app";
+NSString* kHostIntegrationAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app";
+
+NSString* kDaemonName = @"NIHardwareAgent.app";
+NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/Hardware/NIHardwareAgent.app";
+
+- (void)killNativeInstrumentsComponentsIfNeeded
+{
+    NSString* fmtAssert = @"asserting %@ not active";
+    NSString* fmtStopped = @"stopped %@";
+    NSArray<NSString*>* items = @[ kHardwareAgentName, kHostIntegrationAgentName, kDaemonName ];
+
+    assert(items.count == kAlienItemCount);
+
+    for (int i = 0; i < kAlienItemCount; i++) {
+        [_logViewController logLine:[NSString stringWithFormat:fmtAssert, items[i]]];
+
+        restartAlien[i] = [AppDelegate terminateApp:items[i]];
+
+        if (restartAlien[i]) {
+            [_logViewController logLine:[NSString stringWithFormat:fmtStopped, items[i]]];
+        }
+    }
+}
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     NSError* error = nil;
 
     _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
+    
+    [self killNativeInstrumentsComponentsIfNeeded];
+    
+    [NSThread sleepForTimeInterval:0.5f];
 
     _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
                                                                delegate:self
@@ -90,6 +143,7 @@
     self.statusMenu = menu;
     
     if ([SynthesiaController synthesiaRunning] == NO) {
+        [_logViewController logLine:@"Synthesia not running, starting it now"];
         [_midi2hidController boostrapSynthesia];
     }
 }
@@ -154,6 +208,16 @@
 {
     [_videoController stopMirroringAndWait:YES];
     [_midi2hidController teardown];
+    
+    NSArray<NSString*>* items = @[ kHardwareAgentPath, kHostIntegrationAgentPath, kDaemonPath ];
+
+    assert(items.count == kAlienItemCount);
+
+    for (int i = 0; i < kAlienItemCount; i++) {
+        if (restartAlien[i]) {
+            system([NSString stringWithFormat:@"open '%@'", items[i]].cString);
+        }
+    }
 }
 
 - (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app

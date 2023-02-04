@@ -42,11 +42,14 @@ const int kHeaderHeight = 26;
         screenBuffer[1] = NULL;
         atomic_fetch_and(&stopMirroring, 0);
         atomic_fetch_and(&mirrorActive, 0);
+        
+        log = lc;
 
         usb = [[USBController alloc] initWithError:error];
         if (usb == nil) {
             return nil;
         }
+        [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
 
         if (usb.mk2Controller == YES) {
             _screenCount = 2;
@@ -93,11 +96,11 @@ const int kHeaderHeight = 26;
 
     int windowNumber = [SynthesiaController synthesiaWindowNumber];
     if (windowNumber == 0) {
-        NSLog(@"Synthesia window not found");
+        NSLog(@"synthesia window not found");
         return NO;
     }
 
-    [log logLine:@"Starting window mirroring"];
+    [log logLine:@"starting window mirroring"];
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         atomic_fetch_or(&mirrorActive, 1);
@@ -125,7 +128,7 @@ const int kHeaderHeight = 26;
 - (BOOL)reset:(NSError**)error
 {
     if ([SynthesiaController synthesiaRunning] == NO) {
-        [log logLine:@"We need synthesia running for grabbing its video"];
+        [log logLine:@"we need synthesia running for grabbing its video"];
 
         if (error != nil) {
             NSDictionary *userInfo = @{

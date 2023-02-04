@@ -4,7 +4,7 @@ Native Instruments Komplete Kontrol Light Guide and Screen Mirroring Support for
 
 ## Features
 
-Routes Synthesia lighting information to your Native Instruments keyboard controller USB device. 
+Routes Synthesia lighting information to your Native Instruments keyboard controller USB device. Mirrors the Synthesia application window onto your Komplete Kontrol MK2 displays.
 
 Auto-detects a Native Instruments S-series keyboard controller USB device. Listens on the 'LoopBe' MIDI input interface port. Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia protocol.
 

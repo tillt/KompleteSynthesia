@@ -20,6 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, weak) id<SynthesiaControllerDelegate> delegate;
 
++ (BOOL)applicationIsRunning:(NSString*)name;
 + (BOOL)synthesiaRunning;
 + (BOOL)synthesiaHasFocus;
 + (BOOL)activateSynthesia;
@@ -33,7 +34,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate error:(NSError**)error;
 - (BOOL)assertMultiDeviceConfig:(NSError**)error message:(NSString*_Nullable *_Nullable)message;
-//- (void)adjustVolumeByDelta:(int)delta;
+
 @end
 
 NS_ASSUME_NONNULL_END
