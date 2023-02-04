@@ -1,6 +1,6 @@
 <p align="center"><img src="site/images/Logo.png" /></p>
 
-Native Instruments Komplete Kontrol Light Guide support for Synthesia.
+Native Instruments Komplete Kontrol Light Guide and Screen Mirroring Support for Synthesia.
 
 ## Features
 
