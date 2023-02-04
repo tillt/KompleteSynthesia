@@ -2,6 +2,8 @@
 
 Native Instruments Komplete Kontrol Light Guide and Screen Mirroring Support for Synthesia.
 
+<a href="https://youtu.be/bJiGqRVU9uU">![In Action](site/images/VideoThumb.png)</a>
+
 ## Features
 
 Routes Synthesia lighting information to your Native Instruments keyboard controller USB device. Mirrors the Synthesia application window onto your Komplete Kontrol MK2 displays.
