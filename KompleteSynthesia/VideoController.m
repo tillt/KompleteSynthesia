@@ -144,8 +144,7 @@ const int kHeaderHeight = 26;
         return NO;
     }
     
-    [self clearScreen:1 error:nil];
-
+//    [self clearScreen:1 error:nil];
 //    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
 //        for (int i=0; i < 62;i++) {
 //            NSString* frameName = [NSString stringWithFormat:@"frame_%02d_delay-0.06s", i];
@@ -156,6 +155,9 @@ const int kHeaderHeight = 26;
 //        }
 //        [self clearScreen:1 error:nil];
 //    });
+    NSImage* image = [NSImage imageNamed:@"ScreenOne"];
+    CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
+    [self drawCGImage:cgi screen:1 x:0 y:0 error:nil];
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         [self stopMirroringAndWait:YES];
@@ -251,19 +253,18 @@ const int kHeaderHeight = 26;
     const uint16_t rect[] = { htons(x), htons(y), htons(image->width), htons(image->height) };
     [stream appendBytes:&rect length:sizeof(rect)];
 
+    const unsigned char commandBlob2[] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    [stream appendBytes:commandBlob2 length:sizeof(commandBlob2)];
+
     // Pretty sure that hardware expects 32bit boundary data.
     size_t imageSize = image->width * image->height * 2;
     uint16_t imageLongs = (imageSize >> 2);
-    
+
     assert(imageLongs == (image->width * image->height)/2);
     // FIXME: This may explode - watch your image sizes used for the transfer!
     assert((imageLongs << 2) == imageSize);
     uint16_t writtenLongs = htons(imageLongs);
     [stream appendBytes:&writtenLongs length:sizeof(writtenLongs)];
-
-    const unsigned char commandBlob2[] = { 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    [stream appendBytes:commandBlob2 length:sizeof(commandBlob2)];
-
     [stream appendBytes:image->data length:imageSize];
 
     const unsigned char commandBlob3[] = { 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };

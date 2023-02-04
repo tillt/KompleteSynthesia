@@ -1,4 +1,4 @@
-# Komplete Synthesia
+<p align="center"><img src="site/images/Logo.png" /></p>
 
 Native Instruments Komplete Kontrol Light Guide support for Synthesia.
 

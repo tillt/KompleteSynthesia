@@ -352,14 +352,6 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
         
         if (ret != KERN_SUCCESS || plug == NULL) {
             NSLog(@"IOCreatePlugInInterfaceForService failed");
-//            if (error) {
-//                NSDictionary *userInfo = @{
-//                    NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-//                                                 [USBController descriptionWithIOReturn:ret]],
-//                    NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-//                };
-//                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-//            }
             continue;
         }
 
