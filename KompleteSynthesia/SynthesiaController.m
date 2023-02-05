@@ -8,6 +8,7 @@
 #import "SynthesiaController.h"
 #import <AppKit/AppKit.h>
 #import "LogViewController.h"
+#import "ApplicationObserver.h"
 
 NSString* kSynthesiaApplicationName = @"Synthesia";
 NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
@@ -54,20 +55,9 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
     return 0;
 }
 
-+ (BOOL)applicationIsRunning:(NSString*)name
-{
-    NSArray* apps = [[NSWorkspace sharedWorkspace] runningApplications];
-    for (NSRunningApplication* app in apps) {
-        if ([app.localizedName compare:name] == NSOrderedSame) {
-            return YES;
-        }
-    }
-    return NO;
-}
-
 + (BOOL)synthesiaRunning
 {
-    return [SynthesiaController applicationIsRunning:kSynthesiaApplicationName];
+    return [ApplicationObserver applicationIsRunning:kSynthesiaApplicationName];
 }
 
 + (void)runSynthesiaWithCompletion:(void(^)(void))completion

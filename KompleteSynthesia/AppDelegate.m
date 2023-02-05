@@ -10,6 +10,7 @@
 #import "LogViewController.h"
 #import "VideoController.h"
 #import "PreferencesWindowController.h"
+#import "ApplicationObserver.h"
 
 @interface AppDelegate ()
 
@@ -19,6 +20,7 @@
 @property (nonatomic, strong) LogViewController* logViewController;
 @property (nonatomic, strong) SynthesiaController* synthesia;
 @property (nonatomic, strong) PreferencesWindowController* preferences;
+@property (nonatomic, strong) ApplicationObserver* observer;
 
 @property (nonatomic, strong) NSPopover *popover;
 @property (nonatomic, strong) NSMenu *statusMenu;
@@ -35,18 +37,7 @@ enum {
 
 @implementation AppDelegate {
     BOOL restartAlien[kAlienItemCount];
-}
-
-+ (BOOL)terminateApp:(NSString*)name
-{
-    NSArray* apps = [[NSWorkspace sharedWorkspace] runningApplications];
-    for (NSRunningApplication* app in apps) {
-        if ([app.localizedName compare:name] == NSOrderedSame) {
-            NSLog(@"found and trying to kill...");
-            return [app forceTerminate];
-        }
-    }
-    return NO;
+    unsigned int awaitingAlienCount;
 }
 
 NSString* kHardwareAgentName = @"NIHardwareAgent.app";
@@ -55,37 +46,59 @@ NSString* kHardwareAgentPath = @"/Library/Application Support/Native Instruments
 NSString* kHostIntegrationAgentName = @"NIHostIntegrationAgent.app";
 NSString* kHostIntegrationAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app";
 
-NSString* kDaemonName = @"NIHardwareAgent.app";
-NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/Hardware/NIHardwareAgent.app";
+NSString* kDaemonName = @"NTKDaemon.app";
+NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NTKDaemon.app";
 
 - (void)killNativeInstrumentsComponentsIfNeeded
 {
     NSString* fmtAssert = @"asserting %@ not active";
     NSString* fmtStopped = @"stopped %@";
+    NSString* fmtSkipping = @"%@ is not running";
+
     NSArray<NSString*>* items = @[ kHardwareAgentName, kHostIntegrationAgentName, kDaemonName ];
-
+    
+    awaitingAlienCount = 0;
+    
     assert(items.count == kAlienItemCount);
-
+    
     for (int i = 0; i < kAlienItemCount; i++) {
         [_logViewController logLine:[NSString stringWithFormat:fmtAssert, items[i]]];
-
-        restartAlien[i] = [AppDelegate terminateApp:items[i]];
-
-        if (restartAlien[i]) {
-            [_logViewController logLine:[NSString stringWithFormat:fmtStopped, items[i]]];
+        
+        if ([ApplicationObserver applicationIsRunning:items[i]] == NO) {
+            [self.logViewController logLine:[NSString stringWithFormat:fmtSkipping, items[i]]];
+            continue;
         }
+        
+        ++awaitingAlienCount;
+        
+        restartAlien[i] = [_observer terminateApplication:items[i] completion:^{
+            [self.logViewController logLine:[NSString stringWithFormat:fmtStopped, items[i]]];
+            
+            --awaitingAlienCount;
+            
+            if (awaitingAlienCount == 0) {
+                [self applicationDidFinishInitializing];
+            }
+        }];
+        
+        NSLog(@"restart %@ returned %d", items[i], restartAlien[i]);
+    }
+
+    if (awaitingAlienCount == 0) {
+        [self applicationDidFinishInitializing];
     }
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    NSError* error = nil;
-
+    _observer = [[ApplicationObserver alloc] initWithDelegate:self];
     _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
-    
     [self killNativeInstrumentsComponentsIfNeeded];
-    
-    [NSThread sleepForTimeInterval:0.5f];
+}
+
+- (void)applicationDidFinishInitializing
+{
+    NSError* error = nil;
 
     _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
                                                                delegate:self
@@ -206,7 +219,7 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/Hardwa
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
-    [_videoController stopMirroringAndWait:YES];
+    [_videoController teardown];
     [_midi2hidController teardown];
     
     NSArray<NSString*>* items = @[ kHardwareAgentPath, kHostIntegrationAgentPath, kDaemonPath ];

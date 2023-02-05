@@ -20,7 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, weak) id<SynthesiaControllerDelegate> delegate;
 
-+ (BOOL)applicationIsRunning:(NSString*)name;
 + (BOOL)synthesiaRunning;
 + (BOOL)synthesiaHasFocus;
 + (BOOL)activateSynthesia;

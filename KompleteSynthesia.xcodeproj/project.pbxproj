@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB229913299040C500CFFB7C /* ApplicationObserver.m in Sources */ = {isa = PBXBuildFile; fileRef = BB229912299040C500CFFB7C /* ApplicationObserver.m */; };
 		BB31821629679983005EB410 /* MIDIController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB31821529679983005EB410 /* MIDIController.m */; };
 		BB3182192967A037005EB410 /* HIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB3182182967A037005EB410 /* HIDController.m */; };
 		BB49B3B2295CC8AE00D18605 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = BB49B3B1295CC8AE00D18605 /* AppDelegate.m */; };
@@ -29,6 +30,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BB229911299040C500CFFB7C /* ApplicationObserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ApplicationObserver.h; sourceTree = "<group>"; };
+		BB229912299040C500CFFB7C /* ApplicationObserver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ApplicationObserver.m; sourceTree = "<group>"; };
 		BB31821429679983005EB410 /* MIDIController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MIDIController.h; sourceTree = "<group>"; };
 		BB31821529679983005EB410 /* MIDIController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MIDIController.m; sourceTree = "<group>"; };
 		BB3182172967A037005EB410 /* HIDController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HIDController.h; sourceTree = "<group>"; };
@@ -114,6 +117,8 @@
 				BB31821529679983005EB410 /* MIDIController.m */,
 				BB8570F82971935B0004218B /* SynthesiaController.h */,
 				BB8570F92971935B0004218B /* SynthesiaController.m */,
+				BB229911299040C500CFFB7C /* ApplicationObserver.h */,
+				BB229912299040C500CFFB7C /* ApplicationObserver.m */,
 				BB8A5B9A298C45BB0076066D /* VideoController.h */,
 				BB8A5B9B298C45BB0076066D /* VideoController.m */,
 				BB49B3B8295CC8AF00D18605 /* main.m */,
@@ -232,6 +237,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB229913299040C500CFFB7C /* ApplicationObserver.m in Sources */,
 				BBB5EFAF29738E6F00C1BAC3 /* USBController.m in Sources */,
 				BB8570FA2971935B0004218B /* SynthesiaController.m in Sources */,
 				BB7AB63E298042530081B05E /* ColorField.m in Sources */,
