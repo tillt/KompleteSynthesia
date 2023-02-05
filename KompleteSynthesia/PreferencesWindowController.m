@@ -9,6 +9,8 @@
 #import "SynthesiaController.h"
 #import "MIDI2HIDController.h"
 
+/// Preferences window controller.
+
 @interface PreferencesWindowController ()
 @end
 

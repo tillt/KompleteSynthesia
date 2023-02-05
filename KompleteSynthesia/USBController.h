@@ -33,10 +33,13 @@ extern const uint32_t kPID_S88MK2;
 @property (nonatomic, assign) BOOL mk2Controller;
 @property (nonatomic, assign) BOOL connected;
 
+
 + (NSString*)descriptionWithIOReturn:(IOReturn)code;
 
 - (id)initWithError:(NSError**)error;
 - (BOOL)bulkWriteData:(NSData*)data endpoint:(int)endpointNumber error:(NSError**)error;
+- (void)teardown;
+
 
 @end
 

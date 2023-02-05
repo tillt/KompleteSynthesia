@@ -11,18 +11,9 @@
 
 #import <IOKit/IOKitLib.h>
 #import <IOKit/usb/IOUSBLib.h>
-/*
-killall -9 NIHardwareAgent
 
-killall -9 NIHostIntegrationAgent
-
-killall -9 NTKDaemon
-
- 
-/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app/Contents/MacOS/NIHostIntegrationAgent
-/Library/Application Support/Native Instruments/Hardware/NIHardwareAgent.app/Contents/MacOS/NIHardwareAgent
- 
- */
+/// Detects a Komplete Kontrol S-series USB controller. Suports USB bulk write for transmitting large amounts of data as
+/// needed for graphics data transfer to the LCD screens.
 
 const uint32_t kVendorID_NativeInstruments = 0x17CC;
 

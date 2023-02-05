@@ -8,6 +8,8 @@
 #import "ColorField.h"
 #import "HIDController.h"
 
+/// Clickable control for sampling a color.
+
 @implementation ColorField
 
 - (void)drawRect:(NSRect)dirtyRect

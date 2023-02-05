@@ -18,6 +18,9 @@
 #import "SynthesiaController.h"
 #import "LogViewController.h"
 
+/// Makes use of a detected Synthesia instance by streaming the application window onto the first LCD screen of a
+/// detected Komplete Kontrol S-series USB controller.
+
 const double kRefreshDelay = 1.0 / 40.0;
 const int kHeaderHeight = 26;
 
@@ -31,7 +34,6 @@ const int kHeaderHeight = 26;
     atomic_int stopMirroring;
     atomic_int mirrorActive;
     NSMutableData* stream;
-    dispatch_queue_t queue;
 }
 
 - (id)initWithLogViewController:(LogViewController*)lc error:(NSError**)error
@@ -59,8 +61,6 @@ const int kHeaderHeight = 26;
             // width * height * 2 (261120) + commands (36)
             stream = [[NSMutableData alloc] initWithCapacity:(_screenSize.width * 2 * _screenSize.height) + 36];
             
-            queue = dispatch_queue_create("tillt.KompleteSynthesia.usbbulk", DISPATCH_QUEUE_SERIAL);
-
             for (int i=0;i < _screenCount;i++) {
                 if (screenBuffer[i] == NULL) {
                     screenBuffer[i] = malloc(_screenSize.width * 2 * _screenSize.height);
@@ -147,17 +147,6 @@ const int kHeaderHeight = 26;
         return NO;
     }
     
-//    [self clearScreen:1 error:nil];
-//    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-//        for (int i=0; i < 62;i++) {
-//            NSString* frameName = [NSString stringWithFormat:@"frame_%02d_delay-0.06s", i];
-//            NSImage* image = [NSImage imageNamed:frameName];
-//            CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
-//            [self drawCGImage:cgi screen:1 x:0 y:0 error:nil];
-//            [NSThread sleepForTimeInterval:0.06f];
-//        }
-//        [self clearScreen:1 error:nil];
-//    });
     NSImage* image = [NSImage imageNamed:@"ScreenOne"];
     CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
     [self drawCGImage:cgi screen:1 x:0 y:0 error:nil];
@@ -272,8 +261,6 @@ const int kHeaderHeight = 26;
 
     const unsigned char commandBlob3[] = { 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob3 length:sizeof(commandBlob3)];
-
-    //dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
 
     BOOL ret = [usb bulkWriteData:stream endpoint:3 error:error];
 

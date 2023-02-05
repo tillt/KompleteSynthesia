@@ -32,8 +32,8 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 @end
 
 ///
-/// Detects a Native Instruments keyboard controller USB device. Listens on the "LoopBe" MIDI input interface port.
-/// Notes received are forwarded to the keyboard controller USB device as key lighting requests adhering to the Synthesia
+/// Detects a Native Instruments keyboard controller HID device. Listens on the "LoopBe" MIDI input interface port.
+/// Notes received are forwarded to the keyboard controller HID device as key lighting requests adhering to the Synthesia
 /// protocol.
 ///
 /// The initial approach and implementation was closely following a neat little Python project called
