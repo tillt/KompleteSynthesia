@@ -32,6 +32,8 @@ typedef struct {
 - (BOOL)reset:(NSError**)error;
 - (void)stopMirroringAndWait:(BOOL)wait;
 
+- (void)teardown;
+
 @end
 
 NS_ASSUME_NONNULL_END

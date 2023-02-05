@@ -86,6 +86,16 @@ const int kHeaderHeight = 26;
     }
 }
 
+- (void)teardown
+{
+    [self stopMirroringAndWait:YES];
+
+    [self clearScreen:0 error:nil];
+    [self clearScreen:1 error:nil];
+
+    [usb teardown];
+}
+
 - (BOOL)startMirroring
 {
     atomic_fetch_and(&stopMirroring, 0);

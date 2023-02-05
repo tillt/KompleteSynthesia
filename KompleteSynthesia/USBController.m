@@ -4,6 +4,7 @@
 //
 //  Created by Till Toenshoff on 15.01.23.
 //
+#include <stdatomic.h>
 
 #import "USBController.h"
 
@@ -33,6 +34,7 @@ const uint32_t kPID_S88MK2 = 0x1630;
     IOUSBInterfaceInterface942** interface;
     uint8_t endpointCount;
     uint8_t endpointAddresses[32];
+    atomic_int transferActive;
 }
 
 + (NSString*)descriptionWithIOReturn:(IOReturn)err
@@ -60,6 +62,8 @@ const uint32_t kPID_S88MK2 = 0x1630;
 
 - (void)dealloc
 {
+    atomic_fetch_and(&transferActive, 0);
+
     if (interface != NULL) {
         (*interface)->USBInterfaceClose(interface);
         (*interface)->Release(interface);
@@ -68,6 +72,14 @@ const uint32_t kPID_S88MK2 = 0x1630;
         (*device)->USBDeviceClose(device);
         (*device)->Release(device);
     }
+}
+
+- (void)teardown
+{
+//    while (transferActive == 1) {
+//        [NSThread sleepForTimeInterval:0.01f];
+//        NSLog(@"waiting for transfer...");
+//    };
 }
 
 - (NSString*)status
@@ -209,10 +221,17 @@ const uint32_t kPID_S88MK2 = 0x1630;
     return ret;
 }
 
+- (void)pipeTransferDone:(IOReturn)result
+{
+    atomic_fetch_and(&transferActive, 0);
+}
+
 static void asyncCallback (void *refcon, IOReturn result, void *arg0)
 {
-    //USBController* caller = (__bridge USBController*)refcon;
-    //NSLog(@"bulk transfer complete");
+    USBController* caller = (__bridge USBController*)refcon;
+    
+    [caller pipeTransferDone:result];
+
     if (result != kIOReturnSuccess) {
         NSLog(@"async transfer failed");
     }
@@ -271,6 +290,8 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     assert(transferType == kUSBBulk);
     assert(data.length % maxPacketSize);
     
+    atomic_fetch_or(&transferActive, 1);
+
     ret = (*interface)->WritePipeAsyncTO(interface,
                                          pipeRef,
                                          (void *)data.bytes,
