@@ -85,7 +85,7 @@ const float kLightsSwooshTick = 1.0f / 24.0;
 
 const size_t kInputBufferSize = 64;
 
-#define DEBUG_HID_INPUT
+//#define DEBUG_HID_INPUT
 
 static void HIDInputCallback(void* context,
                              IOReturn result,
