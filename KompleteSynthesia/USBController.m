@@ -34,7 +34,7 @@ const uint32_t kPID_S88MK2 = 0x1630;
     IOUSBInterfaceInterface942** interface;
     uint8_t endpointCount;
     uint8_t endpointAddresses[32];
-    atomic_int transferActive;
+//    atomic_int transferActive;
 }
 
 + (NSString*)descriptionWithIOReturn:(IOReturn)err
@@ -48,6 +48,7 @@ const uint32_t kPID_S88MK2 = 0x1630;
     self = [super init];
     if (self) {
         _connected = NO;
+        //transferActive = 0;
         if ([self detectDevice:error] == NULL) {
             return nil;
         }
@@ -62,7 +63,7 @@ const uint32_t kPID_S88MK2 = 0x1630;
 
 - (void)dealloc
 {
-    atomic_fetch_and(&transferActive, 0);
+    //atomic_fetch_and(&transferActive, 0);
 
     if (interface != NULL) {
         (*interface)->USBInterfaceClose(interface);
@@ -76,10 +77,20 @@ const uint32_t kPID_S88MK2 = 0x1630;
 
 - (void)teardown
 {
-//    while (transferActive == 1) {
+    // FIXME: This doesnt work as intendend. The problem is likely the runloop chosen
+    // for our callback. The symptom is that the bulk transfer callback does not get
+    // invoked when the user ie opens the application menu. We didnt make any use of that
+    // callback, other than providing it to IOKIT. Now that this tries to rely on the call-
+    // back getting invoked whenever a transfer is done, we need to find a better way to
+    // setup a runloop for the USB callback.
+    // Without this, we will not be able to reliably transfer the last commands (ie screen
+    // clears) - well, unless we hack in a nasty pause -- see below...
+//    while (atomic_load(&transferActive) > 0) {
 //        [NSThread sleepForTimeInterval:0.01f];
 //        NSLog(@"waiting for transfer...");
 //    };
+    // Sleep for a tenth of a second, that way we can be pretty certain transfers are done.
+    [NSThread sleepForTimeInterval:0.1f];
 }
 
 - (NSString*)status
@@ -223,7 +234,9 @@ const uint32_t kPID_S88MK2 = 0x1630;
 
 - (void)pipeTransferDone:(IOReturn)result
 {
-    atomic_fetch_and(&transferActive, 0);
+    //NSLog(@"transfers active %d", transferActive);
+    
+    //atomic_fetch_sub(&transferActive, 1);
 }
 
 static void asyncCallback (void *refcon, IOReturn result, void *arg0)
@@ -290,7 +303,9 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     assert(transferType == kUSBBulk);
     assert(data.length % maxPacketSize);
     
-    atomic_fetch_or(&transferActive, 1);
+    //NSLog(@"per write, transfers active %d", transferActive);
+
+    //atomic_fetch_add(&transferActive, 1);
 
     ret = (*interface)->WritePipeAsyncTO(interface,
                                          pipeRef,

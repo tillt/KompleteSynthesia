@@ -9,17 +9,17 @@
 #import <AppKit/AppKit.h>
 
 static NSString *const KVO_CONTEXT_TERMINATED_CHANGED = @"KVO_CONTEXT_TERMINATED_CHANGED";
+const NSTimeInterval kShutdownTimeout = 5.0;
 
 @implementation ApplicationObserver
 {
-    NSMutableDictionary<NSString*,NSArray*>* observedApplications;
+    NSMutableDictionary<NSString*,NSDictionary*>* observedApplications;
 }
 
-- (id)initWithDelegate:(id)delegate
+- (id)init
 {
     self = [super init];
     if (self) {
-        _delegate = delegate;
         observedApplications = [NSMutableDictionary dictionary];
     }
     return self;
@@ -36,16 +36,36 @@ static NSString *const KVO_CONTEXT_TERMINATED_CHANGED = @"KVO_CONTEXT_TERMINATED
     return NO;
 }
 
-- (BOOL)terminateApplication:(NSString*)name completion:(void(^)(void))completion
+- (BOOL)terminateApplication:(NSString*)name completion:(void(^)(BOOL))completion
 {
     for (NSRunningApplication* app in [[NSWorkspace sharedWorkspace] runningApplications]) {
         if ([app.localizedName compare:name] == NSOrderedSame) {
             NSLog(@"found and trying to kill...");
-            observedApplications[app.localizedName] = @[app, completion];
+            
+            NSTimer* timer = [NSTimer scheduledTimerWithTimeInterval:kShutdownTimeout repeats:NO block:^(NSTimer* timer){
+                if ([observedApplications objectForKey:app.localizedName] != nil) {
+                    // Seems like that application was still running, give up!
+                    NSLog(@"timeout when trying to kill %@", app.localizedName);
+                    NSDictionary* dict = observedApplications[app.localizedName];
+                    void(^completion)(BOOL) = dict[@"completion"];
+                    
+                    [dict[@"application"] removeObserver:self forKeyPath:@"isTerminated"];
+                    [observedApplications removeObjectForKey:app.localizedName];
+                    
+                    completion(NO);
+                }
+            }];
+            
+            observedApplications[app.localizedName] = @{
+                @"application": app,
+                @"completion": completion,
+                @"timer": timer };
+
             [app addObserver:self
                   forKeyPath:@"isTerminated"
                      options:NSKeyValueObservingOptionNew
-                     context:CFBridgingRetain(KVO_CONTEXT_TERMINATED_CHANGED)];
+                     context:(void*)CFBridgingRetain(KVO_CONTEXT_TERMINATED_CHANGED)];
+
             return [app forceTerminate];
         }
     }
@@ -59,12 +79,20 @@ static NSString *const KVO_CONTEXT_TERMINATED_CHANGED = @"KVO_CONTEXT_TERMINATED
 {
     if (context == CFBridgingRetain(KVO_CONTEXT_TERMINATED_CHANGED)) {
         NSRunningApplication* app = object;
+
         [app removeObserver:self forKeyPath:@"isTerminated"];
+
         if (app.isTerminated) {
             assert([observedApplications objectForKey:app.localizedName] != nil);
-            void(^completion)(void) = observedApplications[app.localizedName][1];
-            completion();
+            NSDictionary* dict = observedApplications[app.localizedName];
+
+            NSTimer* timer = dict[@"timer"];
+            void(^completion)(BOOL) = dict[@"completion"];
+
+            [timer invalidate];
             [observedApplications removeObjectForKey:app.localizedName];
+
+            completion(YES);
         }
     }
 }

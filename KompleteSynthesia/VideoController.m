@@ -124,6 +124,8 @@ const int kHeaderHeight = 26;
             [self drawCGImage:original screen:0 x:0 y:0 error:nil];
             CGImageRelease(original);
             
+            // FIXME: We should try to find something more reliable than a fixed delay...
+            // possibly tie it to the v-refresh of the host machine.
             [NSThread sleepForTimeInterval:kRefreshDelay];
         };
 

@@ -9,17 +9,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol ApplicationObserverDelegate <NSObject>
-@end
-
 @interface ApplicationObserver : NSObject
-@property (nonatomic, weak) id<ApplicationObserverDelegate> delegate;
 
 + (BOOL)applicationIsRunning:(NSString*)name;
-- (BOOL)terminateApplication:(NSString*)name completion:(void(^)(void))completion;
-- (id)initWithDelegate:(id)delegate;
-- (void)observeApplication:(NSString*)name;
 
+- (id)init;
+- (BOOL)terminateApplication:(NSString*)name completion:(void(^)(BOOL))completion;
 
 @end
 

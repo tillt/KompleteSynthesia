@@ -38,6 +38,7 @@ enum {
 @implementation AppDelegate {
     BOOL restartAlien[kAlienItemCount];
     unsigned int awaitingAlienCount;
+    BOOL usbAvailable;
 }
 
 NSString* kHardwareAgentName = @"NIHardwareAgent.app";
@@ -49,10 +50,16 @@ NSString* kHostIntegrationAgentPath = @"/Library/Application Support/Native Inst
 NSString* kDaemonName = @"NTKDaemon.app";
 NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NTKDaemon.app";
 
-- (void)killNativeInstrumentsComponentsIfNeeded
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    NSString* fmtAssert = @"asserting %@ not active";
+    usbAvailable = NO;
+
+    _observer = [[ApplicationObserver alloc] init];
+    _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
+
+    NSString* fmtAssert = @"checking if %@ is active";
     NSString* fmtStopped = @"stopped %@";
+    NSString* fmtFailed = @"failed to stop %@";
     NSString* fmtSkipping = @"%@ is not running";
 
     NSArray<NSString*>* items = @[ kHardwareAgentName, kHostIntegrationAgentName, kDaemonName ];
@@ -60,45 +67,59 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     awaitingAlienCount = 0;
     
     assert(items.count == kAlienItemCount);
-    
+
     for (int i = 0; i < kAlienItemCount; i++) {
         [_logViewController logLine:[NSString stringWithFormat:fmtAssert, items[i]]];
-        
-        if ([ApplicationObserver applicationIsRunning:items[i]] == NO) {
+
+        if ([ApplicationObserver applicationIsRunning:items[i]] == YES) {
+            ++awaitingAlienCount;
+        } else {
             [self.logViewController logLine:[NSString stringWithFormat:fmtSkipping, items[i]]];
+        }
+    }
+    if (awaitingAlienCount == 0) {
+        // No more processes to wait for, continue our mission with full steam!
+        [self applicationDidFinishInitializingWithUSBHighwayOpen:YES];
+        return;
+    }
+
+    for (int i = 0; i < kAlienItemCount; i++) {
+        if ([ApplicationObserver applicationIsRunning:items[i]] == NO) {
             continue;
         }
-        
-        ++awaitingAlienCount;
-        
-        restartAlien[i] = [_observer terminateApplication:items[i] completion:^{
+        restartAlien[i] = [_observer terminateApplication:items[i] completion:^(BOOL complete){
+            if (complete == NO) {
+                [self.logViewController logLine:[NSString stringWithFormat:fmtFailed, items[i]]];
+
+                NSDictionary *userInfo = @{
+                    NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to terminate %@", items[i]],
+                    NSLocalizedRecoverySuggestionErrorKey : @"USB bulk transfer is blocked, no screen updates possible."
+                };
+                [[NSAlert alertWithError:[NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                                             code:-1
+                                                         userInfo:userInfo]] runModal];
+
+                [self applicationDidFinishInitializingWithUSBHighwayOpen:NO];
+                return;
+            }
+
             [self.logViewController logLine:[NSString stringWithFormat:fmtStopped, items[i]]];
-            
+
             --awaitingAlienCount;
             
             if (awaitingAlienCount == 0) {
-                [self applicationDidFinishInitializing];
+                [self applicationDidFinishInitializingWithUSBHighwayOpen:YES];
             }
         }];
-        
         NSLog(@"restart %@ returned %d", items[i], restartAlien[i]);
     }
-
-    if (awaitingAlienCount == 0) {
-        [self applicationDidFinishInitializing];
-    }
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
-{
-    _observer = [[ApplicationObserver alloc] initWithDelegate:self];
-    _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
-    [self killNativeInstrumentsComponentsIfNeeded];
-}
-
-- (void)applicationDidFinishInitializing
+- (void)applicationDidFinishInitializingWithUSBHighwayOpen:(BOOL)usbHighwayOpen
 {
     NSError* error = nil;
+    
+    usbAvailable = usbHighwayOpen;
 
     _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
                                                                delegate:self
@@ -108,13 +129,15 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;
     }
-    
-    _videoController = [[VideoController alloc] initWithLogViewController:_logViewController
-                                                                    error:&error];
-    if (_videoController == nil) {
-        [[NSAlert alertWithError:error] runModal];
-        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
-        return;
+
+    if (usbAvailable == YES) {
+        _videoController = [[VideoController alloc] initWithLogViewController:_logViewController
+                                                                        error:&error];
+        if (_videoController == nil) {
+            [[NSAlert alertWithError:error] runModal];
+            [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+            return;
+        }
     }
    
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController
@@ -186,8 +209,11 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 - (void)reset:(id)sender
 {
     NSError* error = nil;
-    if ([_videoController reset:&error] == NO) {
-        [[NSAlert alertWithError:error] runModal];
+    
+    if (usbAvailable) {
+        if ([_videoController reset:&error] == NO) {
+            [[NSAlert alertWithError:error] runModal];
+        }
     }
 
     if ([_midi2hidController resetWithSwoosh:YES error:&error] == NO) {
@@ -219,7 +245,9 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
-    [_videoController teardown];
+    if (usbAvailable) {
+        [_videoController teardown];
+    }
     [_midi2hidController teardown];
     
     NSArray<NSString*>* items = @[ kHardwareAgentPath, kHostIntegrationAgentPath, kDaemonPath ];
@@ -228,7 +256,8 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 
     for (int i = 0; i < kAlienItemCount; i++) {
         if (restartAlien[i]) {
-            system([NSString stringWithFormat:@"open '%@'", items[i]].cString);
+            const char* command = [[NSString stringWithFormat:@"open '%@'", items[i]] cStringUsingEncoding:NSStringEncodingConversionAllowLossy];
+            system(command);
         }
     }
 }

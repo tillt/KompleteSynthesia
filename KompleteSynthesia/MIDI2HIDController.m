@@ -99,6 +99,32 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     return self;
 }
 
+- (void)boostrapSynthesia
+{
+    [SynthesiaController runSynthesiaWithCompletion:^{
+        // This should really not be fone via polling.... instead use KVO on RunningApplication.
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            // Wait for the Synthesia window to come up.
+            int timeoutMs = 5000;
+            while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
+                [NSThread sleepForTimeInterval:0.01f];
+                timeoutMs -= 10;
+            };
+            if (timeoutMs <= 0) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [log logLine:@"timeout waiting for Synthesia's application window"];
+                    [self.delegate reset:self];
+                });
+                return;
+            }
+            // Reset the VideoController.
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.delegate reset:self];
+            });
+        });
+    }];
+}
+
 - (unsigned char*)colors
 {
     return colorMap;
@@ -297,28 +323,6 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;
     }
-}
-
-- (void)boostrapSynthesia
-{
-    [SynthesiaController runSynthesiaWithCompletion:^{
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-            // Wait for the Synthesia window to come up.
-            int timeoutMs = 1000;
-            while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
-                [NSThread sleepForTimeInterval:0.01f];
-                timeoutMs -= 10;
-            };
-            if (timeoutMs <= 0) {
-                NSLog(@"timeout waiting for Synthesia's application window");
-                return;
-            }
-            // Reset the VideoController.
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.delegate reset:self];
-            });
-        });
-    }];
 }
 
 - (void)receivedEvent:(const int)event value:(int)value
