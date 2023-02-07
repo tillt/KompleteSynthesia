@@ -42,12 +42,15 @@ enum {
 }
 
 NSString* kHardwareAgentName = @"NIHardwareAgent.app";
+NSString* kHardwareAgentBundleIdentifier = @"com.native-instruments.NIHardwareService";
 NSString* kHardwareAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHardwareAgent.app";
 
 NSString* kHostIntegrationAgentName = @"NIHostIntegrationAgent.app";
+NSString* kHostIntegrationAgentBundleIdentifier = @"com.native-instruments.NIHostIntegrationAgent";
 NSString* kHostIntegrationAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app";
 
 NSString* kDaemonName = @"NTKDaemon.app";
+NSString* kDaemonBundleIdentifier = @"com.native-instruments.NTKDaemon";
 NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NTKDaemon.app";
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -62,7 +65,7 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     NSString* fmtFailed = @"failed to stop %@";
     NSString* fmtSkipping = @"%@ is not running";
 
-    NSArray<NSString*>* items = @[ kHardwareAgentName, kHostIntegrationAgentName, kDaemonName ];
+    NSArray<NSString*>* items = @[ kHardwareAgentBundleIdentifier, kHostIntegrationAgentBundleIdentifier, kDaemonBundleIdentifier ];
     
     awaitingAlienCount = 0;
     

@@ -6,15 +6,18 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface ApplicationObserver : NSObject
 
-+ (BOOL)applicationIsRunning:(NSString*)name;
++ (NSRunningApplication*)runningApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
++ (BOOL)applicationIsRunning:(NSString*)bundleIdentifier;
++ (BOOL)applicationHasFocus:(NSString*)bundleIdentifier;
 
 - (id)init;
-- (BOOL)terminateApplication:(NSString*)name completion:(void(^)(BOOL))completion;
+- (BOOL)terminateApplication:(NSString*)bundleIdentifier completion:(void(^)(BOOL))completion;
 
 @end
 

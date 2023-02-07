@@ -11,6 +11,7 @@
 #import "ApplicationObserver.h"
 
 NSString* kSynthesiaApplicationName = @"Synthesia";
+NSString* kSynthesiaApplicationBundleIdentifier = @"com.synthesiallc.synthesia";
 NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
 
 /// Tries to locate Synthesia among the running applications and informs the delegate when the state changed.
@@ -57,7 +58,12 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
 
 + (BOOL)synthesiaRunning
 {
-    return [ApplicationObserver applicationIsRunning:kSynthesiaApplicationName];
+    return [ApplicationObserver applicationIsRunning:kSynthesiaApplicationBundleIdentifier];
+}
+
++ (BOOL)synthesiaHasFocus
+{
+    return [ApplicationObserver applicationHasFocus:kSynthesiaApplicationBundleIdentifier];
 }
 
 + (void)runSynthesiaWithCompletion:(void(^)(void))completion
@@ -75,23 +81,15 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
 
 + (BOOL)activateSynthesia
 {
-    NSArray* apps = [[NSWorkspace sharedWorkspace] runningApplications];
-    for (NSRunningApplication* app in apps) {
-        if ([app.localizedName compare:kSynthesiaApplicationName] == NSOrderedSame) {
-            [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
-            return YES;
-        }
-    }
-    return NO;
-}
+    NSRunningApplication* app = [ApplicationObserver runningApplicationWithBundleIdentifier:kSynthesiaApplicationBundleIdentifier];
 
-+ (BOOL)synthesiaHasFocus
-{
-    NSRunningApplication* app = [[NSWorkspace sharedWorkspace] frontmostApplication];
-    if ([app.localizedName compare:kSynthesiaApplicationName] == NSOrderedSame) {
-        return YES;
+    if (app == nil || app.isTerminated == YES) {
+        return NO;
     }
-    return NO;
+
+    [app activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+
+    return YES;
 }
 
 + (void)triggerVirtualKeyEvents:(CGKeyCode)keyCode
