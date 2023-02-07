@@ -2,7 +2,7 @@
 
 Native Instruments Komplete Kontrol Light Guide and Screen Mirroring Support for Synthesia.
 
-<a href="https://youtu.be/bJiGqRVU9uU">![In Action](site/images/VideoThumb.png)</a>
+<p align="center"><a href="https://youtu.be/bJiGqRVU9uU"><img src="site/images/VideoThumb_Large.png" /></a></p>
 
 ## Features
 
