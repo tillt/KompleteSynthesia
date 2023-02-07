@@ -102,9 +102,10 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 - (void)boostrapSynthesia
 {
     [SynthesiaController runSynthesiaWithCompletion:^{
-        // This should really not be fone via polling.... instead use KVO on RunningApplication.
+        // This should really not be done via polling.... instead use KVO on RunningApplication.
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
             // Wait for the Synthesia window to come up.
+            // TODO: I wonder if it was good enough to use KVO on application.hasLaunched - if that was good for asserting a Window was there, that would be cleaner.
             int timeoutMs = 5000;
             while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
                 [NSThread sleepForTimeInterval:0.01f];
@@ -112,7 +113,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             };
             if (timeoutMs <= 0) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [log logLine:@"timeout waiting for Synthesia's application window"];
+                    [self->log logLine:@"timeout waiting for Synthesia's application window"];
                     [self.delegate reset:self];
                 });
                 return;
@@ -289,7 +290,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     // on a CoreMidi thread.
     dispatch_async(dispatch_get_main_queue(), ^{
         if (cv == kMIDICVStatusNoteOn || cv == kMIDICVStatusNoteOff) {
-            [log logLine:[NSString stringWithFormat:@"port %d - note %-3s - channel %02d - note %@ - velocity %d",
+            [self->log logLine:[NSString stringWithFormat:@"port %d - note %-3s - channel %02d - note %@ - velocity %d",
                           interface,
                           cv == kMIDICVStatusNoteOn ? "on" : "off" ,
                           channel + 1,
@@ -298,13 +299,13 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         } else if (cv == kMIDICVStatusControlChange) {
             if (channel == 0x00 && param1 == 0x10) {
                 if (param2 & 0x04) {
-                    [log logLine:@"user is playing"];
+                    [self->log logLine:@"user is playing"];
                 }
                 if (param2 & 0x01) {
-                    [log logLine:@"playing right hand"];
+                    [self->log logLine:@"playing right hand"];
                 }
                 if (param2 & 0x02) {
-                    [log logLine:@"playing left hand"];
+                    [self->log logLine:@"playing left hand"];
                 }
             }
         }

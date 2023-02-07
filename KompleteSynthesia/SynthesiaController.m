@@ -247,21 +247,23 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
         return YES;
     }
 
-    NSArray<NSString*>* configuration = [[NSString stringWithCString:data.bytes
-                                                              length:data.length] componentsSeparatedByString:@"\n"];
+    NSString* configurationText = [NSString stringWithCString:data.bytes
+                                                     encoding:NSStringEncodingConversionAllowLossy];
+
+    NSArray<NSString*>* configurationLines = [configurationText componentsSeparatedByString:@"\n"];
     
     NSMutableArray* patched = [NSMutableArray array];
-    for (NSString* line in configuration) {
+
+    for (NSString* line in configurationLines) {
         NSString* existingMatcher = @"<OutputDevice version=\"1\" name=\"IAC Driver LoopBe\"";
-        NSUInteger location = [line rangeOfString:existingMatcher].location;
-        if (location == NSNotFound) {
+
+        if ([line rangeOfString:existingMatcher].location == NSNotFound) {
             [patched addObject:line];
         }
     }
     
-    for (int i=0;i < patched.count;i++) {
-        NSUInteger location = [patched[i] rangeOfString:@"</DeviceInfoList>"].location;
-        if (location != NSNotFound) {
+    for (int i = 0; i < patched.count; i++) {
+        if ([patched[i] rangeOfString:@"</DeviceInfoList>"].location != NSNotFound) {
             NSString* expected = @"\t<OutputDevice version=\"1\" name=\"IAC Driver LoopBe\" enabled=\"1\" userNotes=\"0\" backgroundNotes=\"0\" metronome=\"0\" percussion=\"0\" lightChannel=\"-2\" />";
             [patched insertObject:expected atIndex:i];
             break;
@@ -270,11 +272,13 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
     
     NSString* output = [patched componentsJoinedByString:@"\n"];
 
-    if ([output writeToFile:[NSString stringWithCString:panel.URL.fileSystemRepresentation
-                                                  encoding:NSStringEncodingConversionAllowLossy]
-                           atomically:YES
-                             encoding:NSNonLossyASCIIStringEncoding
-                             error:error] == NO) {
+    NSString* filename = [NSString stringWithCString:panel.URL.fileSystemRepresentation
+                                            encoding:NSStringEncodingConversionAllowLossy];
+
+    if ([output writeToFile:filename
+                 atomically:YES
+                   encoding:NSNonLossyASCIIStringEncoding
+                      error:error] == NO) {
         NSLog(@"Error %@", *error);
         return NO;
     }

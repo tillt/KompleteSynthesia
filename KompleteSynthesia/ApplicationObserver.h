@@ -1,5 +1,5 @@
 //
-//  ApplicationHelperFunction.h
+//  ApplicationObserver.h
 //  KompleteSynthesia
 //
 //  Created by Till Toenshoff on 05.02.23.

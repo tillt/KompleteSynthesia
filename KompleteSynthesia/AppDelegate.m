@@ -108,9 +108,9 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 
             [self.logViewController logLine:[NSString stringWithFormat:fmtStopped, items[i]]];
 
-            --awaitingAlienCount;
+            --self->awaitingAlienCount;
             
-            if (awaitingAlienCount == 0) {
+            if (self->awaitingAlienCount == 0) {
                 [self applicationDidFinishInitializingWithUSBHighwayOpen:YES];
             }
         }];

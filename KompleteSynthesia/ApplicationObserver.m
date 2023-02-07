@@ -1,5 +1,5 @@
 //
-//  ApplicationHelperFunction.m
+//  ApplicationObserver.m
 //  KompleteSynthesia
 //
 //  Created by Till Toenshoff on 05.02.23.
@@ -7,6 +7,8 @@
 
 #import "ApplicationObserver.h"
 #import <AppKit/AppKit.h>
+
+/// Provides a collection of workspace application queries and commands.
 
 static NSString *const KVO_CONTEXT_TERMINATED_CHANGED = @"KVO_CONTEXT_TERMINATED_CHANGED";
 const NSTimeInterval kShutdownTimeout = 5.0;
@@ -73,18 +75,18 @@ const NSTimeInterval kShutdownTimeout = 5.0;
     NSLog(@"found %@ and trying to kill %@ ...", bundleIdentifier, app.localizedName);
     
     NSTimer* timer = [NSTimer scheduledTimerWithTimeInterval:kShutdownTimeout repeats:NO block:^(NSTimer* timer){
-        if ([observedApplications objectForKey:bundleIdentifier] == nil) {
+        if ([self->observedApplications objectForKey:bundleIdentifier] == nil) {
             // Application seems gone, we are done.
             return;
         }
 
         // Seems like that application was still running, give up!
         NSLog(@"timeout when trying to kill %@", bundleIdentifier);
-        NSDictionary* dict = observedApplications[bundleIdentifier];
+        NSDictionary* dict = self->observedApplications[bundleIdentifier];
         void(^completion)(BOOL) = dict[@"completion"];
         
         [dict[@"application"] removeObserver:self forKeyPath:@"isTerminated"];
-        [observedApplications removeObjectForKey:bundleIdentifier];
+        [self->observedApplications removeObjectForKey:bundleIdentifier];
         
         completion(NO);
     }];

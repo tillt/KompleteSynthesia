@@ -113,9 +113,9 @@ const int kHeaderHeight = 26;
     [log logLine:@"starting window mirroring"];
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        atomic_fetch_or(&mirrorActive, 1);
+        atomic_fetch_or(&self->mirrorActive, 1);
 
-        while(stopMirroring == 0) {
+        while(self->stopMirroring == 0) {
             CGImageRef original = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, windowNumber, kCGWindowImageBoundsIgnoreFraming);
             if (original == nil) {
                 NSLog(@"window disappeared, lets stop this");
@@ -131,7 +131,7 @@ const int kHeaderHeight = 26;
 
     doneMirroring:
         [self clearScreen:0 error:nil];
-        atomic_fetch_and(&mirrorActive, 0);
+        atomic_fetch_and(&self->mirrorActive, 0);
     });
     
     return YES;
