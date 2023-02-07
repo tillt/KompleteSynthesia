@@ -31,6 +31,9 @@ When running it the first time, the first thing you will be asked by your system
 - Allow for 'Input Monitoring'
     - this is needed for receiving button events from the Komplete Kontrol controller
 
+- Allow for 'Screen Recording'
+    - this is needed for mirroring the Synthesia application window onto the Komplete Kontrol LCD screens
+
 Then, when pushing the 'Play' button or using the jogwheel, the system will ask you for:
 
 - Allow for 'Accessibility'
