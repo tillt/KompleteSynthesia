@@ -133,6 +133,21 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
         return;
     }
 
+    _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController
+                                                                   delegate:self
+                                                                      error:&error];
+    if (_midi2hidController == nil) {
+        [[NSAlert alertWithError:error] runModal];
+        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+        return;
+    }
+
+    // May fix https://github.com/tillt/KompleteSynthesia/issues/13.
+    // We won't need any bulk USB access for MK1 controllers - they have no screens.
+    if (!_midi2hidController.mk2Controller) {
+        usbAvailable = NO;
+    }
+
     if (usbAvailable == YES) {
         _videoController = [[VideoController alloc] initWithLogViewController:_logViewController
                                                                         error:&error];
@@ -141,15 +156,6 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
             [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
             return;
         }
-    }
-   
-    _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController
-                                                                   delegate:self
-                                                                      error:&error];
-    if (_midi2hidController == nil) {
-        [[NSAlert alertWithError:error] runModal];
-        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
-        return;
     }
     
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
