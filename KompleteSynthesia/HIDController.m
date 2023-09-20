@@ -64,7 +64,7 @@ const uint8_t kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kK
 // Seems to be overall device state/Mode Sending just 0xa0 initializes the
 // device and keyboard light control works.
 const uint8_t kCommandInit = 0xA0;
-const uint8_t kKompleteKontrolInit[] = { kCommandInit };
+const uint8_t kKompleteKontrolInit[] = { kCommandInit, 0x00, 0x00 };
 
 const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
 const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
