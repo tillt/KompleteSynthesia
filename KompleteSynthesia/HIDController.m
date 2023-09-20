@@ -557,6 +557,10 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
 
 - (void)lightsSwooshTo:(unsigned char)unpressedKeyState
 {
+    // FIXME: Currently MK1 controllers are not supported for extra beauty.
+    if (_mk2Controller == NO) {
+        return;
+    }
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         const int midIndex = self.keyCount / 2;
 
