@@ -601,9 +601,11 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
                 const unsigned int keysPerShade = 4;
                 const unsigned long round = tick / midIndex;
                 if (keyIndex < round * keysPerShade) {
+                    // FIXME: This is MK2 specific and needs and update for MK1!
                     self.keys[keyIndex] = dimmedKeyState(self.keys[keyIndex],
                                                          YES,
                                                          (self.keys[keyIndex] & 0xfc) | rainbowIntensity);
+                    // FIXME: This is MK2 specific and needs and update for MK1!
                     self.keys[(self.keyCount - 1) - keyIndex] = dimmedKeyState(self.keys[(self.keyCount - 1) - keyIndex],
                                                                                YES,
                                                                                (self.keys[(self.keyCount - 1) - keyIndex] & 0xfc) | rainbowIntensity);
@@ -621,7 +623,9 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
                 unsigned int colorCode = (colorIndex + 1) << 2;
                 colorCode = MIN(colorCode, kKompleteKontrolColorMask);
                 const unsigned int intensity = self.keys[keyIndex] & kKompleteKontrolIntensityMask;
+                // FIXME: This is MK2 specific and needs and update for MK1!
                 self.keys[keyIndex] = colorCode | intensity;
+                // FIXME: This is MK2 specific and needs and update for MK1!
                 self.keys[(self.keyCount - 1) - keyIndex] = colorCode | intensity;
             }
             // Once we are starting a new round of shading, we can display the old one.
