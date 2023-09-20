@@ -91,7 +91,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
         [self synthesiaStateUpdate:@""];
         
-        if ([self resetWithSwoosh:NO error:error] == NO) {
+        if ([self resetWithError:error] == NO) {
             return nil;
         }
     }
@@ -136,7 +136,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     return colorMap;
 }
 
-- (BOOL)resetWithSwoosh:(BOOL)swoosh error:(NSError**)error
+- (BOOL)resetWithError:(NSError**)error
 {
     hid = [[HIDController alloc] initWithDelegate:self error:error];
     if (hid == nil) {
@@ -149,9 +149,12 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         return NO;
     }
 
-    [hid lightsSwooshTo:colorMap[kColorMapUnpressed]];
-
     return YES;
+}
+
+- (void)swoosh
+{
+    [hid lightsSwooshTo:colorMap[kColorMapUnpressed]];
 }
 
 - (void)teardown
@@ -324,7 +327,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     [log logLine:@"HID device removed"];
     
     NSError* error = nil;
-    if ([self resetWithSwoosh:NO error:&error] == NO) {
+    if ([self resetWithError:&error] == NO) {
         [[NSAlert alertWithError:error] runModal];
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;

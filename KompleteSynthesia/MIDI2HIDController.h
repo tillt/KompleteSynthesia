@@ -47,7 +47,8 @@ enum {
                    delegate:(id)delegate
                       error:(NSError**)error;
 
-- (BOOL)resetWithSwoosh:(BOOL)swoosh error:(NSError**)error;
+- (BOOL)resetWithError:(NSError**)error;
+- (void)swoosh;
 - (void)teardown;
 - (void)lightsDefault;
 - (void)boostrapSynthesia;

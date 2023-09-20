@@ -123,7 +123,7 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     NSError* error = nil;
     
     usbAvailable = usbHighwayOpen;
-
+    
     _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
                                                                delegate:self
                                                                   error:&error];
@@ -132,7 +132,7 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;
     }
-
+    
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController
                                                                    delegate:self
                                                                       error:&error];
@@ -141,13 +141,13 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;
     }
-
+    
     // May fix https://github.com/tillt/KompleteSynthesia/issues/13.
     // We won't need any bulk USB access for MK1 controllers - they have no screens.
     if (!_midi2hidController.mk2Controller) {
         usbAvailable = NO;
     }
-
+    
     if (usbAvailable == YES) {
         _videoController = [[VideoController alloc] initWithLogViewController:_logViewController
                                                                         error:&error];
@@ -161,10 +161,10 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults registerDefaults:@{@"forward_buttons_to_synthesia_only": @(YES)}];
     _midi2hidController.forwardButtonsToSynthesiaOnly = [userDefaults boolForKey:@"forward_buttons_to_synthesia_only"];
-   
+    
     // Hide application icon.
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
-
+    
     self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
     self.statusItem.button.action = @selector(showStatusMenu:);
     [self.statusItem.button sendActionOn:NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown];
@@ -191,6 +191,8 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
         [_logViewController logLine:@"Synthesia not running, starting it now"];
         [_midi2hidController boostrapSynthesia];
     }
+    
+    [_midi2hidController swoosh];
 }
 
 - (void)preferences:(id)sender
@@ -225,10 +227,12 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
         }
     }
 
-    if ([_midi2hidController resetWithSwoosh:YES error:&error] == NO) {
+    if ([_midi2hidController resetWithError:&error] == NO) {
         [[NSAlert alertWithError:error] runModal];
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
     }
+
+    [_midi2hidController swoosh];
 }
 
 - (void)showLog:(id)sender
