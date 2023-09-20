@@ -400,7 +400,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.54;
+				MARKETING_VERSION = 0.55.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = tillt.KompleteSynthesia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -432,7 +432,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 11.0;
-				MARKETING_VERSION = 0.54;
+				MARKETING_VERSION = 0.55.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = tillt.KompleteSynthesia;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
