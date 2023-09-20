@@ -85,6 +85,29 @@ const float kLightsSwooshTick = 1.0f / 24.0;
 
 const size_t kInputBufferSize = 64;
 
+// This is just a very rough, initial approximation of the actual palette of the S-series
+// MK2 controllers.
+// FIXME: For MK1 we could simply use the same palette - worth a shot!
+const unsigned char kMK2Palette[17][3] = {
+    { 0xFF, 0x00, 0x00 },   // 0: red
+    { 0xFF, 0x3F, 0x00 },   // 1:
+    { 0xFF, 0x7F, 0x00 },   // 2: orange
+    { 0xFF, 0xCF, 0x00 },   // 3: orange-yellow
+    { 0xFF, 0xFF, 0x00 },   // 4: yellow
+    { 0x7F, 0xFF, 0x00 },   // 5: green-yellow
+    { 0x00, 0xFF, 0x00 },   // 6: green
+    { 0x00, 0xFF, 0x7F },   // 7:
+    { 0x00, 0xFF, 0xFF },   // 8:
+    { 0x00, 0x7F, 0xFF },   // 9:
+    { 0x00, 0x00, 0xFF },   // 10: blue
+    { 0x3F, 0x00, 0xFF },   // 11:
+    { 0x7F, 0x00, 0xFF },   // 12: purple
+    { 0xFF, 0x00, 0xFF },   // 13: pink
+    { 0xFF, 0x00, 0x7F },   // 14:
+    { 0xFF, 0x00, 0x3F },   // 15:
+    { 0xFF, 0xFF, 0xFF }    // 16: white
+};
+
 //#define DEBUG_HID_INPUT
 
 static void HIDInputCallback(void* context,
@@ -140,31 +163,10 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     const unsigned char colorIndex = ((keyState >> 2) - 1) % kKompleteKontrolColorCount;
     const unsigned char colorIntensity = (keyState & kKompleteKontrolIntensityMask) + intensityShift;
 
-    // TODO: This is just a very rough, initial approximation of the actual palette of the S-series controllers.
-    const unsigned char palette[17][3] = {
-        { 0xFF, 0x00, 0x00 },   // 0: red
-        { 0xFF, 0x3F, 0x00 },   // 1:
-        { 0xFF, 0x7F, 0x00 },   // 2: orange
-        { 0xFF, 0xCF, 0x00 },   // 3: orange-yellow
-        { 0xFF, 0xFF, 0x00 },   // 4: yellow
-        { 0x7F, 0xFF, 0x00 },   // 5: green-yellow
-        { 0x00, 0xFF, 0x00 },   // 6: green
-        { 0x00, 0xFF, 0x7F },   // 7:
-        { 0x00, 0xFF, 0xFF },   // 8:
-        { 0x00, 0x7F, 0xFF },   // 9:
-        { 0x00, 0x00, 0xFF },   // 10: blue
-        { 0x3F, 0x00, 0xFF },   // 11:
-        { 0x7F, 0x00, 0xFF },   // 12: purple
-        { 0xFF, 0x00, 0xFF },   // 13: pink
-        { 0xFF, 0x00, 0x7F },   // 14:
-        { 0xFF, 0x00, 0x3F },   // 15:
-        { 0xFF, 0xFF, 0xFF }    // 16: white
-    };
-    
     // FIXME: This intensity simulation only really works for white - racist shit!
-    return [NSColor colorWithRed:(((float)palette[colorIndex][0] / 255.0f) * colorIntensity) / intensityDivider
-                           green:(((float)palette[colorIndex][1] / 255.0f) * colorIntensity) / intensityDivider
-                            blue:(((float)palette[colorIndex][2] / 255.0f) * colorIntensity) / intensityDivider
+    return [NSColor colorWithRed:(((float)kMK2Palette[colorIndex][0] / 255.0f) * colorIntensity) / intensityDivider
+                           green:(((float)kMK2Palette[colorIndex][1] / 255.0f) * colorIntensity) / intensityDivider
+                            blue:(((float)kMK2Palette[colorIndex][2] / 255.0f) * colorIntensity) / intensityDivider
                            alpha:1.0f];
 }
 
@@ -173,20 +175,35 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     self = [super init];
     if (self) {
         _delegate = delegate;
+
         device = [self detectKeyboardController:error];
         if (device == nil) {
             return nil;
         }
+
         if ([self initKeyboardController:error] == NO) {
             return nil;
         }
-        lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK2;
+
         _keys = &lightGuideUpdateMessage[1];
-        memset(_keys, kKeyColorUnpressed, kKompleteKontrolLightGuideKeyMapSize);
+        if (_mk2Controller) {
+            memset(_keys, kKeyColorUnpressed, kKompleteKontrolLightGuideKeyMapSize);
+        } else {
+            for (unsigned int i = 0; i < kKompleteKontrolLightGuideKeyMapSize; i += 3) {
+                // FIXME: This is a hack to at least see some colors on MK1 controllers - maybe.
+                // First thing that likely wont be correct is the intensity - it may be that the
+                // top bits set make the color appear darker - users shall report...
+                _keys[i + 0] = kMK2Palette[kKeyColorUnpressed][0];
+                _keys[i + 1] = kMK2Palette[kKeyColorUnpressed][1];
+                _keys[i + 2] = kMK2Palette[kKeyColorUnpressed][2];
+            }
+        }
 
         buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
         _buttons = &buttonLightingUpdateMessage[1];
+
         memset(_buttons, 0, kKompleteKontrolButtonsMapSize);
+
         _buttons[kKompleteKontrolButtonIdPlay] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIdJogDown] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIdJogUp] = kKompleteKontrolColorBrightWhite;
@@ -472,7 +489,16 @@ typedef struct {
 
 - (void)lightKey:(int)key color:(unsigned char)color
 {
-    _keys[key] = color;
+    if (_mk2Controller) {
+        _keys[key] = color;
+    } else {
+        // FIXME: This is a hack to at least see some colors on MK1 controllers - maybe.
+        // First thing that likely wont be correct is the intensity - it may be that the
+        // top bits set make the color appear darker - users shall report...
+        _keys[key * 3 + 0] = kMK2Palette[color][0];
+        _keys[key * 3 + 1] = kMK2Palette[color][1];
+        _keys[key * 3 + 2] = kMK2Palette[color][2];
+    }
     [self updateLightGuideMap:nil];
 }
 
@@ -488,7 +514,18 @@ typedef struct {
 
 - (void)lightKeysWithColor:(unsigned char)color
 {
-    memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
+    if (_mk2Controller) {
+        memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
+    } else {
+        for (unsigned int i = 0; i < kKompleteKontrolLightGuideKeyMapSize; i += 3) {
+            // FIXME: This is a hack to at least see some colors on MK1 controllers - maybe.
+            // First thing that likely wont be correct is the intensity - it may be that the
+            // top bits set make the color appear darker - users shall report...
+            _keys[i + 0] = kMK2Palette[color][0];
+            _keys[i + 1] = kMK2Palette[color][1];
+            _keys[i + 2] = kMK2Palette[color][2];
+        }
+    }
     [self updateLightGuideMap:nil];
 }
 
