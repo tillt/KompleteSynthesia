@@ -87,7 +87,6 @@ const size_t kInputBufferSize = 64;
 
 // This is just a very rough, initial approximation of the actual palette of the S-series
 // MK2 controllers.
-// FIXME: For MK1 we could simply use the same palette - worth a shot!
 const unsigned char kMK2Palette[17][3] = {
     { 0xFF, 0x00, 0x00 },   // 0: red
     { 0xFF, 0x3F, 0x00 },   // 1:
@@ -186,20 +185,9 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         }
 
         _keys = &lightGuideUpdateMessage[1];
-        if (_mk2Controller) {
-            memset(_keys, kKeyColorUnpressed, kKompleteKontrolLightGuideKeyMapSize);
-        } else {
-            for (unsigned int i = 0; i < kKompleteKontrolLightGuideKeyMapSize; i += 3) {
-                // FIXME: This is a hack to at least see some colors on MK1 controllers - maybe.
-                // First thing that likely wont be correct is the intensity - it may be that the
-                // top bits set make the color appear darker - users shall report...
-                _keys[i + 0] = kMK2Palette[kKeyColorUnpressed][0];
-                _keys[i + 1] = kMK2Palette[kKeyColorUnpressed][1];
-                _keys[i + 2] = kMK2Palette[kKeyColorUnpressed][2];
-            }
-        }
 
-        buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
+        [self lightKeysWithColor:kKeyColorUnpressed];
+
         _buttons = &buttonLightingUpdateMessage[1];
 
         memset(_buttons, 0, kKompleteKontrolButtonsMapSize);
