@@ -76,7 +76,6 @@ const uint8_t kCommandButtonLightsUpdate = 0x80;
 const size_t kKompleteKontrolButtonsMessageSize = 80;
 const size_t kKompleteKontrolButtonsMapSize = kKompleteKontrolButtonsMessageSize - 1;
 
-
 // Funky defaults - users might hate me - but I like orange, eat it!
 const uint8_t kKeyColorUnpressed = kKompleteKontrolColorOrange;
 const uint8_t kKeyColorPressed = kKompleteKontrolColorLightOrange;
@@ -138,7 +137,6 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     HIDController* controller = (__bridge HIDController*)context;
     [controller deviceRemoved];
 }
-
 
 @interface HIDController ()
 @end
