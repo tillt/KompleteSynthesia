@@ -99,9 +99,9 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     return self;
 }
 
-- (BOOL)mk2Controller
+- (int)mk
 {
-    return hid.mk2Controller;
+    return hid.mk;
 }
 
 - (void)boostrapSynthesia

@@ -53,9 +53,9 @@ const int kHeaderHeight = 26;
         }
         [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
 
-        if (usb.mk2Controller == YES) {
-            _screenCount = 2;
-            _screenSize = CGSizeMake(480.0f, 272.0f);
+        if (usb.mk > 1) {
+            _screenCount = usb.mk == 2 ? 2 : 1;
+            _screenSize = usb.mk == 2 ? CGSizeMake(480.0f, 272.0f) : CGSizeMake(480.0f, 272.0f);
             tempBuffer = malloc(_screenSize.width * 4 * _screenSize.height);
             resizeBuffer = malloc(_screenSize.width * 4 * _screenSize.height);
             // width * height * 2 (261120) + commands (36)

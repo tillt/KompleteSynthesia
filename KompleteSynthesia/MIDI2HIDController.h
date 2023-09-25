@@ -52,7 +52,7 @@ enum {
 - (void)teardown;
 - (void)lightsDefault;
 - (void)boostrapSynthesia;
-- (BOOL)mk2Controller;
+- (int)mk;
 
 @end
 
