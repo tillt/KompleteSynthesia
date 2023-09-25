@@ -100,7 +100,7 @@ enum {
 @interface HIDController : NSObject
 @property (nonatomic, copy) NSString* deviceName;
 @property (nonatomic, copy) NSString* status;
-@property (nonatomic, assign) BOOL mk2Controller;
+@property (nonatomic, assign) int mk;
 @property (nonatomic, assign) int keyOffset;
 @property (nonatomic, assign) unsigned int keyCount;
 @property (assign, nonatomic) unsigned char* keys;

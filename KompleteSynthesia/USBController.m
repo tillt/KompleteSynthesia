@@ -29,6 +29,11 @@ const uint32_t kPID_S49MK2 = 0x1610;
 const uint32_t kPID_S61MK2 = 0x1620;
 const uint32_t kPID_S88MK2 = 0x1630;
 
+// MK3 controllers.
+const uint32_t kPID_S49MK3 = 0x1710;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
+const uint32_t kPID_S61MK3 = 0x1720;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
+const uint32_t kPID_S88MK3 = 0x1730;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
+
 @implementation USBController {
     IOUSBDeviceInterface942** device;
     IOUSBInterfaceInterface942** interface;
@@ -333,16 +338,19 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
 
 - (IOUSBDeviceInterface942**)detectDevice:(NSError**)error
 {
-    // FIXME: offset wont be used on this level - lets see what else we need here...
     NSDictionary* supportedDevices = @{
-        @(kPID_S25MK1): @{ @"keys": @(25), @"mk2": @NO },
-        @(kPID_S49MK1): @{ @"keys": @(49), @"mk2": @NO },
-        @(kPID_S61MK1): @{ @"keys": @(61), @"mk2": @NO },
-        @(kPID_S88MK1): @{ @"keys": @(88), @"mk2": @NO },
+        @(kPID_S25MK1): @{ @"keys": @(25), @"mk": @(1) },
+        @(kPID_S49MK1): @{ @"keys": @(49), @"mk": @(1) },
+        @(kPID_S61MK1): @{ @"keys": @(61), @"mk": @(1) },
+        @(kPID_S88MK1): @{ @"keys": @(88), @"mk": @(1) },
 
-        @(kPID_S49MK2): @{ @"keys": @(49), @"mk2": @YES },
-        @(kPID_S61MK2): @{ @"keys": @(61), @"mk2": @YES },
-        @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES },
+        @(kPID_S49MK2): @{ @"keys": @(49), @"mk": @(2) },
+        @(kPID_S61MK2): @{ @"keys": @(61), @"mk": @(2) },
+        @(kPID_S88MK2): @{ @"keys": @(88), @"mk": @(2) },
+
+        @(kPID_S49MK3): @{ @"keys": @(49), @"mk": @(3) },
+        @(kPID_S61MK3): @{ @"keys": @(61), @"mk": @(3) },
+        @(kPID_S88MK3): @{ @"keys": @(88), @"mk": @(3) },
     };
 
     io_registry_entry_t entry = 0;
@@ -411,8 +419,8 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
 
         if ([supportedDevices objectForKey:@(valueWord)] != nil) {
             _keyCount = [supportedDevices[@(valueWord)][@"keys"] intValue];
-            _mk2Controller = [supportedDevices[@(valueWord)][@"mk2"] boolValue];
-            _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
+            _mk = [supportedDevices[@(valueWord)][@"mk"] intValue];
+            _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk];
             IOObjectRelease(iter);
             device = dev;
             return dev;

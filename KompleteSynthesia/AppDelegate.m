@@ -142,9 +142,8 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
         return;
     }
     
-    // May fix https://github.com/tillt/KompleteSynthesia/issues/13.
     // We won't need any bulk USB access for MK1 controllers - they have no screens.
-    if (!_midi2hidController.mk2Controller) {
+    if (_midi2hidController.mk == 1) {
         usbAvailable = NO;
     }
     

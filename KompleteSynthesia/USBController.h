@@ -23,14 +23,19 @@ extern const uint32_t kPID_S49MK2;
 extern const uint32_t kPID_S61MK2;
 extern const uint32_t kPID_S88MK2;
 
+// MK3 controllers.
+extern const uint32_t kPID_S49MK3;
+extern const uint32_t kPID_S61MK3;
+extern const uint32_t kPID_S88MK3;
+
 @interface USBController : NSObject
 
 @property (nonatomic, copy) NSString* deviceName;
 @property (nonatomic, copy) NSString* status;
 @property (nonatomic, assign) unsigned int keyCount;
+@property (nonatomic, assign) unsigned int mk;
 @property (nonatomic, assign) CGSize screenSize;
 @property (nonatomic, assign) unsigned int screenCount;
-@property (nonatomic, assign) BOOL mk2Controller;
 @property (nonatomic, assign) BOOL connected;
 
 

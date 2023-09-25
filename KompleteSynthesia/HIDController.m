@@ -243,7 +243,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 // TODO: Make this MK1 compatible
 - (unsigned char)keyColor:(int)note
 {
-    assert(_mk2Controller);
+    assert(_mk == 2);
     assert(note < kKompleteKontrolLightGuideKeyMapSize);
     return _keys[note];
 }
@@ -369,14 +369,17 @@ typedef struct {
 - (IOHIDDeviceRef)detectKeyboardController:(NSError**)error
 {
     NSDictionary* supportedDevices = @{
-        @(kPID_S25MK1): @{ @"keys": @(25), @"mk2": @NO, @"offset": @(-21) },
-        @(kPID_S49MK1): @{ @"keys": @(49), @"mk2": @NO, @"offset": @(-36) },
-        @(kPID_S61MK1): @{ @"keys": @(61), @"mk2": @NO, @"offset": @(-36) },
-        @(kPID_S88MK1): @{ @"keys": @(88), @"mk2": @NO, @"offset": @(-21) },
+        @(kPID_S25MK1): @{ @"keys": @(25), @"mk": @(1), @"offset": @(-21) },
+        @(kPID_S49MK1): @{ @"keys": @(49), @"mk": @(1), @"offset": @(-36) },
+        @(kPID_S61MK1): @{ @"keys": @(61), @"mk": @(1), @"offset": @(-36) },
+        @(kPID_S88MK1): @{ @"keys": @(88), @"mk": @(1), @"offset": @(-21) },
 
-        @(kPID_S49MK2): @{ @"keys": @(49), @"mk2": @YES, @"offset": @(-36) },
-        @(kPID_S61MK2): @{ @"keys": @(61), @"mk2": @YES, @"offset": @(-36) },
-        @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES, @"offset": @(-21) },
+        @(kPID_S49MK2): @{ @"keys": @(49), @"mk": @(2), @"offset": @(-36) },
+        @(kPID_S61MK2): @{ @"keys": @(61), @"mk": @(2), @"offset": @(-36) },
+        @(kPID_S88MK2): @{ @"keys": @(88), @"mk": @(2), @"offset": @(-21) },
+
+        @(kPID_S61MK3): @{ @"keys": @(61), @"mk": @(3), @"offset": @(-36) },
+        @(kPID_S88MK3): @{ @"keys": @(88), @"mk": @(3), @"offset": @(-21) },
     };
     
 #ifdef DEBUG_FAKE_CONTROLLER
@@ -408,12 +411,12 @@ typedef struct {
 
         if ([supportedDevices objectForKey:@(product)] != nil) {
             _keyCount = [supportedDevices[@(product)][@"keys"] intValue];
-            _mk2Controller = [supportedDevices[@(product)][@"mk2"] boolValue];
+            _mk = [supportedDevices[@(product)][@"mk"] intValue];
             _keyOffset = [supportedDevices[@(product)][@"offset"] intValue];
-            lightGuideUpdateMessage[0] = _mk2Controller ? kCommandLightGuideUpdateMK2 : kCommandLightGuideUpdateMK1;
+            lightGuideUpdateMessage[0] = _mk == 2 ? kCommandLightGuideUpdateMK2 : kCommandLightGuideUpdateMK1;
             // FIXME: This is likely wrong for MK1 devices!
             buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
-            _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
+            _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk];
             return devices[i];
         }
     }
@@ -521,7 +524,7 @@ typedef struct {
 
 - (void)lightKey:(int)key color:(unsigned char)color
 {
-    if (_mk2Controller) {
+    if (_mk == 2) {
         _keys[key] = color;
     } else {
         setMk1ColorWithMk2ColorCode(color, &_keys[key*3]);
@@ -531,7 +534,7 @@ typedef struct {
 
 - (void)lightKeysWithColor:(unsigned char)color
 {
-    if (_mk2Controller) {
+    if (_mk == 2) {
         memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
     } else {
         for (unsigned int i = 0; i < kKompleteKontrolLightGuideKeyMapSize; i += 3) {
@@ -575,7 +578,7 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
 - (void)lightsSwooshTo:(unsigned char)unpressedKeyState
 {
     // FIXME: Currently MK1 controllers are not supported for extra beauty.
-    if (_mk2Controller == NO) {
+    if (_mk == 2) {
         return;
     }
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
