@@ -277,7 +277,7 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
         return;
     }
 
-    const int index = mk2ColorCode >> 2;
+    int index = (mk2ColorCode >> 2) - 1;
     assert(index <= 16);
     const int intensity = mk2ColorCode & 0x03;
     const int shift = 1 + (3 - intensity);
