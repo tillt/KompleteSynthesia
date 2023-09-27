@@ -379,6 +379,16 @@ typedef struct {
         @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES, @"offset": @(-21) },
     };
     
+#ifdef DEBUG_FAKE_CONTROLLER
+    _keyCount = 88;
+    _mk2Controller = YES;
+    _keyOffset = -21;
+    lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK2;
+    // FIXME: This is likely wrong for MK1 devices!
+    buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
+    _deviceName = [NSString stringWithFormat:@"FAKE Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
+    return NULL;
+#else
     IOHIDManagerRef mgr = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
     IOHIDManagerSetDeviceMatching(mgr, NULL);
     IOHIDManagerOpen(mgr, kIOHIDOptionsTypeNone);
@@ -422,7 +432,7 @@ typedef struct {
     free(devices);
     CFRelease(mgr);
     CFRelease(deviceSet);
-
+#endif
     return NULL;
 }
 
