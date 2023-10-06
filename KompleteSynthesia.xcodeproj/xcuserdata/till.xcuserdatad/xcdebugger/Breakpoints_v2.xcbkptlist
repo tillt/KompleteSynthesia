@@ -87,17 +87,160 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "6ECFEA22-D215-4CC9-A93C-F57A77CBAFE2"
+            uuid = "52822036-F40A-4652-85B9-2A96DFD87A2B"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "KompleteSynthesia/USBController.m"
+            filePath = "KompleteSynthesia/HIDController.m"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "308"
-            endingLineNumber = "308"
-            landmarkName = "-bulkWriteData:endpoint:error:"
+            startingLineNumber = "524"
+            endingLineNumber = "524"
+            landmarkName = "-lightKey:color:"
             landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "DCEC0115-9A8C-4A81-9690-704C962A4078"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "KompleteSynthesia/HIDController.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "538"
+            endingLineNumber = "538"
+            landmarkName = "-lightKeysWithColor:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "1D9B1C74-76FF-4C27-BF37-D60B1EE9AA53"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "KompleteSynthesia/HIDController.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "537"
+            endingLineNumber = "537"
+            landmarkName = "-lightKeysWithColor:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "C406AF48-E9DC-4A58-804F-B75412DD80B1"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "KompleteSynthesia/HIDController.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "534"
+            endingLineNumber = "534"
+            landmarkName = "-lightKeysWithColor:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "CCB7E5E2-CC22-4B37-B24C-9C5CB0EDE51F"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "KompleteSynthesia/PreferencesWindowController.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "26"
+            endingLineNumber = "26"
+            landmarkName = "-windowDidLoad"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "E3C3FEFE-08BA-4CAF-AF33-F335A7AA699B"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "KompleteSynthesia/PreferencesWindowController.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "95"
+            endingLineNumber = "95"
+            landmarkName = "-keyStatePicked:index:"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "91169CD8-88BD-4C8F-ADC1-2308CC2B4687"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "KompleteSynthesia/PreferencesWindowController.m"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "115"
+            endingLineNumber = "115"
+            landmarkName = "-assertSynthesiaConfig:"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "91169CD8-88BD-4C8F-ADC1-2308CC2B4687 - 1eb1d88e8b7a8a36"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[PreferencesWindowController assertSynthesiaConfig:]"
+                  moduleName = "KompleteSynthesia"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/till/Development/KompleteSynthesia/KompleteSynthesia/PreferencesWindowController.m"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "112"
+                  endingLineNumber = "112"
+                  offsetFromSymbolStart = "72">
+               </Location>
+               <Location
+                  uuid = "91169CD8-88BD-4C8F-ADC1-2308CC2B4687 - 1eb1d88e8b7a8a36"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[PreferencesWindowController assertSynthesiaConfig:]"
+                  moduleName = "KompleteSynthesia"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/till/Development/KompleteSynthesia/KompleteSynthesia/PreferencesWindowController.m"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "112"
+                  endingLineNumber = "112"
+                  offsetFromSymbolStart = "60">
+               </Location>
+               <Location
+                  uuid = "91169CD8-88BD-4C8F-ADC1-2308CC2B4687 - 1eb1d88e8b7a8aa9"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "-[PreferencesWindowController assertSynthesiaConfig:]"
+                  moduleName = "KompleteSynthesia"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/till/Development/KompleteSynthesia/KompleteSynthesia/PreferencesWindowController.m"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "115"
+                  endingLineNumber = "115"
+                  offsetFromSymbolStart = "60">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

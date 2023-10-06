@@ -18,7 +18,7 @@
     
     NSGraphicsContext* currentContext = [NSGraphicsContext currentContext];
     [currentContext saveGraphicsState];
-
+    
     if (self.isHighlighted) {
         [self.pushedColor setFill];
     } else {
@@ -39,7 +39,8 @@
 
 - (void)setColor:(NSColor*)color
 {
-    if (color == _color) {
+    assert(color);
+    if ([color isEqual:_color]) {
         return;
     }
     _color = color;

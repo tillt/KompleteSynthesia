@@ -64,7 +64,7 @@ const uint8_t kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kK
 // Seems to be overall device state/Mode Sending just 0xa0 initializes the
 // device and keyboard light control works.
 const uint8_t kCommandInit = 0xA0;
-const uint8_t kKompleteKontrolInit[] = { kCommandInit };
+const uint8_t kKompleteKontrolInit[] = { kCommandInit, 0x00, 0x00 };
 
 const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
 const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
@@ -76,7 +76,6 @@ const uint8_t kCommandButtonLightsUpdate = 0x80;
 const size_t kKompleteKontrolButtonsMessageSize = 80;
 const size_t kKompleteKontrolButtonsMapSize = kKompleteKontrolButtonsMessageSize - 1;
 
-
 // Funky defaults - users might hate me - but I like orange, eat it!
 const uint8_t kKeyColorUnpressed = kKompleteKontrolColorOrange;
 const uint8_t kKeyColorPressed = kKompleteKontrolColorLightOrange;
@@ -84,6 +83,28 @@ const uint8_t kKeyColorPressed = kKompleteKontrolColorLightOrange;
 const float kLightsSwooshTick = 1.0f / 24.0;
 
 const size_t kInputBufferSize = 64;
+
+// This is just a very rough, initial approximation of the actual palette of the S-series
+// MK2 controllers.
+const unsigned char kMK2Palette[17][3] = {
+    { 0xFF, 0x00, 0x00 },   // 0: red
+    { 0xFF, 0x3F, 0x00 },   // 1:
+    { 0xFF, 0x7F, 0x00 },   // 2: orange
+    { 0xFF, 0xCF, 0x00 },   // 3: orange-yellow
+    { 0xFF, 0xFF, 0x00 },   // 4: yellow
+    { 0x7F, 0xFF, 0x00 },   // 5: green-yellow
+    { 0x00, 0xFF, 0x00 },   // 6: green
+    { 0x00, 0xFF, 0x7F },   // 7:
+    { 0x00, 0xFF, 0xFF },   // 8:
+    { 0x00, 0x7F, 0xFF },   // 9:
+    { 0x00, 0x00, 0xFF },   // 10: blue
+    { 0x3F, 0x00, 0xFF },   // 11:
+    { 0x7F, 0x00, 0xFF },   // 12: purple
+    { 0xFF, 0x00, 0xFF },   // 13: pink
+    { 0xFF, 0x00, 0x7F },   // 14:
+    { 0xFF, 0x00, 0x3F },   // 15:
+    { 0xFF, 0xFF, 0xFF }    // 16: white
+};
 
 //#define DEBUG_HID_INPUT
 
@@ -117,7 +138,6 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     [controller deviceRemoved];
 }
 
-
 @interface HIDController ()
 @end
 
@@ -140,31 +160,10 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     const unsigned char colorIndex = ((keyState >> 2) - 1) % kKompleteKontrolColorCount;
     const unsigned char colorIntensity = (keyState & kKompleteKontrolIntensityMask) + intensityShift;
 
-    // TODO: This is just a very rough, initial approximation of the actual palette of the S-series controllers.
-    const unsigned char palette[17][3] = {
-        { 0xFF, 0x00, 0x00 },   // 0: red
-        { 0xFF, 0x3F, 0x00 },   // 1:
-        { 0xFF, 0x7F, 0x00 },   // 2: orange
-        { 0xFF, 0xCF, 0x00 },   // 3: orange-yellow
-        { 0xFF, 0xFF, 0x00 },   // 4: yellow
-        { 0x7F, 0xFF, 0x00 },   // 5: green-yellow
-        { 0x00, 0xFF, 0x00 },   // 6: green
-        { 0x00, 0xFF, 0x7F },   // 7:
-        { 0x00, 0xFF, 0xFF },   // 8:
-        { 0x00, 0x7F, 0xFF },   // 9:
-        { 0x00, 0x00, 0xFF },   // 10: blue
-        { 0x3F, 0x00, 0xFF },   // 11:
-        { 0x7F, 0x00, 0xFF },   // 12: purple
-        { 0xFF, 0x00, 0xFF },   // 13: pink
-        { 0xFF, 0x00, 0x7F },   // 14:
-        { 0xFF, 0x00, 0x3F },   // 15:
-        { 0xFF, 0xFF, 0xFF }    // 16: white
-    };
-    
     // FIXME: This intensity simulation only really works for white - racist shit!
-    return [NSColor colorWithRed:(((float)palette[colorIndex][0] / 255.0f) * colorIntensity) / intensityDivider
-                           green:(((float)palette[colorIndex][1] / 255.0f) * colorIntensity) / intensityDivider
-                            blue:(((float)palette[colorIndex][2] / 255.0f) * colorIntensity) / intensityDivider
+    return [NSColor colorWithRed:(((float)kMK2Palette[colorIndex][0] / 255.0f) * colorIntensity) / intensityDivider
+                           green:(((float)kMK2Palette[colorIndex][1] / 255.0f) * colorIntensity) / intensityDivider
+                            blue:(((float)kMK2Palette[colorIndex][2] / 255.0f) * colorIntensity) / intensityDivider
                            alpha:1.0f];
 }
 
@@ -173,20 +172,24 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     self = [super init];
     if (self) {
         _delegate = delegate;
+
         device = [self detectKeyboardController:error];
         if (device == nil) {
             return nil;
         }
+
         if ([self initKeyboardController:error] == NO) {
             return nil;
         }
-        lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK2;
-        _keys = &lightGuideUpdateMessage[1];
-        memset(_keys, kKeyColorUnpressed, kKompleteKontrolLightGuideKeyMapSize);
 
-        buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
+        _keys = &lightGuideUpdateMessage[1];
+
+        [self lightKeysWithColor:kKeyColorUnpressed];
+
         _buttons = &buttonLightingUpdateMessage[1];
+
         memset(_buttons, 0, kKompleteKontrolButtonsMapSize);
+
         _buttons[kKompleteKontrolButtonIdPlay] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIdJogDown] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIdJogUp] = kKompleteKontrolColorBrightWhite;
@@ -237,10 +240,51 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     return [HIDController intProperty:@(kIOHIDVendorIDKey) withDevice:device];
 }
 
+// TODO: Make this MK1 compatible
 - (unsigned char)keyColor:(int)note
 {
+    assert(_mk2Controller);
     assert(note < kKompleteKontrolLightGuideKeyMapSize);
     return _keys[note];
+}
+
+static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned char* destination)
+{
+    const unsigned char kPalette[][3] = {
+        { 0xFF, 0x00, 0x00 },   // 0: red
+        { 0xFF, 0x3F, 0x00 },   // 1:
+        { 0xFF, 0x7F, 0x00 },   // 2: orange
+        { 0xFF, 0xCF, 0x00 },   // 3: orange-yellow
+        { 0xFF, 0xFF, 0x00 },   // 4: yellow
+        { 0x7F, 0xFF, 0x00 },   // 5: green-yellow
+        { 0x00, 0xFF, 0x00 },   // 6: green
+        { 0x00, 0xFF, 0x7F },   // 7:
+        { 0x00, 0xFF, 0xFF },   // 8:
+        { 0x00, 0x7F, 0xFF },   // 9:
+        { 0x00, 0x00, 0xFF },   // 10: blue
+        { 0x3F, 0x00, 0xFF },   // 11:
+        { 0x7F, 0x00, 0xFF },   // 12: purple
+        { 0xFF, 0x00, 0xFF },   // 13: pink
+        { 0xFF, 0x00, 0x7F },   // 14:
+        { 0xFF, 0x00, 0x3F },   // 15:
+        { 0xFF, 0xFF, 0xFF }    // 16: white
+    };
+    
+    if (mk2ColorCode == kKompleteKontrolKeyStateLightOff) {
+        destination[0] = 0x00;
+        destination[1] = 0x00;
+        destination[2] = 0x00;
+        return;
+    }
+
+    int index = (mk2ColorCode >> 2) - 1;
+    assert(index <= 16);
+    const int intensity = mk2ColorCode & 0x03;
+    const int shift = 1 + (3 - intensity);
+
+    destination[0] = kPalette[index][0] >> shift;
+    destination[1] = kPalette[index][1] >> shift;
+    destination[2] = kPalette[index][2] >> shift;
 }
 
 - (void)deviceRemoved
@@ -335,6 +379,16 @@ typedef struct {
         @(kPID_S88MK2): @{ @"keys": @(88), @"mk2": @YES, @"offset": @(-21) },
     };
     
+#ifdef DEBUG_FAKE_CONTROLLER
+    _keyCount = 88;
+    _mk2Controller = YES;
+    _keyOffset = -21;
+    lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK2;
+    // FIXME: This is likely wrong for MK1 devices!
+    buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
+    _deviceName = [NSString stringWithFormat:@"FAKE Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
+    return NULL;
+#else
     IOHIDManagerRef mgr = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
     IOHIDManagerSetDeviceMatching(mgr, NULL);
     IOHIDManagerOpen(mgr, kIOHIDOptionsTypeNone);
@@ -357,6 +411,8 @@ typedef struct {
             _mk2Controller = [supportedDevices[@(product)][@"mk2"] boolValue];
             _keyOffset = [supportedDevices[@(product)][@"offset"] intValue];
             lightGuideUpdateMessage[0] = _mk2Controller ? kCommandLightGuideUpdateMK2 : kCommandLightGuideUpdateMK1;
+            // FIXME: This is likely wrong for MK1 devices!
+            buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
             _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk2Controller ? 2 : 1];
             return devices[i];
         }
@@ -376,7 +432,7 @@ typedef struct {
     free(devices);
     CFRelease(mgr);
     CFRelease(deviceSet);
-
+#endif
     return NULL;
 }
 
@@ -463,33 +519,31 @@ typedef struct {
                      error:error];
 }
 
-- (BOOL)updateButtonLightMap:(NSError**)error
-{
-    return [self setReport:buttonLightingUpdateMessage
-                    length:sizeof(buttonLightingUpdateMessage)
-                     error:error];
-}
-
 - (void)lightKey:(int)key color:(unsigned char)color
 {
-    _keys[key] = color;
+    if (_mk2Controller) {
+        _keys[key] = color;
+    } else {
+        setMk1ColorWithMk2ColorCode(color, &_keys[key*3]);
+    }
     [self updateLightGuideMap:nil];
 }
 
-- (void)lightButton:(int)button color:(unsigned char)color
+- (void)lightKeysWithColor:(unsigned char)color
 {
-    _buttons[button] = color;
+    if (_mk2Controller) {
+        memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
+    } else {
+        for (unsigned int i = 0; i < kKompleteKontrolLightGuideKeyMapSize; i += 3) {
+            setMk1ColorWithMk2ColorCode(color, &_keys[i]);
+        }
+    }
+    [self updateLightGuideMap:nil];
 }
 
 - (void)lightsOff
 {
     [self lightKeysWithColor:kKompleteKontrolKeyStateLightOff];
-}
-
-- (void)lightKeysWithColor:(unsigned char)color
-{
-    memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
-    [self updateLightGuideMap:nil];
 }
 
 static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsigned char endState)
@@ -520,6 +574,10 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
 
 - (void)lightsSwooshTo:(unsigned char)unpressedKeyState
 {
+    // FIXME: Currently MK1 controllers are not supported for extra beauty.
+    if (_mk2Controller == NO) {
+        return;
+    }
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         const int midIndex = self.keyCount / 2;
 
@@ -564,9 +622,11 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
                 const unsigned int keysPerShade = 4;
                 const unsigned long round = tick / midIndex;
                 if (keyIndex < round * keysPerShade) {
+                    // FIXME: This is MK2 specific and needs and update for MK1!
                     self.keys[keyIndex] = dimmedKeyState(self.keys[keyIndex],
                                                          YES,
                                                          (self.keys[keyIndex] & 0xfc) | rainbowIntensity);
+                    // FIXME: This is MK2 specific and needs and update for MK1!
                     self.keys[(self.keyCount - 1) - keyIndex] = dimmedKeyState(self.keys[(self.keyCount - 1) - keyIndex],
                                                                                YES,
                                                                                (self.keys[(self.keyCount - 1) - keyIndex] & 0xfc) | rainbowIntensity);
@@ -584,7 +644,9 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
                 unsigned int colorCode = (colorIndex + 1) << 2;
                 colorCode = MIN(colorCode, kKompleteKontrolColorMask);
                 const unsigned int intensity = self.keys[keyIndex] & kKompleteKontrolIntensityMask;
+                // FIXME: This is MK2 specific and needs and update for MK1!
                 self.keys[keyIndex] = colorCode | intensity;
+                // FIXME: This is MK2 specific and needs and update for MK1!
                 self.keys[(self.keyCount - 1) - keyIndex] = colorCode | intensity;
             }
             // Once we are starting a new round of shading, we can display the old one.
@@ -597,6 +659,18 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
         // Assert final state on all keys - if the above left some garbage.
         [self lightKeysWithColor:unpressedKeyState];
     });
+}
+
+- (BOOL)updateButtonLightMap:(NSError**)error
+{
+    return [self setReport:buttonLightingUpdateMessage
+                    length:sizeof(buttonLightingUpdateMessage)
+                     error:error];
+}
+
+- (void)lightButton:(int)button color:(unsigned char)color
+{
+    _buttons[button] = color;
 }
 
 @end

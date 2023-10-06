@@ -59,21 +59,25 @@
     }
     ColorField* colorField = sender;
     
-    NSPopover* popOver = [NSPopover new];
-
     if (paletteViewController == nil) {
         paletteViewController = [[PaletteViewController alloc] initWithNibName:@"PaletteViewController" bundle:NULL];
         paletteViewController.delegate = self;
     }
     paletteViewController.keyState = colorField.keyState;
-
+    
     NSInteger key = [controls indexOfObject:colorField];
     assert(key != NSNotFound);
     assert(key < kColorMapSize);
     paletteViewController.index = key;
+
+    NSPopover* popOver = [NSPopover new];
     popOver.contentViewController = paletteViewController;
     popOver.contentSize = paletteViewController.view.bounds.size;
     popOver.animates = YES;
+    // TODO: Recent macOS versions appear to have tinkered on the popover effect views,
+    // making the colors appear much lighter than they should be. We need to fall
+    // back to aqua appaerance or do much more elaborate things.
+    popOver.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
     popOver.behavior = NSPopoverBehaviorTransient;
     [popOver showRelativeToRect:colorField.frame ofView:[self.window contentView] preferredEdge:NSMaxXEdge];
 }
