@@ -78,6 +78,6 @@ The inspiration for re-implementing this as a native macOS appllication struck m
 
 ## Credits
 
-Olivier Jacques [@ojacques] for the inspiring [SynthesiaKontrol](https://github.com/ojacques/SynthesiaKontrol) project.
-GoaSkin [@GoaSkin] for the inspiring [qKontrol](https://github.com/GoaSkin/qKontrol) project.
-Thanks for invaluable help in achieving MK1 compatibility, Daniel Demmel [@daaain].
+- Olivier Jacques [@ojacques] for the inspiring [SynthesiaKontrol](https://github.com/ojacques/SynthesiaKontrol) project
+- GoaSkin [@GoaSkin] for the inspiring [qKontrol](https://github.com/GoaSkin/qKontrol) project
+- Thanks for invaluable help in achieving MK1 compatibility, Daniel Demmel [@daaain]
