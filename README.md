@@ -75,3 +75,9 @@ The approach and implementation of Komplete Syntesia in its early inceptions was
 Kudos and many thanks to Olivier Jacques [@ojacques] for sharing!
 
 The inspiration for re-implementing this as a native macOS appllication struck me when I had a bit of a hard time getting that original Python project to build on a recent system as it would not run on anything beyond Python 3.7 for me. Another driver here is that I always took great pleasure from controlling hardware via code. As a result no third party dependencies are made use of - pure, native macOS code that will compile without hassle in 10 years from now.
+
+## Credits
+
+Olivier Jacques [@ojacques] for the inspiring [SynthesiaKontrol](https://github.com/ojacques/SynthesiaKontrol) project.
+GoaSkin [@GoaSkin] for the inspiring [qKontrol](https://github.com/GoaSkin/qKontrol) project.
+Thanks for invaluable help in achieving MK1 compatibility, Daniel Demmel [@daaain].
