@@ -250,26 +250,6 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
 static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned char* destination)
 {
-    const unsigned char kPalette[][3] = {
-        { 0xFF, 0x00, 0x00 },   // 0: red
-        { 0xFF, 0x3F, 0x00 },   // 1:
-        { 0xFF, 0x7F, 0x00 },   // 2: orange
-        { 0xFF, 0xCF, 0x00 },   // 3: orange-yellow
-        { 0xFF, 0xFF, 0x00 },   // 4: yellow
-        { 0x7F, 0xFF, 0x00 },   // 5: green-yellow
-        { 0x00, 0xFF, 0x00 },   // 6: green
-        { 0x00, 0xFF, 0x7F },   // 7:
-        { 0x00, 0xFF, 0xFF },   // 8:
-        { 0x00, 0x7F, 0xFF },   // 9:
-        { 0x00, 0x00, 0xFF },   // 10: blue
-        { 0x3F, 0x00, 0xFF },   // 11:
-        { 0x7F, 0x00, 0xFF },   // 12: purple
-        { 0xFF, 0x00, 0xFF },   // 13: pink
-        { 0xFF, 0x00, 0x7F },   // 14:
-        { 0xFF, 0x00, 0x3F },   // 15:
-        { 0xFF, 0xFF, 0xFF }    // 16: white
-    };
-    
     if (mk2ColorCode == kKompleteKontrolKeyStateLightOff) {
         destination[0] = 0x00;
         destination[1] = 0x00;
@@ -282,9 +262,9 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     const int intensity = mk2ColorCode & 0x03;
     const int shift = 1 + (3 - intensity);
 
-    destination[0] = kPalette[index][0] >> shift;
-    destination[1] = kPalette[index][1] >> shift;
-    destination[2] = kPalette[index][2] >> shift;
+    destination[0] = kMK2Palette[index][0] >> shift;
+    destination[1] = kMK2Palette[index][1] >> shift;
+    destination[2] = kMK2Palette[index][2] >> shift;
 }
 
 - (void)deviceRemoved
