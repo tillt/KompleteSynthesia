@@ -13,7 +13,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-enum {
+typedef enum colorMapState {
     kColorMapUnpressed = 0,
     kColorMapPressed,
     kColorMapLeft,
@@ -23,7 +23,7 @@ enum {
     kColorMapRightThumb,
     kColorMapRightPressed,
     kColorMapSize
-};
+} ColorMapState;
 
 @class LogViewController;
 @class SynthesiaController;
@@ -39,7 +39,7 @@ enum {
 @property (copy, nonatomic) NSString* midiStatus;
 
 @property (assign, nonatomic) BOOL forwardButtonsToSynthesiaOnly;
-@property (assign, nonatomic) unsigned char* colors;
+@property (assign, nonatomic, readonly) unsigned char* colors;
 
 @property (nonatomic, weak) id<MIDI2HIDControllerDelegate> delegate;
 

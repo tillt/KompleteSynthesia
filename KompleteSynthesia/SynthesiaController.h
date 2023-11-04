@@ -31,8 +31,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 + (NSString*)status;
 
-- (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate error:(NSError**)error;
+- (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate;
+
 - (BOOL)assertMultiDeviceConfig:(NSError**)error message:(NSString*_Nullable *_Nullable)message;
+- (BOOL)cachedAssertSynthesiaConfiguration;
 
 @end
 

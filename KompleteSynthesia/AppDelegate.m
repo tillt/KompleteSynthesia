@@ -57,6 +57,12 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 {
     usbAvailable = NO;
 
+    // First thing, we assert that a bunch of interlopers are kept from interfering
+    // with controlling the Native Instruments hardware.
+    // That approach is rather brutal and possibly even harmful if a user was in the
+    // process of running state mutating things like flashing a device firmware
+    // update.
+
     _observer = [[ApplicationObserver alloc] init];
     _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
 
@@ -71,6 +77,7 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     
     assert(items.count == kAlienItemCount);
 
+    // Identify unwanted processes.
     for (int i = 0; i < kAlienItemCount; i++) {
         [_logViewController logLine:[NSString stringWithFormat:fmtAssert, items[i]]];
 
@@ -80,6 +87,7 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
             [self.logViewController logLine:[NSString stringWithFormat:fmtSkipping, items[i]]];
         }
     }
+
     if (awaitingAlienCount == 0) {
         // No more processes to wait for, continue our mission with full steam!
         [self applicationDidFinishInitializingWithUSBHighwayOpen:YES];
@@ -118,6 +126,7 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     }
 }
 
+
 - (void)applicationDidFinishInitializingWithUSBHighwayOpen:(BOOL)usbHighwayOpen
 {
     NSError* error = nil;
@@ -125,14 +134,9 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     usbAvailable = usbHighwayOpen;
     
     _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
-                                                               delegate:self
-                                                                  error:&error];
-    if (_synthesia == nil) {
-        [[NSAlert alertWithError:error] runModal];
-        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
-        return;
-    }
-    
+                                                               delegate:self];
+    [_synthesia cachedAssertSynthesiaConfiguration];
+
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController
                                                                    delegate:self
                                                                       error:&error];

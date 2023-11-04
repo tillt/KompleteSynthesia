@@ -106,7 +106,8 @@
     _midi2hid.forwardButtonsToSynthesiaOnly = self.forwardButtonsOnlyToSynthesia.state == NSControlStateValueOn;
     
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    [userDefaults setBool:_midi2hid.forwardButtonsToSynthesiaOnly forKey:@"forward_buttons_to_synthesia_only"];
+    [userDefaults setBool:_midi2hid.forwardButtonsToSynthesiaOnly 
+                   forKey:@"forward_buttons_to_synthesia_only"];
 }
 
 - (IBAction)assertSynthesiaConfig:(id)sender
@@ -115,18 +116,13 @@
     NSString* message = nil;
     if ([_synthesia assertMultiDeviceConfig:&error message:&message] == NO) {
         NSLog(@"failed to assert Synthesia key light loopback setup");
-        if (error == nil && message != nil) {
-            NSAlert* alert = [NSAlert alertWithError:error];
-            alert.messageText = message;
-            alert.alertStyle = NSAlertStyleWarning;
-            [alert runModal];
-        } else {
-            NSAlert* alert = [NSAlert alertWithError:error];
-            alert.alertStyle = NSAlertStyleWarning;
-            [alert runModal];
-        }
+        NSAlert* alert = [NSAlert alertWithError:error];
+        alert.alertStyle = NSAlertStyleWarning;
+        alert.messageText = message;
+        [alert runModal];
     } else {
-        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"initial_synthesia_config_assert_done"];
+        [[NSUserDefaults standardUserDefaults] setBool:YES 
+                                                forKey:@"initial_synthesia_config_assert_done"];
         if (message != nil) {
             NSAlert* alert = [NSAlert new];
             alert.messageText = message;

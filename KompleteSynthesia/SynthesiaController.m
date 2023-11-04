@@ -14,6 +14,8 @@ NSString* kSynthesiaApplicationName = @"Synthesia";
 NSString* kSynthesiaApplicationBundleIdentifier = @"com.synthesiallc.synthesia";
 NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
 
+NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_assert_done";
+
 /// Tries to locate Synthesia among the running applications and informs the delegate when the state changed.
 
 @implementation SynthesiaController {
@@ -155,7 +157,7 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
     CFRelease(event);
 }
 
-- (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate error:(NSError**)error;
+- (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate
 {
     self = [super init];
     if (self) {
@@ -173,28 +175,6 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
                                                                selector:@selector(synthesiaMayHaveChangedStatus:)
                                                                    name:NSWorkspaceDidTerminateApplicationNotification
                                                                  object:nil];
-
-        // If not done before, assert that Synthesia is configured the way we need it.
-        NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-        [userDefaults registerDefaults:@{@"initial_synthesia_config_assert_done": @(NO)}];
-
-        if ([userDefaults boolForKey:@"initial_synthesia_config_assert_done"] == NO) {
-            [log logLine:@"Synthesia configuration needs to get validated"];
-
-            NSString* message = nil;
-            if ([self assertMultiDeviceConfig:error message:&message] == NO) {
-                [log logLine:@"Failed to assert Synthesia key light loopback setup"];
-                // Note, we don't fail here -- chances are the user knows what he is doing.
-                NSAlert* alert = [NSAlert alertWithError:*error];
-                alert.messageText = message;
-                alert.alertStyle = NSAlertStyleWarning;
-                [alert runModal];
-            } else {
-                [userDefaults setBool:YES forKey:@"initial_synthesia_config_assert_done"];
-            }
-        } else {
-            [log logLine:@"Synthesia configuration was validated before"];
-        }
     }
     return self;
 }
@@ -204,15 +184,46 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
     [_delegate synthesiaStateUpdate:[SynthesiaController status]];
 }
 
+- (BOOL)cachedAssertSynthesiaConfiguration
+{
+    // If not done before, assert that Synthesia is configured the way we need it.
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults registerDefaults:@{kDefaultsKeyInitialSynthesiaAssertDone: @(NO)}];
+
+    if ([userDefaults boolForKey:kDefaultsKeyInitialSynthesiaAssertDone] == NO) {
+        [log logLine:@"Synthesia configuration needs to get validated"];
+        NSString* message = nil;
+        NSError* error = nil;
+        if ([self assertMultiDeviceConfig:&error message:&message] == NO) {
+            [log logLine:@"Failed to assert Synthesia key light loopback setup"];
+
+            NSAlert* alert = [NSAlert alertWithError:error];
+            alert.alertStyle = NSAlertStyleWarning;
+            alert.messageText = message;
+            [alert runModal];
+            return NO;
+        } else {
+            [log logLine:@"Synthesia configuration validated"];
+            [userDefaults setBool:YES forKey:kDefaultsKeyInitialSynthesiaAssertDone];
+            return YES;
+        }
+    } else {
+        [log logLine:@"Synthesia configuration was validated before"];
+        return YES;
+    }
+    return YES;
+}
+
 - (BOOL)assertMultiDeviceConfig:(NSError**)error message:(NSString*_Nullable *_Nullable)message
 {
+    // Assert that Synthesia is configured the way we need it.
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     panel.title = @"Locate Synthesia configuration file";
     panel.message = @"Please locate and select the Synthesia 'multiDevice.xml' configuration file and activate 'Open' below!";
     panel.directoryURL = [NSURL fileURLWithFileSystemRepresentation:"~/Library/Application Support/Synthesia" isDirectory:YES relativeToURL:nil];
     if ([panel runModal] != NSModalResponseOK) {
-        NSLog(@"user canceled file selection");
         *message = @"User canceled the file selection.";
+        NSLog(@"%@", *message);
         return NO;
     }
 
@@ -247,30 +258,32 @@ NSString* kSynthesiaApplicationPath = @"/Applications/Synthesia.app";
         return YES;
     }
 
+    NSString* kSynthesiaConfigDeviceHead = @"<OutputDevice version=\"1\" name=\"IAC Driver LoopBe\"";
+    NSString* kSynthesiaConfigDeviceTail = @" enabled=\"1\" userNotes=\"0\" backgroundNotes=\"0\" metronome=\"0\" percussion=\"0\" lightChannel=\"-2\" />";
+    NSString* kSynthesiaConfigListTail = @"</DeviceInfoList>";
+
     NSString* configurationText = [NSString stringWithCString:data.bytes
                                                      encoding:NSStringEncodingConversionAllowLossy];
 
     NSArray<NSString*>* configurationLines = [configurationText componentsSeparatedByString:@"\n"];
     
-    NSMutableArray* patched = [NSMutableArray array];
-
+    NSMutableArray<NSString*>* patchedConfigurationLines = [NSMutableArray array];
+    
     for (NSString* line in configurationLines) {
-        NSString* existingMatcher = @"<OutputDevice version=\"1\" name=\"IAC Driver LoopBe\"";
-
-        if ([line rangeOfString:existingMatcher].location == NSNotFound) {
-            [patched addObject:line];
+        if ([line rangeOfString:kSynthesiaConfigDeviceHead].location == NSNotFound) {
+            [patchedConfigurationLines addObject:line];
         }
     }
     
-    for (int i = 0; i < patched.count; i++) {
-        if ([patched[i] rangeOfString:@"</DeviceInfoList>"].location != NSNotFound) {
-            NSString* expected = @"\t<OutputDevice version=\"1\" name=\"IAC Driver LoopBe\" enabled=\"1\" userNotes=\"0\" backgroundNotes=\"0\" metronome=\"0\" percussion=\"0\" lightChannel=\"-2\" />";
-            [patched insertObject:expected atIndex:i];
+    for (int i = 0; i < patchedConfigurationLines.count; i++) {
+        if ([patchedConfigurationLines[i] rangeOfString:kSynthesiaConfigListTail].location != NSNotFound) {
+            NSString* expected = [NSString stringWithFormat:@"\t%@%@", kSynthesiaConfigDeviceHead, kSynthesiaConfigDeviceTail];
+            [patchedConfigurationLines insertObject:expected atIndex:i];
             break;
         }
     }
     
-    NSString* output = [patched componentsJoinedByString:@"\n"];
+    NSString* output = [patchedConfigurationLines componentsJoinedByString:@"\n"];
 
     NSString* filename = [NSString stringWithCString:panel.URL.fileSystemRepresentation
                                             encoding:NSStringEncodingConversionAllowLossy];

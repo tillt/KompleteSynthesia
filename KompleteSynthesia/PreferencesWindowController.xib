@@ -238,18 +238,90 @@
                                     <rect key="frame" x="10" y="33" width="476" height="240"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3Vo-Ih-a7R">
-                                            <rect key="frame" x="17" y="117" width="442" height="120"/>
+                                        <scrollView appearanceType="aqua" fixedFrame="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" horizontalScrollElasticity="none" verticalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="nvz-Ze-6vG">
+                                            <rect key="frame" x="19" y="101" width="440" height="98"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <clipView key="contentView" drawsBackground="NO" id="Kda-gH-XL1">
+                                                <rect key="frame" x="0.0" y="0.0" width="440" height="98"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <subviews>
+                                                    <textView wantsLayer="YES" editable="NO" selectable="NO" drawsBackground="NO" importsGraphics="NO" verticallyResizable="YES" baseWritingDirection="leftToRight" findStyle="bar" spellingCorrection="YES" smartInsertDelete="YES" id="YqR-iw-B81">
+                                                        <rect key="frame" x="0.0" y="0.0" width="440" height="98"/>
+                                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                        <color key="textColor" red="0.85639495895184525" green="0.87773895300925642" blue="0.94177093518148991" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                        <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                                                        <size key="minSize" width="440" height="98"/>
+                                                        <size key="maxSize" width="449" height="10000000"/>
+                                                        <attributedString key="textStorage">
+                                                            <fragment>
+                                                                <string key="content">Synthesia has to be configured the way this little helper expects. 
+
+For being able to configure Synthesia, this Application needs to manipulate a file.  </string>
+                                                                <attributes>
+                                                                    <color key="NSBackgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                                                                    <color key="NSColor" red="0.85639495895184525" green="0.87773895300925642" blue="0.94177093518148991" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                                    <font key="NSFont" metaFont="smallSystem"/>
+                                                                    <real key="NSKern" value="0.0"/>
+                                                                    <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="leftToRight" defaultTabInterval="36" tighteningFactorForTruncation="0.0">
+                                                                        <tabStops/>
+                                                                    </paragraphStyle>
+                                                                    <color key="NSStrokeColor" red="0.67058825489999996" green="0.69803923369999998" blue="0.74901962280000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                                    <real key="NSStrokeWidth" value="0.0"/>
+                                                                </attributes>
+                                                            </fragment>
+                                                            <fragment content="Select the file multiDevice.xml ">
+                                                                <attributes>
+                                                                    <color key="NSBackgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                                                                    <color key="NSColor" red="0.85639495895184525" green="0.87773895300925642" blue="0.94177093518148991" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                                    <font key="NSFont" metaFont="systemBlack" size="11"/>
+                                                                    <real key="NSKern" value="0.0"/>
+                                                                    <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="leftToRight" defaultTabInterval="36" tighteningFactorForTruncation="0.0">
+                                                                        <tabStops/>
+                                                                    </paragraphStyle>
+                                                                    <color key="NSStrokeColor" red="0.67058825489999996" green="0.69803923369999998" blue="0.74901962280000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                                    <real key="NSStrokeWidth" value="0.0"/>
+                                                                </attributes>
+                                                            </fragment>
+                                                            <fragment>
+                                                                <string key="content">in the file dialog popping up when clicking on the button below. 
+</string>
+                                                                <attributes>
+                                                                    <color key="NSBackgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
+                                                                    <color key="NSColor" red="0.85639495895184525" green="0.87773895300925642" blue="0.94177093518148991" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                                    <font key="NSFont" metaFont="smallSystem"/>
+                                                                    <real key="NSKern" value="0.0"/>
+                                                                    <paragraphStyle key="NSParagraphStyle" alignment="natural" lineBreakMode="wordWrapping" baseWritingDirection="leftToRight" defaultTabInterval="36" tighteningFactorForTruncation="0.0">
+                                                                        <tabStops/>
+                                                                    </paragraphStyle>
+                                                                    <color key="NSStrokeColor" red="0.67058825489999996" green="0.69803923369999998" blue="0.74901962280000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                                                    <real key="NSStrokeWidth" value="0.0"/>
+                                                                </attributes>
+                                                            </fragment>
+                                                        </attributedString>
+                                                        <color key="insertionPointColor" name="textInsertionPointColor" catalog="System" colorSpace="catalog"/>
+                                                    </textView>
+                                                </subviews>
+                                            </clipView>
+                                            <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="a2e-j5-66w">
+                                                <rect key="frame" x="-100" y="-100" width="240" height="16"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                            </scroller>
+                                            <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="fvo-S7-Uxe">
+                                                <rect key="frame" x="424" y="0.0" width="16" height="98"/>
+                                                <autoresizingMask key="autoresizingMask"/>
+                                            </scroller>
+                                        </scrollView>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4CP-GM-Me7">
+                                            <rect key="frame" x="419" y="198" width="42" height="39"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <textFieldCell key="cell" refusesFirstResponder="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="justified" drawsBackground="YES" id="Ugf-z2-gIM">
-                                                <font key="font" metaFont="smallSystem"/>
-                                                <string key="title">Synthesia has to be configured the way this little helper expects. This can be done manually, by following the steps described in the 'SETUP' documentation chapter.  This function is providing a semi-automated way of configuring Synthesia. For being able to configure Synthesia, this Application needs to manipulate a file. That file is called 'multiDevice.xml' and you will need to select it in the file dialog popping up when clicking on the button below. Go ahead, confirm your selection by clicking on 'Open'. Komplete Synthesia will then make sure that Synthesia is configured correctly when it comes to the lighting control output.</string>
-                                                <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                                <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="displayP3"/>
+                                            <textFieldCell key="cell" lineBreakMode="clipping" title="􁌵" id="CQf-Ba-VKF">
+                                                <font key="font" metaFont="system" size="30"/>
+                                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
                                         <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="HVU-cO-C7e">
-                                            <rect key="frame" x="122" y="82" width="234" height="32"/>
+                                            <rect key="frame" x="121" y="54" width="234" height="32"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="push" title="Repair light configuration in Synthesia" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Rou-M1-HAc">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
