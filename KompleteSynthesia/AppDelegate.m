@@ -61,7 +61,8 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 
     NSString *appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
     NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-    [_logViewController logLine:[NSString stringWithFormat:@"%@ %@", appName, version]];
+    NSString *commit = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
+    [_logViewController logLine:[NSString stringWithFormat:@"%@ %@.%@", appName, version, commit]];
 
     // First thing, we assert that a bunch of interlopers are kept from interfering
     // with controlling the Native Instruments hardware.

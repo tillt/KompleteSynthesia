@@ -10,6 +10,8 @@
 		BB229913299040C500CFFB7C /* ApplicationObserver.m in Sources */ = {isa = PBXBuildFile; fileRef = BB229912299040C500CFFB7C /* ApplicationObserver.m */; };
 		BB31821629679983005EB410 /* MIDIController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB31821529679983005EB410 /* MIDIController.m */; };
 		BB3182192967A037005EB410 /* HIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB3182182967A037005EB410 /* HIDController.m */; };
+		BB34BC1F2B081E45004CF123 /* build_dmg.sh in Resources */ = {isa = PBXBuildFile; fileRef = BB34BC1D2B081E45004CF123 /* build_dmg.sh */; };
+		BB34BC202B081E45004CF123 /* set_build_number.sh in Resources */ = {isa = PBXBuildFile; fileRef = BB34BC1E2B081E45004CF123 /* set_build_number.sh */; };
 		BB49B3B2295CC8AE00D18605 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = BB49B3B1295CC8AE00D18605 /* AppDelegate.m */; };
 		BB49B3B4295CC8AF00D18605 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB49B3B3295CC8AF00D18605 /* Assets.xcassets */; };
 		BB49B3B7295CC8AF00D18605 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB49B3B5295CC8AF00D18605 /* MainMenu.xib */; };
@@ -24,7 +26,6 @@
 		BB7AB64329807A700081B05E /* PaletteViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB7AB64129807A700081B05E /* PaletteViewController.xib */; };
 		BB8570FA2971935B0004218B /* SynthesiaController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB8570F92971935B0004218B /* SynthesiaController.m */; };
 		BB8A5B9C298C45BB0076066D /* VideoController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB8A5B9B298C45BB0076066D /* VideoController.m */; };
-		BB9401852AD07E1100B7B150 /* build_dmg.sh in Resources */ = {isa = PBXBuildFile; fileRef = BB9401842AD07E1100B7B150 /* build_dmg.sh */; };
 		BBA0166929611D1D0018B2DB /* MIDI2HIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */; };
 		BBB5EFAF29738E6F00C1BAC3 /* USBController.m in Sources */ = {isa = PBXBuildFile; fileRef = BBB5EFAE29738E6F00C1BAC3 /* USBController.m */; };
 		BBE086C22989965900DC59B3 /* CoreMIDI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BBE086C12989965900DC59B3 /* CoreMIDI.framework */; };
@@ -39,6 +40,8 @@
 		BB3182172967A037005EB410 /* HIDController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HIDController.h; sourceTree = "<group>"; };
 		BB3182182967A037005EB410 /* HIDController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = HIDController.m; sourceTree = "<group>"; };
 		BB31821A2967C85F005EB410 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		BB34BC1D2B081E45004CF123 /* build_dmg.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = build_dmg.sh; path = Scripts/build_dmg.sh; sourceTree = "<group>"; };
+		BB34BC1E2B081E45004CF123 /* set_build_number.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = set_build_number.sh; path = Scripts/set_build_number.sh; sourceTree = "<group>"; };
 		BB49B3AD295CC8AE00D18605 /* KompleteSynthesia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KompleteSynthesia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB49B3B0295CC8AE00D18605 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		BB49B3B1295CC8AE00D18605 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -65,7 +68,6 @@
 		BB8570F92971935B0004218B /* SynthesiaController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SynthesiaController.m; sourceTree = "<group>"; };
 		BB8A5B9A298C45BB0076066D /* VideoController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoController.h; sourceTree = "<group>"; };
 		BB8A5B9B298C45BB0076066D /* VideoController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VideoController.m; sourceTree = "<group>"; };
-		BB9401842AD07E1100B7B150 /* build_dmg.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = build_dmg.sh; sourceTree = "<group>"; };
 		BBA0166729611D1D0018B2DB /* MIDI2HIDController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MIDI2HIDController.h; sourceTree = "<group>"; };
 		BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MIDI2HIDController.m; sourceTree = "<group>"; };
 		BBB5EFAD29738E6F00C1BAC3 /* USBController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = USBController.h; sourceTree = "<group>"; };
@@ -87,13 +89,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BB34BC1C2B081E35004CF123 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				BB34BC1D2B081E45004CF123 /* build_dmg.sh */,
+				BB34BC1E2B081E45004CF123 /* set_build_number.sh */,
+			);
+			name = Scripts;
+			sourceTree = "<group>";
+		};
 		BB49B3A4295CC8AE00D18605 = {
 			isa = PBXGroup;
 			children = (
-				BB9401842AD07E1100B7B150 /* build_dmg.sh */,
 				BB49B3AF295CC8AE00D18605 /* KompleteSynthesia */,
 				BB49B3AE295CC8AE00D18605 /* Products */,
 				BBE086C02989965900DC59B3 /* Frameworks */,
+				BB34BC1C2B081E35004CF123 /* Scripts */,
 			);
 			sourceTree = "<group>";
 		};
@@ -183,6 +194,7 @@
 				BB49B3A9295CC8AE00D18605 /* Sources */,
 				BB49B3AA295CC8AE00D18605 /* Frameworks */,
 				BB49B3AB295CC8AE00D18605 /* Resources */,
+				BB34BC1A2B081D23004CF123 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -232,7 +244,8 @@
 			files = (
 				BB49B3C4295CC91000D18605 /* LogViewController.xib in Resources */,
 				BB76A1A5297B333D00A869D8 /* PreferencesWindowController.xib in Resources */,
-				BB9401852AD07E1100B7B150 /* build_dmg.sh in Resources */,
+				BB34BC202B081E45004CF123 /* set_build_number.sh in Resources */,
+				BB34BC1F2B081E45004CF123 /* build_dmg.sh in Resources */,
 				BB49B3B4295CC8AF00D18605 /* Assets.xcassets in Resources */,
 				BB7AB64329807A700081B05E /* PaletteViewController.xib in Resources */,
 				BB49B3B7295CC8AF00D18605 /* MainMenu.xib in Resources */,
@@ -240,6 +253,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		BB34BC1A2B081D23004CF123 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				" $(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+				"$(DWARF_DSYM_FOLDER_PATH)/$(DWARF_DSYM_FILE_NAME)/Contents/Info.plist",
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n$SRCROOT/Scripts/set_build_number.sh\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		BB49B3A9295CC8AE00D18605 /* Sources */ = {
@@ -400,6 +435,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = YK4D72U3YW;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = KompleteSynthesia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Komplete Synthesia";
@@ -433,6 +469,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = YK4D72U3YW;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = KompleteSynthesia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Komplete Synthesia";
