@@ -1,6 +1,7 @@
 #!/bin/bash
 
-version=$(git describe --tags --abbrev=0)
+git=$(sh /etc/profile; which git)
+version=$("$git" describe --tags --abbrev=0)
 destination_path="KompleteSynthesia.${version}/"
 
 rm "KompleteSynthesia.${version}.dmg"
