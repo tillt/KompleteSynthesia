@@ -2,7 +2,15 @@
 
 Native Instruments Komplete Kontrol Light Guide and Screen Mirroring Support for Synthesia.
 
-<p align="center"><a href="https://youtu.be/bJiGqRVU9uU"><img src="site/images/VideoThumb_Large.png" /></a></p>
+<p align="center">
+    <a href="https://youtu.be/bJiGqRVU9uU"><img src="site/images/VideoThumb_Large.png" /></a>
+    <small>Running on Komplete Kontrol MK2 S</small>
+</p>
+
+<p align="center">
+    <a href="https://youtu.be/XK_dgRA3lPM"><img src="site/images/VideoThumb_Large_MK1.jpg" /></a>
+    <small>Running on Komplete Kontrol MK1 S</small>
+</p>
 
 ## Features
 
