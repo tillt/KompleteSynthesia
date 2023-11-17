@@ -31,17 +31,15 @@
     // Avoid unused variable.
     view = nil;
 
-    NSDate* date = [NSDate date];
-    
     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"hh:mm:ss:SSS"];
-    NSString* t = [dateFormatter stringFromDate:date];
+    NSString* t = [dateFormatter stringFromDate:[NSDate date]];
     
     NSDictionary *attributes = @{
         NSFontAttributeName: [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightLight],
         NSForegroundColorAttributeName: NSColor.textColor
     };
-    NSAttributedString *attrstr = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@: %@\n", t, l] attributes:attributes];
+    NSAttributedString *attrstr = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@ %@\n", t, l] attributes:attributes];
     [self.textView.textStorage appendAttributedString:attrstr];
     [self.textView scrollRangeToVisible: NSMakeRange(self.textView.string.length, 0)];
 }
