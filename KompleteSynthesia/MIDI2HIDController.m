@@ -296,9 +296,9 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     // on a CoreMidi thread.
     dispatch_async(dispatch_get_main_queue(), ^{
         if (cv == kMIDICVStatusNoteOn || cv == kMIDICVStatusNoteOff) {
-            [self->log logLine:[NSString stringWithFormat:@"port %d - note %-3s - channel %02d - note %@ - velocity %d",
-                          interface,
-                          cv == kMIDICVStatusNoteOn ? "on" : "off" ,
+            [self->log logLine:[NSString stringWithFormat:@"%@ - note %-3s - channel %02d - note %@ - velocity %d",
+                          interface == 0 ? @"synthesia " : @"user plays",
+                          cv == kMIDICVStatusNoteOn ? "on " : "off" ,
                           channel + 1,
                           [MIDIController readableNote:param1],
                           param2]];
