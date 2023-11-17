@@ -132,6 +132,10 @@ const int kHeaderHeight = 26;
     doneMirroring:
         [self clearScreen:0 error:nil];
         atomic_fetch_and(&self->mirrorActive, 0);
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self->log logLine:@"stopped window mirroring"];
+        });
     });
     
     return YES;

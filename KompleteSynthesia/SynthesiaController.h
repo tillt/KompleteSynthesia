@@ -25,9 +25,6 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)activateSynthesia;
 + (void)runSynthesiaWithCompletion:(void(^)(void))completion;
 + (int)synthesiaWindowNumber;
-+ (void)triggerVirtualKeyEvents:(CGKeyCode)keyCode;
-+ (void)triggerVirtualAuxKeyEvents:(uint32_t)keyCode;
-+ (void)triggerVirtualMouseWheelEvent:(int)distance;
 
 + (NSString*)status;
 

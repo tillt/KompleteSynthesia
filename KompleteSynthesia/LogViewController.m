@@ -11,14 +11,14 @@
 @end
 
 @implementation LogViewController {
-    NSTimeInterval startTime;
+    NSDate* startedAt;
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
-    startTime = [NSDate timeIntervalSinceReferenceDate];
+    startedAt = [NSDate date];
 }
 
 - (void)dealloc
@@ -34,17 +34,19 @@
     // Avoid unused variable.
     view = nil;
 
-    NSDate* date = [NSDate dateWithTimeIntervalSinceNow:startTime];
+    NSTimeInterval timeIntervalSinceStarted = -[startedAt timeIntervalSinceNow];
     
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateFormat:@"hh:mm:ss:SSS"];
-    NSString* t = [dateFormatter stringFromDate:date];
+    NSDateComponentsFormatter *formatter = [[NSDateComponentsFormatter alloc] init];
+    formatter.allowedUnits = NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond;
+    formatter.zeroFormattingBehavior = NSDateComponentsFormatterZeroFormattingBehaviorPad;
+    NSString* t = [formatter stringFromTimeInterval:timeIntervalSinceStarted];
     
     NSDictionary *attributes = @{
-        NSFontAttributeName: [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightLight],
-        NSForegroundColorAttributeName: NSColor.textColor
+        NSFontAttributeName:[NSFont monospacedSystemFontOfSize:11.0 weight:NSFontWeightLight],
+        NSForegroundColorAttributeName:NSColor.textColor
     };
-    NSAttributedString *attrstr = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@: %@\n", t, l] attributes:attributes];
+
+    NSAttributedString *attrstr = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@  %@\n", t, l] attributes:attributes];
     [self.textView.textStorage appendAttributedString:attrstr];
     [self.textView scrollRangeToVisible: NSMakeRange(self.textView.string.length, 0)];
 }

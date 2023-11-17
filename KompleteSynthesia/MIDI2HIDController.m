@@ -13,6 +13,7 @@
 #import <Carbon/Carbon.h>
 
 #import "LogViewController.h"
+#import "VirtualEventController.h"
 
 const CGKeyCode kVK_ArrowLeft = 0x7B;
 const CGKeyCode kVK_ArrowRight = 0x7C;
@@ -42,9 +43,6 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 ///
 /// The inspiration for re-implementing this as a native macOS appllication struck me when I had a bit of a hard time getting
 /// that original Python project to build on a recent system as it would not run on anything beyond Python 3.7 for me.
-///
-/// TODO: Fully implement MK1 support. Sorry, too lazy and no way to test.
-///
 ///
 
 @implementation MIDI2HIDController {
@@ -88,7 +86,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
         [userDefaults registerDefaults:@{@"kColorMapRightPressed": @(kKompleteKontrolColorBrightGreen)}];
         colorMap[kColorMapRightPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapRightPressed"];
-
+        
         [self synthesiaStateUpdate:@""];
         
         if ([self resetWithError:error] == NO) {
@@ -363,63 +361,63 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     switch(event) {
         case kKompleteKontrolButtonIdPlay:
             [log logLine:@"PLAY button -> sending SPACE key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_Space];
+            [VirtualEventController triggerKeyEvents:kVK_Space];
             break;
         case kKompleteKontrolButtonIdJogPress:
             [log logLine:@"JOG PRESS -> sending RETURN key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_Return];
+            [VirtualEventController triggerKeyEvents:kVK_Return];
             break;
         case kKompleteKontrolButtonIdJogLeft:
             [log logLine:@"JOG LEFT -> sending ARROW LEFT key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowLeft];
+            [VirtualEventController triggerKeyEvents:kVK_ArrowLeft];
             break;
         case kKompleteKontrolButtonIdJogRight:
             [log logLine:@"JOG RIGHT -> sending ARROW RIGHT key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowRight];
+            [VirtualEventController triggerKeyEvents:kVK_ArrowRight];
             break;
         case kKompleteKontrolButtonIdJogUp:
             [log logLine:@"JOG UP -> sending ARROW UP key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowUp];
+            [VirtualEventController triggerKeyEvents:kVK_ArrowUp];
             break;
         case kKompleteKontrolButtonIdPageLeft:
             [log logLine:@"PAGE LEFT -> sending PAGE UP key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_ANSI_Z];
+            [VirtualEventController triggerKeyEvents:kVK_ANSI_Z];
             break;
         case kKompleteKontrolButtonIdPageRight:
             [log logLine:@"PAGE RIGHT -> sending PAGE DOWN key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_ANSI_X];
+            [VirtualEventController triggerKeyEvents:kVK_ANSI_X];
             break;
         case kKompleteKontrolButtonIdJogDown:
             [log logLine:@"JOG DOWN -> sending ARROW DOWN key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_ArrowDown];
+            [VirtualEventController triggerKeyEvents:kVK_ArrowDown];
             break;
         case kKompleteKontrolButtonIdFunction1:
             [log logLine:@"FUNCTION1 -> sending ESCAPE key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_Escape];
+            [VirtualEventController triggerKeyEvents:kVK_Escape];
             break;
         case kKompleteKontrolButtonIdFunction2:
             [log logLine:@"FUNCTION2 -> sending F2 key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_F2];
+            [VirtualEventController triggerKeyEvents:kVK_F2];
             break;
         case kKompleteKontrolButtonIdFunction3:
             [log logLine:@"FUNCTION3 -> sending F3 key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_F3];
+            [VirtualEventController triggerKeyEvents:kVK_F3];
             break;
         case kKompleteKontrolButtonIdFunction4:
             [log logLine:@"FUNCTION4 -> sending F4 key"];
-            [SynthesiaController triggerVirtualKeyEvents:kVK_F4];
+            [VirtualEventController triggerKeyEvents:kVK_F4];
             break;
         case kKompleteKontrolButtonIdJogScroll:
             [log logLine:@"JOG SCROLL -> sending mouse WHEEL"];
-            [SynthesiaController triggerVirtualMouseWheelEvent:-value];
+            [VirtualEventController triggerMouseWheelEvent:-value];
             break;
         case kKompleteKontrolButtonIdKnob8:
             if (value > 0) {
                 [log logLine:@"KNOB8 -> sending volume up"];
-                [SynthesiaController triggerVirtualAuxKeyEvents:0];
+                [VirtualEventController triggerAuxKeyEvents:0];
             } else if (value < 0) {
                 [log logLine:@"KNOB8 -> sending volume down"];
-                [SynthesiaController triggerVirtualAuxKeyEvents:1];
+                [VirtualEventController triggerAuxKeyEvents:1];
             }
             break;
     }

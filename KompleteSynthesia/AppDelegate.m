@@ -243,7 +243,7 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     if (self.popover == nil) {
         self.popover = [[NSPopover alloc] init];
         self.popover.contentViewController = _logViewController;
-        self.popover.contentSize = NSMakeSize(500.0f, 300.0f);
+        self.popover.contentSize = NSMakeSize(600.0f, 300.0f);
         self.popover.animates = YES;
         self.popover.appearance = [NSAppearance currentDrawingAppearance];
     }
