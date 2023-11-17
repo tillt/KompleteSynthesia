@@ -57,6 +57,12 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 {
     usbAvailable = NO;
 
+    _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
+
+    NSString *appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
+    NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
+    [_logViewController logLine:[NSString stringWithFormat:@"%@ %@", appName, version]];
+
     // First thing, we assert that a bunch of interlopers are kept from interfering
     // with controlling the Native Instruments hardware.
     // That approach is rather brutal and possibly even harmful if a user was in the
@@ -64,7 +70,6 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     // update.
 
     _observer = [[ApplicationObserver alloc] init];
-    _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
 
     NSString* fmtAssert = @"checking if %@ is active";
     NSString* fmtStopped = @"stopped %@";
