@@ -116,12 +116,17 @@ const int kHeaderHeight = 26;
         atomic_fetch_or(&self->mirrorActive, 1);
 
         while(self->stopMirroring == 0) {
-            CGImageRef original = CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, windowNumber, kCGWindowImageBoundsIgnoreFraming);
+            CGImageRef original = CGWindowListCreateImage(CGRectNull,
+                                                          kCGWindowListOptionIncludingWindow,
+                                                          windowNumber,
+                                                          kCGWindowImageBoundsIgnoreFraming);
             if (original == nil) {
                 NSLog(@"window disappeared, lets stop this");
                 goto doneMirroring;
             }
+
             [self drawCGImage:original screen:0 x:0 y:0 error:nil];
+
             CGImageRelease(original);
             
             // FIXME: We should try to find something more reliable than a fixed delay...
@@ -214,7 +219,7 @@ const int kHeaderHeight = 26;
             _screenSize.width * 4
         };
 
-        vImageScale_ARGB8888(&sourceBuffer, &resizedBuffer, nil, kvImageHighQualityResampling);
+        vImageScale_ARGB8888(&sourceBuffer, &resizedBuffer, nil, kvImageHighQualityResampling | kvImageDoNotTile);
 
         sourceBuffer.data = resizeBuffer;
         sourceBuffer.height = _screenSize.height;
@@ -230,10 +235,12 @@ const int kHeaderHeight = 26;
     };
 
     vImage_Error err = kvImageNoError;
+    // Do not attempt to invoke internal tiling with the image converter: `kvImageDoNotTile`
+    // should prevent https://github.com/tillt/KompleteSynthesia/issues/21.
     vImageConverterRef converter = vImageConverter_CreateWithCGImageFormat(&sourceFormat,
                                                                            &screenFormat,
                                                                            NULL,
-                                                                           kvImageNoFlags,
+                                                                           kvImageDoNotTile,
                                                                            &err);
     vImage_Buffer destinationBuffer = {
         destination->data,
@@ -242,11 +249,13 @@ const int kHeaderHeight = 26;
         destination->width * 2
     };
 
+    // Do not attempt to invoke internal tiling with the image converter: `kvImageDoNotTile`
+    // should prevent https://github.com/tillt/KompleteSynthesia/issues/21.
     vImageConvert_AnyToAny(converter,
                            &sourceBuffer,
                            &destinationBuffer,
                            tempBuffer,
-                           kvImageNoFlags);
+                           kvImageDoNotTile);
 
     vImageConverter_Release(converter);
 
