@@ -287,7 +287,7 @@ const int kHeaderHeight = 26;
     const unsigned char commandBlob3[] = { 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob3 length:sizeof(commandBlob3)];
 
-    BOOL ret = [usb bulkWriteData:stream endpoint:3 error:error];
+    BOOL ret = [usb bulkWriteData:stream error:error];
 
     stream.length = 0;
 

@@ -34,6 +34,9 @@ const uint32_t kPID_S49MK3 = 0x1710;    // FIXME: NO IDEA - THESE ARE PLACEHOLDE
 const uint32_t kPID_S61MK3 = 0x1720;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
 const uint32_t kPID_S88MK3 = 0x1730;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
 
+const uint32_t kUSBDeviceInterface = 0x03;          // FIXME: Possibly MK2 specific.
+const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 specific.
+
 @implementation USBController {
     IOUSBDeviceInterface942** device;
     IOUSBInterfaceInterface942** interface;
@@ -53,6 +56,7 @@ const uint32_t kPID_S88MK3 = 0x1730;    // FIXME: NO IDEA - THESE ARE PLACEHOLDE
     self = [super init];
     if (self) {
         _connected = NO;
+        _deviceInterfaceEndpoint = kUSBDeviceInterfaceEndpoint;
         //transferActive = 0;
         if ([self detectDevice:error] == NULL) {
             return nil;
@@ -267,11 +271,11 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     return NO;
 }
 
-- (BOOL)bulkWriteData:(NSData*)data endpoint:(int)endpointNumber error:(NSError**)error
+- (BOOL)bulkWriteData:(NSData*)data error:(NSError**)error
 {
     assert(data.length > 0);
     uint8_t pipeRef;
-    if ([self endpoint:endpointNumber pipeRef:&pipeRef] == NO) {
+    if ([self endpoint:_deviceInterfaceEndpoint pipeRef:&pipeRef] == NO) {
         NSLog(@"endpoint doesnt exist");
         if (error) {
             NSDictionary *userInfo = @{
@@ -355,7 +359,7 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
 
     io_registry_entry_t entry = 0;
 
-    entry = IORegistryGetRootEntry(kIOMasterPortDefault);
+    entry = IORegistryGetRootEntry(kIOMainPortDefault);
     if (entry == 0) {
         return nil;
     }
@@ -480,7 +484,7 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
         return NO;
     }
     
-    ret = [self openDeviceInterface:3];
+    ret = [self openDeviceInterface:kUSBDeviceInterface];
     if (ret != kIOReturnSuccess) {
         if (error) {
             NSDictionary *userInfo = @{

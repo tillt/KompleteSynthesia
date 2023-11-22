@@ -37,12 +37,13 @@ extern const uint32_t kPID_S88MK3;
 @property (nonatomic, assign) CGSize screenSize;
 @property (nonatomic, assign) unsigned int screenCount;
 @property (nonatomic, assign) BOOL connected;
+@property (nonatomic, assign) uint32_t deviceInterfaceEndpoint;
 
 
 + (NSString*)descriptionWithIOReturn:(IOReturn)code;
 
 - (id)initWithError:(NSError**)error;
-- (BOOL)bulkWriteData:(NSData*)data endpoint:(int)endpointNumber error:(NSError**)error;
+- (BOOL)bulkWriteData:(NSData*)data error:(NSError**)error;
 - (void)teardown;
 
 
