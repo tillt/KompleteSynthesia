@@ -192,7 +192,7 @@
 				BB49B3A9295CC8AE00D18605 /* Sources */,
 				BB49B3AA295CC8AE00D18605 /* Frameworks */,
 				BB49B3AB295CC8AE00D18605 /* Resources */,
-				BB34BC1A2B081D23004CF123 /* ShellScript */,
+				BB34BC1A2B081D23004CF123 /* Run Script */,
 			);
 			buildRules = (
 			);
@@ -251,9 +251,9 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		BB34BC1A2B081D23004CF123 /* ShellScript */ = {
+		BB34BC1A2B081D23004CF123 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			files = (
 			);
 			inputFileListPaths = (
@@ -262,6 +262,7 @@
 				" $(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
 				"$(DWARF_DSYM_FOLDER_PATH)/$(DWARF_DSYM_FILE_NAME)/Contents/Info.plist",
 			);
+			name = "Run Script";
 			outputFileListPaths = (
 			);
 			outputPaths = (
