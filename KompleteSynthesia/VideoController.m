@@ -219,7 +219,7 @@ const int kHeaderHeight = 26;
             _screenSize.width * 4
         };
 
-        vImageScale_ARGB8888(&sourceBuffer, &resizedBuffer, nil, kvImageHighQualityResampling | kvImageDoNotTile);
+        vImageScale_ARGB8888(&sourceBuffer, &resizedBuffer, nil, kvImageDoNotTile);
 
         sourceBuffer.data = resizeBuffer;
         sourceBuffer.height = _screenSize.height;
