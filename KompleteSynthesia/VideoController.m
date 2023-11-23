@@ -256,8 +256,6 @@ const int kHeaderHeight = 26;
     };
 
     vImage_Error err = kvImageNoError;
-    // Do not attempt to invoke internal tiling with the image converter: `kvImageDoNotTile`
-    // should prevent https://github.com/tillt/KompleteSynthesia/issues/21.
     vImageConverterRef converter = vImageConverter_CreateWithCGImageFormat(&sourceFormat,
                                                                            &screenFormat,
                                                                            NULL,
