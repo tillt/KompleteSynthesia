@@ -172,13 +172,13 @@ const int kHeaderHeight = 26;
         NSLog(@"we need the USB device to be accessable");
         return NO;
     }
-    
-    NSImage* image = [NSImage imageNamed:@"ScreenOne"];
-    CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
-    [self drawCGImage:cgi screen:1 x:0 y:0 error:nil];
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         [self stopMirroringAndWait:YES];
+
+        NSImage* image = [NSImage imageNamed:@"ScreenOne"];
+        CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
+        [self drawCGImage:cgi screen:1 x:0 y:0 error:nil];
 
         dispatch_async(dispatch_get_main_queue(), ^{
             [self startMirroring];
