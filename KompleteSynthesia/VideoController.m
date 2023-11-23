@@ -46,7 +46,11 @@ const int kHeaderHeight = 26;
         screenBuffer[1] = NULL;
         atomic_fetch_and(&stopMirroring, 0);
         atomic_fetch_and(&mirrorActive, 0);
-        
+
+        imageConversionTempBuffer = NULL;
+        imageConversionTempBufferDimensions = CGSizeMake(0,0);
+        imageConversionScaleBuffer = NULL;
+
         log = lc;
 
         usb = [[USBController alloc] initWithError:error];
@@ -59,10 +63,6 @@ const int kHeaderHeight = 26;
             _screenCount = usb.mk == 2 ? 2 : 1;
             // FIXME: We don't know the resolution the MK3 screen.
             _screenSize = usb.mk == 2 ? CGSizeMake(480.0f, 272.0f) : CGSizeMake(480.0f, 272.0f);
-
-            imageConversionTempBuffer = NULL;
-            imageConversionTempBufferDimensions = CGSizeMake(0,0);
-            imageConversionScaleBuffer = malloc(_screenSize.width * 4 * _screenSize.height);
 
             // width * height * 2 (261120) + commands (36)
             stream = [[NSMutableData alloc] initWithCapacity:(_screenSize.width * 2 * _screenSize.height) + 36];
@@ -203,8 +203,12 @@ const int kHeaderHeight = 26;
         if (imageConversionTempBuffer != NULL) {
             free(imageConversionTempBuffer);
         }
+        if (imageConversionScaleBuffer != NULL) {
+            free(imageConversionScaleBuffer);
+        }
         imageConversionTempBufferDimensions = CGSizeMake(width, height);
         imageConversionTempBuffer = malloc(CGImageGetBytesPerRow(source) * height);
+        imageConversionScaleBuffer = malloc(CGImageGetBytesPerRow(source) * _screenSize.height);
     }
 
     CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider(source));
@@ -235,7 +239,7 @@ const int kHeaderHeight = 26;
             imageConversionScaleBuffer,
             _screenSize.height,
             _screenSize.width,
-            _screenSize.width * 4
+            _screenSize.width * (((unsigned int)CGImageGetBitsPerPixel(source)) >> 3)
         };
 
         vImageScale_ARGB8888(&sourceBuffer, 
