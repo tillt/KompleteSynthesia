@@ -209,6 +209,7 @@ const int kHeaderHeight = 26;
     if (width > _screenSize.width || height > _screenSize.height ) {
         // We want to skip the header part of the application window, that does not add any
         // value in the mirrored image.
+        // FIXME: This is a rather surprising way of cropping the header off - but efficient.
         sourceBuffer.data += kHeaderHeight * sourceBuffer.rowBytes;
         sourceBuffer.height -= kHeaderHeight;
 
