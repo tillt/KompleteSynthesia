@@ -57,6 +57,7 @@ const int kHeaderHeight = 26;
 
         if (usb.mk > 1) {
             _screenCount = usb.mk == 2 ? 2 : 1;
+            // FIXME: We don't know the resolution the MK3 screen.
             _screenSize = usb.mk == 2 ? CGSizeMake(480.0f, 272.0f) : CGSizeMake(480.0f, 272.0f);
 
             imageConversionTempBuffer = NULL;
