@@ -27,8 +27,10 @@ const int kHeaderHeight = 26;
 @implementation VideoController
 {
     void* screenBuffer[2];
-    void* resizeBuffer;
-    void* tempBuffer;
+    void* imageConversionScaleBuffer;
+    void* imageConversionTempBuffer;
+    CGSize imageConversionTempBufferDimensions;
+
     USBController* usb;
     LogViewController* log;
     atomic_int stopMirroring;
@@ -56,8 +58,11 @@ const int kHeaderHeight = 26;
         if (usb.mk > 1) {
             _screenCount = usb.mk == 2 ? 2 : 1;
             _screenSize = usb.mk == 2 ? CGSizeMake(480.0f, 272.0f) : CGSizeMake(480.0f, 272.0f);
-            tempBuffer = malloc(_screenSize.width * 4 * _screenSize.height);
-            resizeBuffer = malloc(_screenSize.width * 4 * _screenSize.height);
+
+            imageConversionTempBuffer = NULL;
+            imageConversionTempBufferDimensions = CGSizeMake(0,0);
+            imageConversionScaleBuffer = malloc(_screenSize.width * 4 * _screenSize.height);
+
             // width * height * 2 (261120) + commands (36)
             stream = [[NSMutableData alloc] initWithCapacity:(_screenSize.width * 2 * _screenSize.height) + 36];
             
@@ -189,6 +194,18 @@ const int kHeaderHeight = 26;
     unsigned long width = CGImageGetWidth(source);
     unsigned long height = CGImageGetHeight(source);
     
+    // We make use of the vImage tempBuffer feature, allowing us to provide an operational
+    // buffer for conversion and scaling. The source of our operation is resizeable during
+    // runtime and thus we need to make sure the tempBuffer is properly sized.
+    if (imageConversionTempBufferDimensions.width != width ||
+        imageConversionTempBufferDimensions.height != height) {
+        if (imageConversionTempBuffer != NULL) {
+            free(imageConversionTempBuffer);
+        }
+        imageConversionTempBufferDimensions = CGSizeMake(width, height);
+        imageConversionTempBuffer = malloc(CGImageGetBytesPerRow(source) * height);
+    }
+
     CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider(source));
     
     vImage_Buffer sourceBuffer = {
@@ -214,18 +231,21 @@ const int kHeaderHeight = 26;
         sourceBuffer.height -= kHeaderHeight;
 
         vImage_Buffer resizedBuffer = {
-            resizeBuffer,
+            imageConversionScaleBuffer,
             _screenSize.height,
             _screenSize.width,
             _screenSize.width * 4
         };
 
-        vImageScale_ARGB8888(&sourceBuffer, &resizedBuffer, nil, kvImageDoNotTile);
+        vImageScale_ARGB8888(&sourceBuffer, 
+                             &resizedBuffer,
+                             imageConversionTempBuffer,
+                             kvImageDoNotTile);
 
-        sourceBuffer.data = resizeBuffer;
-        sourceBuffer.height = _screenSize.height;
-        sourceBuffer.width = _screenSize.width;
-        sourceBuffer.rowBytes = _screenSize.width * 4;
+        sourceBuffer.data = imageConversionScaleBuffer;
+        sourceBuffer.height = resizedBuffer.height;
+        sourceBuffer.width = resizedBuffer.width;
+        sourceBuffer.rowBytes = resizedBuffer.rowBytes;
     }
 
     vImage_CGImageFormat screenFormat = {
@@ -250,12 +270,10 @@ const int kHeaderHeight = 26;
         destination->width * 2
     };
 
-    // Do not attempt to invoke internal tiling with the image converter: `kvImageDoNotTile`
-    // should prevent https://github.com/tillt/KompleteSynthesia/issues/21.
     vImageConvert_AnyToAny(converter,
                            &sourceBuffer,
                            &destinationBuffer,
-                           tempBuffer,
+                           imageConversionTempBuffer,
                            kvImageDoNotTile);
 
     vImageConverter_Release(converter);
