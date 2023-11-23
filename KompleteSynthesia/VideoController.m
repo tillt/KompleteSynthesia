@@ -195,7 +195,7 @@ const int kHeaderHeight = 26;
         (void*)CFDataGetBytePtr(raw),
         height,
         width,
-        (((width + 31) >> 5) << 5) * 4      // Stride is remains for chunks of 32 pixels.
+        CGImageGetBytesPerRow(source)
     };
 
     vImage_CGImageFormat sourceFormat = {
