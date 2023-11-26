@@ -181,6 +181,9 @@ const int kHeaderHeight = 26;
         CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
         [self drawCGImage:cgi screen:1 x:0 y:0 error:nil];
 
+        // Assure extreme delay after sending data to screen 2 to make sure the first screen transfer does not interfere.
+        [NSThread sleepForTimeInterval:0.05f];
+
         dispatch_async(dispatch_get_main_queue(), ^{
             [self startMirroring];
         });
