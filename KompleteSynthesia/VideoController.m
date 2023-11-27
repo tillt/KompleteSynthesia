@@ -96,6 +96,9 @@ const int kHeaderHeight = 26;
 {
     [self stopMirroringAndWait:YES];
 
+    // FIXME: We are transmitting data via USB but not waiting for the transfer
+    // to be done here. That has the risk of interfering with other transfers. The right
+    // solution here would be a producer/consumer pattern on two threads.
     [self clearScreen:0 error:nil];
     [self clearScreen:1 error:nil];
 
@@ -106,6 +109,9 @@ const int kHeaderHeight = 26;
 {
     atomic_fetch_and(&stopMirroring, 0);
 
+    // FIXME: We are transmitting data via USB but not waiting for the transfer
+    // to be done here. That has the risk of interfering with other transfers. The right
+    // solution here would be a producer/consumer pattern on two threads.
     if ([self clearScreen:0 error:nil] == NO) {
         return NO;
     }
