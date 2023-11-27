@@ -10,8 +10,6 @@
 		BB229913299040C500CFFB7C /* ApplicationObserver.m in Sources */ = {isa = PBXBuildFile; fileRef = BB229912299040C500CFFB7C /* ApplicationObserver.m */; };
 		BB31821629679983005EB410 /* MIDIController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB31821529679983005EB410 /* MIDIController.m */; };
 		BB3182192967A037005EB410 /* HIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB3182182967A037005EB410 /* HIDController.m */; };
-		BB34BC1F2B081E45004CF123 /* build_dmg.sh in Resources */ = {isa = PBXBuildFile; fileRef = BB34BC1D2B081E45004CF123 /* build_dmg.sh */; };
-		BB34BC202B081E45004CF123 /* set_build_number.sh in Resources */ = {isa = PBXBuildFile; fileRef = BB34BC1E2B081E45004CF123 /* set_build_number.sh */; };
 		BB49B3B2295CC8AE00D18605 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = BB49B3B1295CC8AE00D18605 /* AppDelegate.m */; };
 		BB49B3B4295CC8AF00D18605 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB49B3B3295CC8AF00D18605 /* Assets.xcassets */; };
 		BB49B3B7295CC8AF00D18605 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB49B3B5295CC8AF00D18605 /* MainMenu.xib */; };
@@ -194,7 +192,7 @@
 				BB49B3A9295CC8AE00D18605 /* Sources */,
 				BB49B3AA295CC8AE00D18605 /* Frameworks */,
 				BB49B3AB295CC8AE00D18605 /* Resources */,
-				BB34BC1A2B081D23004CF123 /* ShellScript */,
+				BB34BC1A2B081D23004CF123 /* Run Script */,
 			);
 			buildRules = (
 			);
@@ -244,8 +242,6 @@
 			files = (
 				BB49B3C4295CC91000D18605 /* LogViewController.xib in Resources */,
 				BB76A1A5297B333D00A869D8 /* PreferencesWindowController.xib in Resources */,
-				BB34BC202B081E45004CF123 /* set_build_number.sh in Resources */,
-				BB34BC1F2B081E45004CF123 /* build_dmg.sh in Resources */,
 				BB49B3B4295CC8AF00D18605 /* Assets.xcassets in Resources */,
 				BB7AB64329807A700081B05E /* PaletteViewController.xib in Resources */,
 				BB49B3B7295CC8AF00D18605 /* MainMenu.xib in Resources */,
@@ -255,9 +251,9 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		BB34BC1A2B081D23004CF123 /* ShellScript */ = {
+		BB34BC1A2B081D23004CF123 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
+			buildActionMask = 12;
 			files = (
 			);
 			inputFileListPaths = (
@@ -266,6 +262,7 @@
 				" $(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
 				"$(DWARF_DSYM_FOLDER_PATH)/$(DWARF_DSYM_FILE_NAME)/Contents/Info.plist",
 			);
+			name = "Run Script";
 			outputFileListPaths = (
 			);
 			outputPaths = (

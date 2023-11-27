@@ -27,8 +27,10 @@ const int kHeaderHeight = 26;
 @implementation VideoController
 {
     void* screenBuffer[2];
-    void* resizeBuffer;
-    void* tempBuffer;
+    void* imageConversionScaleBuffer;
+    void* imageConversionTempBuffer;
+    CGSize imageConversionTempBufferDimensions;
+
     USBController* usb;
     LogViewController* log;
     atomic_int stopMirroring;
@@ -44,7 +46,11 @@ const int kHeaderHeight = 26;
         screenBuffer[1] = NULL;
         atomic_fetch_and(&stopMirroring, 0);
         atomic_fetch_and(&mirrorActive, 0);
-        
+
+        imageConversionTempBuffer = NULL;
+        imageConversionTempBufferDimensions = CGSizeMake(0,0);
+        imageConversionScaleBuffer = NULL;
+
         log = lc;
 
         usb = [[USBController alloc] initWithError:error];
@@ -55,9 +61,9 @@ const int kHeaderHeight = 26;
 
         if (usb.mk > 1) {
             _screenCount = usb.mk == 2 ? 2 : 1;
+            // FIXME: We don't know the resolution the MK3 screen.
             _screenSize = usb.mk == 2 ? CGSizeMake(480.0f, 272.0f) : CGSizeMake(480.0f, 272.0f);
-            tempBuffer = malloc(_screenSize.width * 4 * _screenSize.height);
-            resizeBuffer = malloc(_screenSize.width * 4 * _screenSize.height);
+
             // width * height * 2 (261120) + commands (36)
             stream = [[NSMutableData alloc] initWithCapacity:(_screenSize.width * 2 * _screenSize.height) + 36];
             
@@ -90,6 +96,9 @@ const int kHeaderHeight = 26;
 {
     [self stopMirroringAndWait:YES];
 
+    // FIXME: We are transmitting data via USB but not waiting for the transfer
+    // to be done here. That has the risk of interfering with other transfers. The right
+    // solution here would be a producer/consumer pattern on two threads.
     [self clearScreen:0 error:nil];
     [self clearScreen:1 error:nil];
 
@@ -100,6 +109,9 @@ const int kHeaderHeight = 26;
 {
     atomic_fetch_and(&stopMirroring, 0);
 
+    // FIXME: We are transmitting data via USB but not waiting for the transfer
+    // to be done here. That has the risk of interfering with other transfers. The right
+    // solution here would be a producer/consumer pattern on two threads.
     if ([self clearScreen:0 error:nil] == NO) {
         return NO;
     }
@@ -167,13 +179,16 @@ const int kHeaderHeight = 26;
         NSLog(@"we need the USB device to be accessable");
         return NO;
     }
-    
-    NSImage* image = [NSImage imageNamed:@"ScreenOne"];
-    CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
-    [self drawCGImage:cgi screen:1 x:0 y:0 error:nil];
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         [self stopMirroringAndWait:YES];
+
+        NSImage* image = [NSImage imageNamed:@"ScreenOne"];
+        CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
+        [self drawCGImage:cgi screen:1 x:0 y:0 error:nil];
+
+        // Assure extreme delay after sending data to screen 2 to make sure the first screen transfer does not interfere.
+        [NSThread sleepForTimeInterval:0.05f];
 
         dispatch_async(dispatch_get_main_queue(), ^{
             [self startMirroring];
@@ -189,13 +204,29 @@ const int kHeaderHeight = 26;
     unsigned long width = CGImageGetWidth(source);
     unsigned long height = CGImageGetHeight(source);
     
+    // We make use of the vImage tempBuffer feature, allowing us to provide an operational
+    // buffer for conversion and scaling. The source of our operation is resizeable during
+    // runtime and thus we need to make sure the tempBuffer is properly sized.
+    if (imageConversionTempBufferDimensions.width != width ||
+        imageConversionTempBufferDimensions.height != height) {
+        if (imageConversionTempBuffer != NULL) {
+            free(imageConversionTempBuffer);
+        }
+        if (imageConversionScaleBuffer != NULL) {
+            free(imageConversionScaleBuffer);
+        }
+        imageConversionTempBufferDimensions = CGSizeMake(width, height);
+        imageConversionTempBuffer = malloc(CGImageGetBytesPerRow(source) * height);
+        imageConversionScaleBuffer = malloc(CGImageGetBytesPerRow(source) * _screenSize.height);
+    }
+
     CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider(source));
     
     vImage_Buffer sourceBuffer = {
         (void*)CFDataGetBytePtr(raw),
         height,
         width,
-        (((width + 31) >> 5) << 5) * 4      // Stride is remains for chunks of 32 pixels.
+        CGImageGetBytesPerRow(source)
     };
 
     vImage_CGImageFormat sourceFormat = {
@@ -209,22 +240,26 @@ const int kHeaderHeight = 26;
     if (width > _screenSize.width || height > _screenSize.height ) {
         // We want to skip the header part of the application window, that does not add any
         // value in the mirrored image.
+        // FIXME: This is a rather surprising way of cropping the header off - but efficient.
         sourceBuffer.data += kHeaderHeight * sourceBuffer.rowBytes;
         sourceBuffer.height -= kHeaderHeight;
 
         vImage_Buffer resizedBuffer = {
-            resizeBuffer,
+            imageConversionScaleBuffer,
             _screenSize.height,
             _screenSize.width,
-            _screenSize.width * 4
+            _screenSize.width * (((unsigned int)CGImageGetBitsPerPixel(source)) >> 3)
         };
 
-        vImageScale_ARGB8888(&sourceBuffer, &resizedBuffer, nil, kvImageHighQualityResampling | kvImageDoNotTile);
+        vImageScale_ARGB8888(&sourceBuffer, 
+                             &resizedBuffer,
+                             imageConversionTempBuffer,
+                             kvImageDoNotTile);
 
-        sourceBuffer.data = resizeBuffer;
-        sourceBuffer.height = _screenSize.height;
-        sourceBuffer.width = _screenSize.width;
-        sourceBuffer.rowBytes = _screenSize.width * 4;
+        sourceBuffer.data = imageConversionScaleBuffer;
+        sourceBuffer.height = resizedBuffer.height;
+        sourceBuffer.width = resizedBuffer.width;
+        sourceBuffer.rowBytes = resizedBuffer.rowBytes;
     }
 
     vImage_CGImageFormat screenFormat = {
@@ -235,8 +270,6 @@ const int kHeaderHeight = 26;
     };
 
     vImage_Error err = kvImageNoError;
-    // Do not attempt to invoke internal tiling with the image converter: `kvImageDoNotTile`
-    // should prevent https://github.com/tillt/KompleteSynthesia/issues/21.
     vImageConverterRef converter = vImageConverter_CreateWithCGImageFormat(&sourceFormat,
                                                                            &screenFormat,
                                                                            NULL,
@@ -249,12 +282,10 @@ const int kHeaderHeight = 26;
         destination->width * 2
     };
 
-    // Do not attempt to invoke internal tiling with the image converter: `kvImageDoNotTile`
-    // should prevent https://github.com/tillt/KompleteSynthesia/issues/21.
     vImageConvert_AnyToAny(converter,
                            &sourceBuffer,
                            &destinationBuffer,
-                           tempBuffer,
+                           imageConversionTempBuffer,
                            kvImageDoNotTile);
 
     vImageConverter_Release(converter);
