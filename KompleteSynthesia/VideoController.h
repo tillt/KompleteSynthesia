@@ -25,13 +25,7 @@ typedef struct {
 @property (nonatomic, assign) CGSize screenSize;
 
 - (id)initWithLogViewController:(LogViewController*)lc error:(NSError**)error;
-
-- (BOOL)drawCGImage:(CGImageRef)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error;
-- (BOOL)clearScreen:(uint8_t)screen error:(NSError**)error;
-
 - (BOOL)reset:(NSError**)error;
-- (void)stopMirroringAndWait:(BOOL)wait;
-
 - (void)teardown;
 
 @end

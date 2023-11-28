@@ -95,28 +95,20 @@ const int kHeaderHeight = 26;
 - (void)teardown
 {
     [self stopMirroringAndWait:YES];
+    [usb waitForTransfersWithTimeout:0.01];
 
-    // FIXME: We are transmitting data via USB but not waiting for the transfer
-    // to be done here. That has the risk of interfering with other transfers. The right
-    // solution here would be a producer/consumer pattern on two threads.
     [self clearScreen:0 error:nil];
-    [self clearScreen:1 error:nil];
+    [usb waitForTransfersWithTimeout:0.01];
 
-    [usb teardown];
+    [self clearScreen:1 error:nil];
+    [usb waitForTransfersWithTimeout:0.01];
 }
 
 - (BOOL)startMirroring
 {
     atomic_fetch_and(&stopMirroring, 0);
 
-    // FIXME: We are transmitting data via USB but not waiting for the transfer
-    // to be done here. That has the risk of interfering with other transfers. The right
-    // solution here would be a producer/consumer pattern on two threads.
-    if ([self clearScreen:0 error:nil] == NO) {
-        return NO;
-    }
-
-    int windowNumber = [SynthesiaController synthesiaWindowNumber];
+    const int windowNumber = [SynthesiaController synthesiaWindowNumber];
     if (windowNumber == 0) {
         NSLog(@"synthesia window not found");
         return NO;
@@ -125,6 +117,18 @@ const int kHeaderHeight = 26;
     [log logLine:@"starting window mirroring"];
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        NSImage* image = [NSImage imageNamed:@"ScreenOne"];
+        CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
+
+        [self drawCGImage:cgi 
+                   screen:1
+                        x:0
+                        y:0
+         skipHeaderHeight:0
+                    error:nil];
+
+        [self->usb waitForTransfersWithTimeout:0.01];
+
         atomic_fetch_or(&self->mirrorActive, 1);
 
         while(self->stopMirroring == 0) {
@@ -137,7 +141,12 @@ const int kHeaderHeight = 26;
                 goto doneMirroring;
             }
 
-            [self drawCGImage:original screen:0 x:0 y:0 error:nil];
+            [self drawCGImage:original
+                       screen:0
+                            x:0
+                            y:0
+             skipHeaderHeight:kHeaderHeight
+                        error:nil];
 
             CGImageRelease(original);
             
@@ -183,13 +192,6 @@ const int kHeaderHeight = 26;
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         [self stopMirroringAndWait:YES];
 
-        NSImage* image = [NSImage imageNamed:@"ScreenOne"];
-        CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
-        [self drawCGImage:cgi screen:1 x:0 y:0 error:nil];
-
-        // Assure extreme delay after sending data to screen 2 to make sure the first screen transfer does not interfere.
-        [NSThread sleepForTimeInterval:0.05f];
-
         dispatch_async(dispatch_get_main_queue(), ^{
             [self startMirroring];
         });
@@ -199,10 +201,12 @@ const int kHeaderHeight = 26;
 }
 
 // Convert a CGImage to a NIImage, adjusting the color depth and the size, if needed.
-- (void)NIImageFromCGImage:(CGImageRef)source destination:(NIImage*)destination
+- (void)NIImageFromCGImage:(CGImageRef)source 
+               destination:(NIImage*)destination
+          skipHeaderHeight:(const int)headerHeight
 {
-    unsigned long width = CGImageGetWidth(source);
-    unsigned long height = CGImageGetHeight(source);
+    const unsigned long width = CGImageGetWidth(source);
+    const unsigned long height = CGImageGetHeight(source);
     
     // We make use of the vImage tempBuffer feature, allowing us to provide an operational
     // buffer for conversion and scaling. The source of our operation is resizeable during
@@ -236,14 +240,13 @@ const int kHeaderHeight = 26;
         .colorSpace = NULL,
     };
 
+    // We want to skip the header part of the application window, that does not add any
+    // value in the mirrored image.
+    sourceBuffer.data += headerHeight * sourceBuffer.rowBytes;
+    sourceBuffer.height -= headerHeight;
+
     // If the image is too big, resize it.
     if (width > _screenSize.width || height > _screenSize.height ) {
-        // We want to skip the header part of the application window, that does not add any
-        // value in the mirrored image.
-        // FIXME: This is a rather surprising way of cropping the header off - but efficient.
-        sourceBuffer.data += kHeaderHeight * sourceBuffer.rowBytes;
-        sourceBuffer.height -= kHeaderHeight;
-
         vImage_Buffer resizedBuffer = {
             imageConversionScaleBuffer,
             _screenSize.height,
@@ -325,7 +328,12 @@ const int kHeaderHeight = 26;
     return ret;
 }
 
-- (BOOL)drawCGImage:(CGImageRef)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
+- (BOOL)drawCGImage:(CGImageRef)image
+             screen:(const uint8_t)screen
+                  x:(const unsigned int)x
+                  y:(const unsigned int)y
+   skipHeaderHeight:(const unsigned int)headerHeight
+              error:(NSError**)error
 {
     const unsigned int width = MIN(CGImageGetWidth(image), _screenSize.width);
     const unsigned int height = MIN(CGImageGetHeight(image), _screenSize.height);
@@ -334,7 +342,9 @@ const int kHeaderHeight = 26;
         height,
         screenBuffer[screen]
     };
-    [self NIImageFromCGImage:image destination:&convertedImage];
+    [self NIImageFromCGImage:image 
+                 destination:&convertedImage
+            skipHeaderHeight:headerHeight];
     return [self drawNIImage:&convertedImage screen:screen x:x y:y error:error];
 }
 

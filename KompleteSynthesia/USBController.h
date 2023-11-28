@@ -44,6 +44,7 @@ extern const uint32_t kPID_S88MK3;
 
 - (id)initWithError:(NSError**)error;
 - (BOOL)bulkWriteData:(NSData*)data error:(NSError**)error;
+- (BOOL)waitForTransfersWithTimeout:(NSTimeInterval)timout;
 - (void)teardown;
 
 
