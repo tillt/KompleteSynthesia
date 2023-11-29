@@ -41,17 +41,17 @@ enum {
     BOOL usbAvailable;
 }
 
-const NSString* kHardwareAgentName = @"NIHardwareAgent.app";
-const NSString* kHardwareAgentBundleIdentifier = @"com.native-instruments.NIHardwareService";
-const NSString* kHardwareAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHardwareAgent.app";
+NSString* kHardwareAgentName = @"NIHardwareAgent.app";
+NSString* kHardwareAgentBundleIdentifier = @"com.native-instruments.NIHardwareService";
+NSString* kHardwareAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHardwareAgent.app";
 
-const NSString* kHostIntegrationAgentName = @"NIHostIntegrationAgent.app";
-const NSString* kHostIntegrationAgentBundleIdentifier = @"com.native-instruments.NIHostIntegrationAgent";
-const NSString* kHostIntegrationAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app";
+NSString* kHostIntegrationAgentName = @"NIHostIntegrationAgent.app";
+NSString* kHostIntegrationAgentBundleIdentifier = @"com.native-instruments.NIHostIntegrationAgent";
+NSString* kHostIntegrationAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app";
 
-const NSString* kDaemonName = @"NTKDaemon.app";
-const NSString* kDaemonBundleIdentifier = @"com.native-instruments.NTKDaemon";
-const NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NTKDaemon.app";
+NSString* kDaemonName = @"NTKDaemon.app";
+NSString* kDaemonBundleIdentifier = @"com.native-instruments.NTKDaemon";
+NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NTKDaemon.app";
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
