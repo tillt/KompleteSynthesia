@@ -42,7 +42,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
     IOUSBInterfaceInterface942** interface;
     uint8_t endpointCount;
     uint8_t endpointAddresses[32];
-//    atomic_int transferActive;
+    atomic_int transferActive;
 }
 
 + (NSString*)descriptionWithIOReturn:(IOReturn)err
@@ -72,8 +72,6 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
 
 - (void)dealloc
 {
-    //atomic_fetch_and(&transferActive, 0);
-
     if (interface != NULL) {
         (*interface)->USBInterfaceClose(interface);
         (*interface)->Release(interface);
@@ -86,20 +84,10 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
 
 - (void)teardown
 {
-    // FIXME: This doesnt work as intendend. The problem is likely the runloop chosen
-    // for our callback. The symptom is that the bulk transfer callback does not get
-    // invoked when the user ie opens the application menu. We didnt make any use of that
-    // callback, other than providing it to IOKIT. Now that this tries to rely on the call-
-    // back getting invoked whenever a transfer is done, we need to find a better way to
-    // setup a runloop for the USB callback.
-    // Without this, we will not be able to reliably transfer the last commands (ie screen
-    // clears) - well, unless we hack in a nasty pause -- see below...
-//    while (atomic_load(&transferActive) > 0) {
-//        [NSThread sleepForTimeInterval:0.01f];
-//        NSLog(@"waiting for transfer...");
-//    };
-    // Sleep for a tenth of a second, that way we can be pretty certain transfers are done.
-    [NSThread sleepForTimeInterval:0.1f];
+    // When our runloop is killed which happens on application termination, the async
+    // callbacks wont get called anymore and thus the timeout may kick in here - make it
+    // a safe value for being sure we can rely on the device status.
+    [self waitForTransfersWithTimeout:0.01];
 }
 
 - (NSString*)status
@@ -161,7 +149,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
     }
     assert(endpointCount <= 32);
 
-    for (int i = 1 ; i <= endpointCount ; i++) {
+    for (int i = 1; i <= endpointCount; i++) {
         UInt8 direction;
         UInt8 number;
         UInt8 dont_care1, dont_care3;
@@ -228,40 +216,22 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
         return ret;
     }
 
-    CFRunLoopSourceRef compl_event_source;
-    ret = (*interface)->CreateInterfaceAsyncEventSource(interface, &compl_event_source);
+    CFRunLoopSourceRef eventSource;
+    ret = (*interface)->CreateInterfaceAsyncEventSource(interface, &eventSource);
     if (ret != kIOReturnSuccess) {
         NSLog(@"CreateInterfaceAsyncEventSource failed");
         return ret;
     }
-    CFRunLoopAddSource(CFRunLoopGetCurrent(), compl_event_source, kCFRunLoopDefaultMode);
+    CFRunLoopAddSource(CFRunLoopGetCurrent(), eventSource, kCFRunLoopCommonModes);
 
     NSLog(@"interface opened and async port setup");
 
     return ret;
 }
 
-- (void)pipeTransferDone:(IOReturn)result
-{
-    //NSLog(@"transfers active %d", transferActive);
-    
-    //atomic_fetch_sub(&transferActive, 1);
-}
-
-static void asyncCallback (void *refcon, IOReturn result, void *arg0)
-{
-    USBController* caller = (__bridge USBController*)refcon;
-    
-    [caller pipeTransferDone:result];
-
-    if (result != kIOReturnSuccess) {
-        NSLog(@"async transfer failed");
-    }
-}
-
 - (BOOL)endpoint:(uint8_t)ep pipeRef:(uint8_t*)pipep
 {
-    for (int8_t i = 0 ; i < endpointCount; i++) {
+    for (int8_t i = 0; i < endpointCount; i++) {
         if (endpointAddresses[i] == ep) {
             *pipep = i + 1;
             return YES;
@@ -269,6 +239,16 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     }
     NSLog(@"no pipeRef found with endpoint address 0x%02x", ep);
     return NO;
+}
+
+static void asyncCallback (void *refcon, IOReturn result, void* arg0)
+{
+    atomic_int* transferActive = (atomic_int*)refcon;
+    atomic_fetch_sub(transferActive, 1);
+
+    if (result != kIOReturnSuccess) {
+        NSLog(@"async transfer failed");
+    }
 }
 
 - (BOOL)bulkWriteData:(NSData*)data error:(NSError**)error
@@ -312,18 +292,16 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     assert(transferType == kUSBBulk);
     assert(data.length % maxPacketSize);
     
-    //NSLog(@"per write, transfers active %d", transferActive);
-
-    //atomic_fetch_add(&transferActive, 1);
+    atomic_fetch_add(&transferActive, 1);
 
     ret = (*interface)->WritePipeAsyncTO(interface,
                                          pipeRef,
-                                         (void *)data.bytes,
+                                         (void*)data.bytes,
                                          (UInt32)data.length,
                                          0,
                                          0,
                                          asyncCallback,
-                                         (__bridge void *)self);
+                                         &transferActive);
     if (ret != kIOReturnSuccess) {
         NSLog(@"(*interface)->WritePipeAsync failed");
         if (error) {
@@ -513,6 +491,17 @@ static void asyncCallback (void *refcon, IOReturn result, void *arg0)
     _connected = YES;
 
     return YES;
+}
+
+- (BOOL)waitForTransfersWithTimeout:(NSTimeInterval)timeout
+{
+    NSTimeInterval roundDelay = 0.001;
+    unsigned int roundsUntilTimeout = timeout / roundDelay;
+    while (atomic_load(&transferActive) > 0 && roundsUntilTimeout) {
+        [NSThread sleepForTimeInterval:roundDelay];
+        --roundsUntilTimeout;
+    };
+    return atomic_load(&transferActive) == 0;
 }
 
 @end

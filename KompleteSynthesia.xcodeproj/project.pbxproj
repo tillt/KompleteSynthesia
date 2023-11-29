@@ -437,7 +437,8 @@
 				INFOPLIST_FILE = KompleteSynthesia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Komplete Synthesia";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Till Toenshoff, 2023";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2023 Till Toenshoff. All rights reserved.";
 				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -471,7 +472,8 @@
 				INFOPLIST_FILE = KompleteSynthesia/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Komplete Synthesia";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Till Toenshoff, 2023";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2023 Till Toenshoff. All rights reserved.";
 				INFOPLIST_KEY_NSMainNibFile = MainMenu;
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (

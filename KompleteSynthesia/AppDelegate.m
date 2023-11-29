@@ -41,17 +41,17 @@ enum {
     BOOL usbAvailable;
 }
 
-NSString* kHardwareAgentName = @"NIHardwareAgent.app";
-NSString* kHardwareAgentBundleIdentifier = @"com.native-instruments.NIHardwareService";
-NSString* kHardwareAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHardwareAgent.app";
+const NSString* kHardwareAgentName = @"NIHardwareAgent.app";
+const NSString* kHardwareAgentBundleIdentifier = @"com.native-instruments.NIHardwareService";
+const NSString* kHardwareAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHardwareAgent.app";
 
-NSString* kHostIntegrationAgentName = @"NIHostIntegrationAgent.app";
-NSString* kHostIntegrationAgentBundleIdentifier = @"com.native-instruments.NIHostIntegrationAgent";
-NSString* kHostIntegrationAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app";
+const NSString* kHostIntegrationAgentName = @"NIHostIntegrationAgent.app";
+const NSString* kHostIntegrationAgentBundleIdentifier = @"com.native-instruments.NIHostIntegrationAgent";
+const NSString* kHostIntegrationAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app";
 
-NSString* kDaemonName = @"NTKDaemon.app";
-NSString* kDaemonBundleIdentifier = @"com.native-instruments.NTKDaemon";
-NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NTKDaemon.app";
+const NSString* kDaemonName = @"NTKDaemon.app";
+const NSString* kDaemonBundleIdentifier = @"com.native-instruments.NTKDaemon";
+const NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NTKDaemon.app";
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
@@ -72,7 +72,7 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 
     _observer = [[ApplicationObserver alloc] init];
 
-    NSString* fmtAssert = @"checking if %@ is active";
+    NSString* fmtAssert = @"%@ is active";
     NSString* fmtStopped = @"stopped %@";
     NSString* fmtFailed = @"failed to stop %@";
     NSString* fmtSkipping = @"%@ is not running";
@@ -85,10 +85,9 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 
     // Identify unwanted processes.
     for (int i = 0; i < kAlienItemCount; i++) {
-        [_logViewController logLine:[NSString stringWithFormat:fmtAssert, items[i]]];
-
         if ([ApplicationObserver applicationIsRunning:items[i]] == YES) {
             ++awaitingAlienCount;
+            [self.logViewController logLine:[NSString stringWithFormat:fmtAssert, items[i]]];
         } else {
             [self.logViewController logLine:[NSString stringWithFormat:fmtSkipping, items[i]]];
         }
