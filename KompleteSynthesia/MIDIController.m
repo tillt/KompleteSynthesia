@@ -225,7 +225,8 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     const MIDIEventPacket *packet = &eventList->packet[0];
 
     for (unsigned i = 0; i < eventList->numPackets; ++i) {
-        for (unsigned w = 0; w < packet->wordCount; ++w) {
+        const unsigned words = MIN(packet->wordCount, 64);
+        for (unsigned w = 0; w < words; ++w) {
             unsigned char cvStatus = (packet->words[w] & 0x00F00000) >> 20;
             if (cvStatus == kMIDICVStatusNoteOn ||
                 cvStatus == kMIDICVStatusNoteOff ||
