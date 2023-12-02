@@ -23,6 +23,7 @@ typedef struct {
 
 @property (nonatomic, assign) int screenCount;
 @property (nonatomic, assign) CGSize screenSize;
+@property (nonatomic, assign) BOOL mirrorSynthesiaApplicationWindow;
 
 - (id)initWithLogViewController:(LogViewController*)lc error:(NSError**)error;
 - (BOOL)reset:(NSError**)error;

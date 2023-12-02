@@ -21,7 +21,10 @@
 /// Makes use of a detected Synthesia instance by streaming the application window onto the first LCD screen of a
 /// detected Komplete Kontrol S-series USB controller.
 
+// Note that this is only used when mirroring isnt active.
 const double kRefreshDelay = 1.0 / 40.0;
+
+// FIXME: This smells too magic -- try to find that size from a system function!
 const int kHeaderHeight = 26;
 
 @implementation VideoController
@@ -33,8 +36,11 @@ const int kHeaderHeight = 26;
 
     USBController* usb;
     LogViewController* log;
-    atomic_int stopMirroring;
-    atomic_int mirrorActive;
+
+    atomic_int stopScreenUpdating;
+    atomic_int screenUpdateActive;
+    atomic_int mirror;
+
     NSMutableData* stream;
 }
 
@@ -44,8 +50,9 @@ const int kHeaderHeight = 26;
     if (self) {
         screenBuffer[0] = NULL;
         screenBuffer[1] = NULL;
-        atomic_fetch_and(&stopMirroring, 0);
-        atomic_fetch_and(&mirrorActive, 0);
+        atomic_fetch_and(&stopScreenUpdating, 0);
+        atomic_fetch_and(&screenUpdateActive, 0);
+        atomic_fetch_and(&mirror, 0);
 
         imageConversionTempBuffer = NULL;
         imageConversionTempBufferDimensions = CGSizeMake(0,0);
@@ -75,18 +82,29 @@ const int kHeaderHeight = 26;
         } else {
             return nil;
         }
-
-        [self reset:nil];
     }
     return self;
 }
 
-- (void)stopMirroringAndWait:(BOOL)wait
+- (void)setMirrorSynthesiaApplicationWindow:(BOOL)mirrorSynthesiaApplicationWindow
 {
-    atomic_fetch_or(&stopMirroring, 1);
+    if (mirrorSynthesiaApplicationWindow == _mirrorSynthesiaApplicationWindow) {
+        return;
+    }
+    if (mirrorSynthesiaApplicationWindow) {
+        atomic_fetch_or(&mirror, 1);
+    } else {
+        atomic_fetch_and(&mirror, 0);
+    }
+    _mirrorSynthesiaApplicationWindow = mirrorSynthesiaApplicationWindow;
+}
+
+- (void)stopUpdatingAndWait:(BOOL)wait
+{
+    atomic_fetch_or(&stopScreenUpdating, 1);
 
     if (wait == YES) {
-        while (mirrorActive != 0) {
+        while (screenUpdateActive != 0) {
             [NSThread sleepForTimeInterval:0.01f];
         };
     }
@@ -94,7 +112,7 @@ const int kHeaderHeight = 26;
 
 - (void)teardown
 {
-    [self stopMirroringAndWait:YES];
+    [self stopUpdatingAndWait:YES];
     [usb waitForTransfersWithTimeout:0.01];
 
     [self clearScreen:0 error:nil];
@@ -104,9 +122,9 @@ const int kHeaderHeight = 26;
     [usb waitForTransfersWithTimeout:0.01];
 }
 
-- (BOOL)startMirroring
+- (BOOL)startUpdating
 {
-    atomic_fetch_and(&stopMirroring, 0);
+    atomic_fetch_and(&stopScreenUpdating, 0);
 
     const int windowNumber = [SynthesiaController synthesiaWindowNumber];
     if (windowNumber == 0) {
@@ -114,7 +132,7 @@ const int kHeaderHeight = 26;
         return NO;
     }
 
-    [log logLine:@"starting window mirroring"];
+    [log logLine:@"starting screen update loop"];
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         NSImage* image = [NSImage imageNamed:@"ScreenOne"];
@@ -126,41 +144,56 @@ const int kHeaderHeight = 26;
                         y:0
          skipHeaderHeight:0
                     error:nil];
-
         [self->usb waitForTransfersWithTimeout:0.01];
 
-        atomic_fetch_or(&self->mirrorActive, 1);
+        [self drawCGImage:cgi
+                   screen:0
+                        x:0
+                        y:0
+         skipHeaderHeight:0
+                    error:nil];
+        [self->usb waitForTransfersWithTimeout:0.01];
 
-        while(self->stopMirroring == 0) {
-            CGImageRef original = CGWindowListCreateImage(CGRectNull,
-                                                          kCGWindowListOptionIncludingWindow,
-                                                          windowNumber,
-                                                          kCGWindowImageBoundsIgnoreFraming);
-            if (original == nil) {
-                NSLog(@"window disappeared, lets stop this");
-                goto doneMirroring;
+        atomic_fetch_or(&self->screenUpdateActive, 1);
+
+        while(atomic_load(&self->stopScreenUpdating) == 0) {
+            if (atomic_load(&self->mirror) == 1) {
+                CGImageRef original = CGWindowListCreateImage(CGRectNull,
+                                                              kCGWindowListOptionIncludingWindow,
+                                                              windowNumber,
+                                                              kCGWindowImageBoundsIgnoreFraming);
+                if (original == nil) {
+                    NSLog(@"window disappeared, lets stop this");
+                    goto doneUpdating;
+                }
+                
+                BOOL drawSetupDone = [self drawCGImage:original
+                                                screen:0
+                                                     x:0
+                                                     y:0
+                                      skipHeaderHeight:kHeaderHeight
+                                                 error:nil];
+                
+                CGImageRelease(original);
+                if (!drawSetupDone) {
+                    NSLog(@"usb transfer failed right away, lets stop this");
+                    goto doneUpdating;
+                }
+                [self->usb waitForTransfersWithTimeout:0.01];
+            } else {
+                // FIXME: this is used only until we do control display overlays - stay tuned!
+                [NSThread sleepForTimeInterval:kRefreshDelay];
             }
-
-            [self drawCGImage:original
-                       screen:0
-                            x:0
-                            y:0
-             skipHeaderHeight:kHeaderHeight
-                        error:nil];
-
-            CGImageRelease(original);
-            
-            // FIXME: We should try to find something more reliable than a fixed delay...
-            // possibly tie it to the v-refresh of the host machine.
-            [NSThread sleepForTimeInterval:kRefreshDelay];
         };
 
-    doneMirroring:
+    doneUpdating:
         [self clearScreen:0 error:nil];
-        atomic_fetch_and(&self->mirrorActive, 0);
+        [self->usb waitForTransfersWithTimeout:0.01];
+
+        atomic_fetch_and(&self->screenUpdateActive, 0);
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self->log logLine:@"stopped window mirroring"];
+            [self->log logLine:@"stopped screen update loop"];
         });
     });
     
@@ -190,10 +223,10 @@ const int kHeaderHeight = 26;
     }
 
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        [self stopMirroringAndWait:YES];
+        [self stopUpdatingAndWait:YES];
 
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self startMirroring];
+            [self startUpdating];
         });
     });
 

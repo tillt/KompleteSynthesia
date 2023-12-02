@@ -63,6 +63,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
         NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
 
+        // FIXME: Not a great spot for application logic - this should be done in the application delegate instead
         [userDefaults registerDefaults:@{@"kColorMapUnpressed": @(kKeyColorUnpressed)}];
         colorMap[kColorMapUnpressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapUnpressed"];
 

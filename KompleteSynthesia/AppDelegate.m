@@ -53,6 +53,9 @@ NSString* kDaemonName = @"NTKDaemon.app";
 NSString* kDaemonBundleIdentifier = @"com.native-instruments.NTKDaemon";
 NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NTKDaemon.app";
 
+NSString* kAppDefaultActivateSynthesia = @"forward_buttons_to_synthesia_only";
+NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
+
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     usbAvailable = NO;
@@ -131,7 +134,6 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     }
 }
 
-
 - (void)applicationDidFinishInitializingWithUSBHighwayOpen:(BOOL)usbHighwayOpen
 {
     NSError* error = nil;
@@ -155,7 +157,12 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     if (_midi2hidController.mk == 1) {
         usbAvailable = NO;
     }
-    
+
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+
+    [userDefaults registerDefaults:@{kAppDefaultActivateSynthesia: @(YES)}];
+    _midi2hidController.forwardButtonsToSynthesiaOnly = [userDefaults boolForKey:kAppDefaultActivateSynthesia];
+
     if (usbAvailable == YES) {
         _videoController = [[VideoController alloc] initWithLogViewController:_logViewController
                                                                         error:&error];
@@ -164,11 +171,16 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
             [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
             return;
         }
+
+        [userDefaults registerDefaults:@{kAppDefaultMirrorSynthesia: @(YES)}];
+        _videoController.mirrorSynthesiaApplicationWindow = [userDefaults boolForKey:kAppDefaultMirrorSynthesia];
+
+        if (![_videoController reset:&error]) {
+            [[NSAlert alertWithError:error] runModal];
+            [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+            return;
+        }
     }
-    
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    [userDefaults registerDefaults:@{@"forward_buttons_to_synthesia_only": @(YES)}];
-    _midi2hidController.forwardButtonsToSynthesiaOnly = [userDefaults boolForKey:@"forward_buttons_to_synthesia_only"];
     
     // Hide application icon.
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
@@ -207,9 +219,12 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 {
     if (_preferences == nil) {
         _preferences = [[PreferencesWindowController alloc] initWithWindowNibName:@"PreferencesWindowController"];
+        _preferences.delegate = self;
     }
     _preferences.synthesia = _synthesia;
     _preferences.midi2hid = _midi2hidController;
+    _preferences.video = _videoController;
+
     NSWindow* window = [_preferences window];
     
     // We need to do some trickery here as the Application itself has no window. Not sure
@@ -298,6 +313,37 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
     }
     
     [_midi2hidController synthesiaStateUpdate:status];
+}
+
+#pragma mark PreferencesDelegate
+
+- (void)preferencesUpdatedActivate
+{
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults setBool:_midi2hidController.forwardButtonsToSynthesiaOnly
+                   forKey:kAppDefaultActivateSynthesia];
+}
+
+- (void)preferencesUpdatedMirror
+{
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults setBool:_videoController.mirrorSynthesiaApplicationWindow
+                   forKey:kAppDefaultMirrorSynthesia];
+}
+
+- (void)preferencesUpdatedKeyState:(int)keyState forKeyIndex:(int)index
+{
+    NSArray<NSString*>* userDefaultKeys = @[ @"kColorMapUnpressed",
+                                             @"kColorMapPressed",
+                                             @"kColorMapLeft",
+                                             @"kColorMapLeftThumb",
+                                             @"kColorMapLeftPressed",
+                                             @"kColorMapRight",
+                                             @"kColorMapRightThumb",
+                                             @"kColorMapRightPressed" ];
+
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults setInteger:keyState forKey:userDefaultKeys[index]];
 }
 
 @end
