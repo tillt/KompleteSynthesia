@@ -13,11 +13,21 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class SynthesiaController;
 @class MIDI2HIDController;
+@class VideoController;
+
+@protocol PreferencesDelegate <NSObject>
+- (void)preferencesUpdatedActivate;
+- (void)preferencesUpdatedMirror;
+//- (void)preferencesUpdatedMirror:(id)sender;
+- (void)preferencesUpdatedKeyState:(int)keyState forKeyIndex:(int)index;
+
+@end
 
 @interface PreferencesWindowController : NSWindowController<PaletteViewControllerDelegate>
 
 @property (weak, nonatomic) IBOutlet NSTabView *tabView;
 @property (weak, nonatomic) IBOutlet NSButton *forwardButtonsOnlyToSynthesia;
+@property (weak, nonatomic) IBOutlet NSButton *mirrorSynthesiaToControllerScreen;
 @property (weak, nonatomic) IBOutlet ColorField* colorUnpressed;
 @property (weak, nonatomic) IBOutlet ColorField* colorPressed;
 @property (weak, nonatomic) IBOutlet ColorField* colorLeft;
@@ -29,6 +39,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (weak, nonatomic) SynthesiaController* synthesia;
 @property (weak, nonatomic) MIDI2HIDController* midi2hid;
+@property (weak, nonatomic) VideoController* video;
+
+@property (nonatomic, weak) id<PreferencesDelegate> delegate;
 
 - (IBAction)assertSynthesiaConfig:(id)sender;
 

@@ -18,6 +18,7 @@
                 <outlet property="colorRightThumb" destination="a80-j5-1aw" id="zEX-Ps-h1Y"/>
                 <outlet property="colorUnpressed" destination="0Hf-sh-MQb" id="j2R-b7-OXM"/>
                 <outlet property="forwardButtonsOnlyToSynthesia" destination="IYA-Ho-9yy" id="vYE-Rs-pYT"/>
+                <outlet property="mirrorSynthesiaToControllerScreen" destination="Sdc-LV-BaN" id="Mok-ZX-5hG"/>
                 <outlet property="tabView" destination="qrt-pB-3fV" id="3MD-ul-L0g"/>
                 <outlet property="window" destination="F0z-JX-Cv5" id="gIp-Ho-8D9"/>
             </connections>
@@ -38,15 +39,26 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
-                            <tabViewItem label="Buttons" identifier="" image="NSInfo" id="erR-wt-3H5">
+                            <tabViewItem label="Advanced" identifier="" image="NSInfo" id="erR-wt-3H5">
                                 <view key="view" id="po6-mk-svN">
                                     <rect key="frame" x="10" y="33" width="476" height="240"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IYA-Ho-9yy">
-                                            <rect key="frame" x="118" y="110" width="238" height="34"/>
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Sdc-LV-BaN">
+                                            <rect key="frame" x="15" y="169" width="363" height="34"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                            <buttonCell key="cell" type="check" title="Control events activate Synthesia" bezelStyle="regularSquare" imagePosition="left" inset="2" id="cCF-lR-49o">
+                                            <buttonCell key="cell" type="check" title="Mirror Synthesia application window to Komplete Kontrol display" bezelStyle="regularSquare" imagePosition="left" enabled="NO" inset="2" id="rmr-tN-EhR">
+                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                <font key="font" metaFont="smallSystem"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="mirroringValueChanged:" target="-2" id="4t7-B3-fcP"/>
+                                            </connections>
+                                        </button>
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IYA-Ho-9yy">
+                                            <rect key="frame" x="15" y="205" width="444" height="34"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <buttonCell key="cell" type="check" title="Komplete Kontrol control events activate the Synthesia application" bezelStyle="regularSquare" imagePosition="left" inset="2" id="cCF-lR-49o">
                                                 <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                 <font key="font" metaFont="smallSystem"/>
                                             </buttonCell>
@@ -239,18 +251,18 @@
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <scrollView appearanceType="aqua" fixedFrame="YES" borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" horizontalScrollElasticity="none" verticalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="nvz-Ze-6vG">
-                                            <rect key="frame" x="19" y="101" width="440" height="98"/>
+                                            <rect key="frame" x="19" y="83" width="440" height="116"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <clipView key="contentView" drawsBackground="NO" id="Kda-gH-XL1">
-                                                <rect key="frame" x="0.0" y="0.0" width="440" height="98"/>
-                                                <autoresizingMask key="autoresizingMask"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="440" height="116"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
                                                     <textView wantsLayer="YES" editable="NO" selectable="NO" drawsBackground="NO" importsGraphics="NO" verticallyResizable="YES" baseWritingDirection="leftToRight" findStyle="bar" spellingCorrection="YES" smartInsertDelete="YES" id="YqR-iw-B81">
-                                                        <rect key="frame" x="0.0" y="0.0" width="440" height="98"/>
+                                                        <rect key="frame" x="0.0" y="0.0" width="440" height="116"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <color key="textColor" red="0.85639495895184525" green="0.87773895300925642" blue="0.94177093518148991" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
-                                                        <size key="minSize" width="440" height="98"/>
+                                                        <size key="minSize" width="440" height="116"/>
                                                         <size key="maxSize" width="449" height="10000000"/>
                                                         <attributedString key="textStorage">
                                                             <fragment>
@@ -284,7 +296,8 @@ For being able to configure Synthesia, this Application needs to manipulate a fi
                                                             </fragment>
                                                             <fragment>
                                                                 <string key="content">in the file dialog popping up when clicking on the button below. 
-</string>
+
+That file belongs to Synthesia and should be located in the folder ~/Library/Application Support/Synthesia</string>
                                                                 <attributes>
                                                                     <color key="NSBackgroundColor" red="0.0" green="0.0" blue="0.0" alpha="0.0" colorSpace="custom" customColorSpace="sRGB"/>
                                                                     <color key="NSColor" red="0.85639495895184525" green="0.87773895300925642" blue="0.94177093518148991" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
@@ -307,7 +320,7 @@ For being able to configure Synthesia, this Application needs to manipulate a fi
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
                                             <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="fvo-S7-Uxe">
-                                                <rect key="frame" x="424" y="0.0" width="16" height="98"/>
+                                                <rect key="frame" x="424" y="0.0" width="16" height="116"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
                                         </scrollView>
@@ -321,7 +334,7 @@ For being able to configure Synthesia, this Application needs to manipulate a fi
                                             </textFieldCell>
                                         </textField>
                                         <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="HVU-cO-C7e">
-                                            <rect key="frame" x="121" y="54" width="234" height="32"/>
+                                            <rect key="frame" x="121" y="15" width="234" height="32"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <buttonCell key="cell" type="push" title="Repair light configuration in Synthesia" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Rou-M1-HAc">
                                                 <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>

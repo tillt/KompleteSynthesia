@@ -8,6 +8,7 @@
 #import "PreferencesWindowController.h"
 #import "SynthesiaController.h"
 #import "MIDI2HIDController.h"
+#import "VideoController.h"
 
 /// Preferences window controller.
 
@@ -34,15 +35,6 @@
                   _colorRightThumb,
                   _colorRightPressed ];
 
-    userDefaultKeys = @[ @"kColorMapUnpressed",
-                         @"kColorMapPressed",
-                         @"kColorMapLeft",
-                         @"kColorMapLeftThumb",
-                         @"kColorMapLeftPressed",
-                         @"kColorMapRight",
-                         @"kColorMapRightThumb",
-                         @"kColorMapRightPressed" ];
-    
     for (int key = 0;key < controls.count;key++) {
         ColorField* colorField = controls[key];
         colorField.keyState = _midi2hid.colors[key];
@@ -50,6 +42,8 @@
     }
 
     [self.forwardButtonsOnlyToSynthesia setState:_midi2hid.forwardButtonsToSynthesiaOnly ? NSControlStateValueOn : NSControlStateValueOff];
+    self.mirrorSynthesiaToControllerScreen.enabled = _video != nil;
+    [self.mirrorSynthesiaToControllerScreen setState:_video.mirrorSynthesiaApplicationWindow ? NSControlStateValueOn : NSControlStateValueOff];
 }
 
 - (IBAction)selectKeyState:(id)sender
@@ -85,29 +79,33 @@
 - (void)keyStatePicked:(const unsigned char)keyState index:(const unsigned char)index
 {
     NSLog(@"picked key state %02Xh for map index %d", keyState, index);
-
+    
     assert(index < kColorMapSize);
     _midi2hid.colors[index] = keyState;
     if (index == 0) {
         [_midi2hid lightsDefault];
     }
-
+    
     assert(controls.count > index);
     ColorField* colorField = controls[index];
     colorField.keyState = keyState;
     [colorField setNeedsDisplay:YES];
-
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    [userDefaults setInteger:keyState forKey:userDefaultKeys[index]];
+    
+    [self.delegate preferencesUpdatedKeyState:keyState forKeyIndex:index];
 }
 
 - (IBAction)fowardingValueChanged:(id)sender
 {
     _midi2hid.forwardButtonsToSynthesiaOnly = self.forwardButtonsOnlyToSynthesia.state == NSControlStateValueOn;
-    
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    [userDefaults setBool:_midi2hid.forwardButtonsToSynthesiaOnly 
-                   forKey:@"forward_buttons_to_synthesia_only"];
+    [self.delegate preferencesUpdatedActivate];
+
+}
+
+- (IBAction)mirroringValueChanged:(id)sender
+{
+    _video.mirrorSynthesiaApplicationWindow = self.mirrorSynthesiaToControllerScreen.state == NSControlStateValueOn;
+    [_video reset:nil];
+    [self.delegate preferencesUpdatedMirror];
 }
 
 - (IBAction)assertSynthesiaConfig:(id)sender
