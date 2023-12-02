@@ -13,7 +13,7 @@
 #import <IOKit/IOKitLib.h>
 #import <IOKit/usb/IOUSBLib.h>
 
-/// Detects a Komplete Kontrol S-series USB controller. Suports USB bulk write for transmitting large amounts of data as
+/// Detects a Komplete Kontrol S-series USB controller. Supports USB bulk write for transmitting large amounts of data as
 /// needed for graphics data transfer to the LCD screens.
 
 const uint32_t kVendorID_NativeInstruments = 0x17CC;
@@ -501,6 +501,9 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
         [NSThread sleepForTimeInterval:roundDelay];
         --roundsUntilTimeout;
     };
+    if (roundsUntilTimeout == 0) {
+        NSLog(@"waiting for bulk transfer timed out");
+    }
     return atomic_load(&transferActive) == 0;
 }
 

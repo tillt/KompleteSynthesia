@@ -24,6 +24,8 @@
 // Note that this is only used when mirroring isnt active.
 const double kRefreshDelay = 1.0 / 40.0;
 
+const double kTimeoutDelay = 0.1;
+
 // FIXME: This smells too magic -- try to find that size from a system function!
 const int kHeaderHeight = 26;
 
@@ -32,7 +34,7 @@ const int kHeaderHeight = 26;
     void* screenBuffer[2];
     void* imageConversionScaleBuffer;
     void* imageConversionTempBuffer;
-    CGSize imageConversionTempBufferDimensions;
+    size_t imageConversionTempBufferSize;
 
     USBController* usb;
     LogViewController* log;
@@ -55,7 +57,7 @@ const int kHeaderHeight = 26;
         atomic_fetch_and(&mirror, 0);
 
         imageConversionTempBuffer = NULL;
-        imageConversionTempBufferDimensions = CGSizeMake(0,0);
+        imageConversionTempBufferSize = 0;
         imageConversionScaleBuffer = NULL;
 
         log = lc;
@@ -113,13 +115,13 @@ const int kHeaderHeight = 26;
 - (void)teardown
 {
     [self stopUpdatingAndWait:YES];
-    [usb waitForTransfersWithTimeout:0.01];
+    [usb waitForTransfersWithTimeout:kTimeoutDelay];
 
     [self clearScreen:0 error:nil];
-    [usb waitForTransfersWithTimeout:0.01];
+    [usb waitForTransfersWithTimeout:kTimeoutDelay];
 
     [self clearScreen:1 error:nil];
-    [usb waitForTransfersWithTimeout:0.01];
+    [usb waitForTransfersWithTimeout:kTimeoutDelay];
 }
 
 - (BOOL)startUpdating
@@ -144,7 +146,7 @@ const int kHeaderHeight = 26;
                         y:0
          skipHeaderHeight:0
                     error:nil];
-        [self->usb waitForTransfersWithTimeout:0.01];
+        [self->usb waitForTransfersWithTimeout:kTimeoutDelay];
 
         [self drawCGImage:cgi
                    screen:0
@@ -152,7 +154,7 @@ const int kHeaderHeight = 26;
                         y:0
          skipHeaderHeight:0
                     error:nil];
-        [self->usb waitForTransfersWithTimeout:0.01];
+        [self->usb waitForTransfersWithTimeout:kTimeoutDelay];
 
         atomic_fetch_or(&self->screenUpdateActive, 1);
 
@@ -179,7 +181,7 @@ const int kHeaderHeight = 26;
                     NSLog(@"usb transfer failed right away, lets stop this");
                     goto doneUpdating;
                 }
-                [self->usb waitForTransfersWithTimeout:0.01];
+                [self->usb waitForTransfersWithTimeout:kTimeoutDelay];
             } else {
                 // FIXME: this is used only until we do control display overlays - stay tuned!
                 [NSThread sleepForTimeInterval:kRefreshDelay];
@@ -188,7 +190,7 @@ const int kHeaderHeight = 26;
 
     doneUpdating:
         [self clearScreen:0 error:nil];
-        [self->usb waitForTransfersWithTimeout:0.01];
+        [self->usb waitForTransfersWithTimeout:kTimeoutDelay];
 
         atomic_fetch_and(&self->screenUpdateActive, 0);
         
@@ -240,21 +242,22 @@ const int kHeaderHeight = 26;
 {
     const unsigned long width = CGImageGetWidth(source);
     const unsigned long height = CGImageGetHeight(source);
+    const size_t bytesPerRow = CGImageGetBytesPerRow(source);
+    const size_t size = bytesPerRow * height;
     
     // We make use of the vImage tempBuffer feature, allowing us to provide an operational
     // buffer for conversion and scaling. The source of our operation is resizeable during
     // runtime and thus we need to make sure the tempBuffer is properly sized.
-    if (imageConversionTempBufferDimensions.width != width ||
-        imageConversionTempBufferDimensions.height != height) {
+    if (imageConversionTempBufferSize < size) {
         if (imageConversionTempBuffer != NULL) {
             free(imageConversionTempBuffer);
         }
         if (imageConversionScaleBuffer != NULL) {
             free(imageConversionScaleBuffer);
         }
-        imageConversionTempBufferDimensions = CGSizeMake(width, height);
-        imageConversionTempBuffer = malloc(CGImageGetBytesPerRow(source) * height);
-        imageConversionScaleBuffer = malloc(CGImageGetBytesPerRow(source) * _screenSize.height);
+        imageConversionTempBufferSize = size;
+        imageConversionTempBuffer = malloc(size);
+        imageConversionScaleBuffer = malloc(bytesPerRow * _screenSize.height);
     }
 
     CFDataRef raw = CGDataProviderCopyData(CGImageGetDataProvider(source));
@@ -263,7 +266,7 @@ const int kHeaderHeight = 26;
         (void*)CFDataGetBytePtr(raw),
         height,
         width,
-        CGImageGetBytesPerRow(source)
+        bytesPerRow
     };
 
     vImage_CGImageFormat sourceFormat = {
@@ -344,7 +347,7 @@ const int kHeaderHeight = 26;
     size_t imageSize = image->width * image->height * 2;
     uint16_t imageLongs = (imageSize >> 2);
 
-    assert(imageLongs == (image->width * image->height)/2);
+    assert(imageLongs == (image->width * image->height) / 2);
     // FIXME: This may explode - watch your image sizes used for the transfer!
     assert((imageLongs << 2) == imageSize);
     uint16_t writtenLongs = htons(imageLongs);
