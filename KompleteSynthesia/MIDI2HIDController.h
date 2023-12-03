@@ -35,7 +35,7 @@ typedef enum colorMapState {
 - (void)bootstrapSynthesia:(id)sender withCompletion:(void(^)(void))completion;
 @end
 
-@interface MIDI2HIDController : NSObject <MIDIControllerDelegate, HIDControllerDelegate, SynthesiaControllerDelegate>
+@interface MIDI2HIDController : NSObject <MIDIControllerDelegate, HIDControllerDelegate>
 
 @property (copy, nonatomic) NSString* hidStatus;
 @property (copy, nonatomic) NSString* midiStatus;

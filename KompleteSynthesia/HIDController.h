@@ -23,6 +23,14 @@ extern const uint8_t kKompleteKontrolColorWhite;
 extern const uint8_t kKompleteKontrolColorMediumWhite;
 extern const uint8_t kKompleteKontrolColorBrightWhite;
 
+extern const uint8_t kKompleteKontrolColorOrange;
+extern const uint8_t kKompleteKontrolColorMediumOrange;
+extern const uint8_t kKompleteKontrolColorBrightOrange;
+
+extern const uint8_t kKompleteKontrolColorYellow;
+extern const uint8_t kKompleteKontrolColorMediumYellow;
+extern const uint8_t kKompleteKontrolColorBrightYellow;
+
 extern const uint8_t kKeyColorUnpressed;
 extern const uint8_t kKeyColorPressed;
 

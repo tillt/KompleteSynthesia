@@ -88,8 +88,6 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         [userDefaults registerDefaults:@{@"kColorMapRightPressed": @(kKompleteKontrolColorBrightGreen)}];
         colorMap[kColorMapRightPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapRightPressed"];
         
-        [self synthesiaStateUpdate:@""];
-        
         if ([self resetWithError:error] == NO) {
             return nil;
         }
@@ -410,21 +408,5 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 }
 
 #pragma mark HIDControllerDelegate
-
-- (void)synthesiaStateUpdate:(NSString*)status
-{
-    BOOL synthesiaRunning = [SynthesiaController synthesiaRunning];
-
-    [hid lightButton:kKompleteKontrolButtonIdScene
-               color:synthesiaRunning ? kKompleteKontrolButtonLightOff : kKompleteKontrolColorWhite];
-
-    [hid lightButton:kKompleteKontrolButtonIdFunction1
-               color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff];
-
-    [hid lightButton:kKompleteKontrolButtonIdClear
-               color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff];
-    
-    [hid updateButtonLightMap:nil];
-}
 
 @end

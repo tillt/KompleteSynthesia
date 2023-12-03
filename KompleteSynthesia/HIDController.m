@@ -51,8 +51,11 @@ const uint8_t kKompleteKontrolColorBrightBlue = kKompleteKontrolColorBlue | kKom
 const uint8_t kKompleteKontrolColorLightGreen = kKompleteKontrolColorGreen | kKompleteKontrolIntensityHigh;
 const uint8_t kKompleteKontrolColorBrightGreen = kKompleteKontrolColorGreen | kKompleteKontrolIntensityBright;
 
+const uint8_t kKompleteKontrolColorMediumYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityMedium;
 const uint8_t kKompleteKontrolColorLightYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityHigh;
+const uint8_t kKompleteKontrolColorBrightYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityBright;
 
+const uint8_t kKompleteKontrolColorMediumOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityMedium;
 const uint8_t kKompleteKontrolColorLightOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityHigh;
 const uint8_t kKompleteKontrolColorBrightOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityBright;
 
@@ -203,7 +206,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         _buttons[kKompleteKontrolButtonIdJogRight] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdPageLeft] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdPageRight] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdFunction1] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdFunction1] = kKompleteKontrolColorOrange;
         _buttons[kKompleteKontrolButtonIdFunction2] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdFunction3] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdFunction4] = kKompleteKontrolColorWhite;

@@ -192,8 +192,6 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
             [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
             return;
         }
-
-        [self preferencesUpdatedMirror];
     }
     
     // Hide application icon.
@@ -222,7 +220,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     self.statusMenu = menu;
     
     [_midi2hidController swoosh];
-
+    [self updateButtonStates];
 }
 
 - (void)preferences:(id)sender
@@ -265,6 +263,8 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
     }
 
+    [self updateButtonStates];
+
     [_midi2hidController swoosh];
 }
 
@@ -299,7 +299,6 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
         });
     }];
 }
-
 
 - (void)showLog:(id)sender
 {
@@ -346,6 +345,25 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     return YES;
 }
 
+- (void)updateButtonStates
+{
+    BOOL synthesiaRunning = [SynthesiaController synthesiaRunning];
+
+    [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdScene
+                                   color:synthesiaRunning ? kKompleteKontrolButtonLightOff : kKompleteKontrolColorWhite];
+
+    [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdFunction1
+                                   color:synthesiaRunning ? kKompleteKontrolColorMediumOrange : kKompleteKontrolButtonLightOff];
+
+    [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdClear
+                                   color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff];
+
+    [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdFunction5
+                                   color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorMediumYellow : kKompleteKontrolColorYellow];
+
+    [_midi2hidController.hid updateButtonLightMap:nil];
+}
+
 #pragma mark SynthesiaControllerDelegate
 
 - (void)synthesiaStateUpdate:(NSString*)status
@@ -354,28 +372,24 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
         NSMenuItem* item = self.statusMenu.itemArray[1];
         item.title = status;
     }
-    
-    [_midi2hidController synthesiaStateUpdate:status];
+    [self updateButtonStates];
 }
 
 #pragma mark PreferencesDelegate
 
 - (void)preferencesUpdatedActivate
 {
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setBool:_midi2hidController.forwardButtonsToSynthesiaOnly
                    forKey:kAppDefaultActivateSynthesia];
 }
 
 - (void)preferencesUpdatedMirror
 {
-    [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdFunction5 
-                                   color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorMediumWhite : kKompleteKontrolColorWhite];
-    [_midi2hidController.hid updateButtonLightMap:nil];
-
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setBool:_videoController.mirrorSynthesiaApplicationWindow
                    forKey:kAppDefaultMirrorSynthesia];
+    [self updateButtonStates];
 }
 
 - (void)preferencesUpdatedKeyState:(int)keyState forKeyIndex:(int)index
@@ -389,7 +403,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
                                              @"kColorMapRightThumb",
                                              @"kColorMapRightPressed" ];
 
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setInteger:keyState forKey:userDefaultKeys[index]];
 }
 
