@@ -137,13 +137,24 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 
 - (void)applicationDidFinishInitializingWithUSBHighwayOpen:(BOOL)usbHighwayOpen
 {
-    NSError* error = nil;
-    
     usbAvailable = usbHighwayOpen;
-    
     _synthesia = [[SynthesiaController alloc] initWithLogViewController:_log
                                                                delegate:self];
     [_synthesia cachedAssertSynthesiaConfiguration];
+
+    if ([SynthesiaController synthesiaRunning] == NO) {
+        [_log logLine:@"Synthesia not running, starting it now"];
+        [self bootstrapSynthesia:self withCompletion:^(){
+            [self applicationDidFinishInitializingWithSynthesiaRunning];
+        }];
+        return;
+    }
+    [self applicationDidFinishInitializingWithSynthesiaRunning];
+}
+
+- (void)applicationDidFinishInitializingWithSynthesiaRunning
+{
+    NSError* error = nil;
 
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_log
                                                                    delegate:self
@@ -163,21 +174,6 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 
     [userDefaults registerDefaults:@{kAppDefaultActivateSynthesia: @(YES)}];
     _midi2hidController.forwardButtonsToSynthesiaOnly = [userDefaults boolForKey:kAppDefaultActivateSynthesia];
-
-    if ([SynthesiaController synthesiaRunning] == NO) {
-        [_log logLine:@"Synthesia not running, starting it now"];
-        [self bootstrapSynthesia:self withCompletion:^(){
-            [self applicationDidFinishInitializingWithSynthesiaRunning];
-        }];
-    }
-    [self applicationDidFinishInitializingWithSynthesiaRunning];
-}
-
-- (void)applicationDidFinishInitializingWithSynthesiaRunning
-{
-    NSError* error = nil;
-
-    NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
 
     if (usbAvailable == YES) {
         _videoController = [[VideoController alloc] initWithLogViewController:_log
