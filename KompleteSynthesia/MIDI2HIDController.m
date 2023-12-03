@@ -327,7 +327,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         case kKompleteKontrolButtonIdScene: {
             [log logLine:@"SCENE -> starting Synthesia"];
             [_delegate bootstrapSynthesia:self withCompletion:^(){
-                [_delegate reset:self];
+                [self->_delegate reset:self];
             }];
             break;
         }

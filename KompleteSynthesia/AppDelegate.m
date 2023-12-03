@@ -281,7 +281,8 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
         // This should really not be done via polling.... instead use KVO on RunningApplication.
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
             // Wait for the Synthesia window to come up.
-            // TODO: I wonder if it was good enough to use KVO on application.hasLaunched - if that was good for asserting a Window was there, that would be cleaner.
+            // TODO: I wonder if it was good enough to use KVO on application.hasLaunched - 
+            // if that was good for asserting a Window was there, that would be cleaner.
             int timeoutMs = 5000;
             while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
                 [NSThread sleepForTimeInterval:0.01f];
@@ -289,7 +290,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
             };
             if (timeoutMs <= 0) {
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [_log logLine:@"timeout waiting for Synthesia's application window"];
+                    [self->_log logLine:@"timeout waiting for Synthesia's application window"];
                 });
             }
             dispatch_async(dispatch_get_main_queue(), ^{
