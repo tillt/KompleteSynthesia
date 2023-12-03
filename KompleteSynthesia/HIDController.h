@@ -114,7 +114,7 @@ enum {
 + (NSColor*)colorWithKeyState:(const unsigned char)keyState;
 
 - (id)initWithDelegate:(id)delegate error:(NSError**)error;
-- (void)lightButton:(int)button color:(unsigned char)color;
+- (void)lightButton:(int)button color:(unsigned char)color bufferIntensity:(BOOL)buffer;
 - (void)lightKey:(int)note color:(unsigned char)color;
 - (void)lightsOff;
 - (void)lightKeysWithColor:(unsigned char)color;

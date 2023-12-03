@@ -293,7 +293,6 @@ typedef struct {
 {
     NSLog(@"feedback for identifier: %d", identifier);
     
-    _feedbackIntensityBuffer[identifier] = _buttons[identifier] & kKompleteKontrolIntensityMask;
     _buttons[identifier] |= kKompleteKontrolIntensityBright;
     
     [self updateButtonLightMap:nil];
@@ -684,8 +683,11 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
                      error:error];
 }
 
-- (void)lightButton:(int)button color:(unsigned char)color
+- (void)lightButton:(int)button color:(unsigned char)color bufferIntensity:(BOOL)buffer
 {
+    if (buffer) {
+        _feedbackIntensityBuffer[button] = color & kKompleteKontrolIntensityMask;
+    }
     _buttons[button] = color;
 }
 

@@ -18,7 +18,7 @@
 @property (nonatomic, strong) IBOutlet NSWindow *window;
 @property (nonatomic, strong) MIDI2HIDController* midi2hidController;
 @property (nonatomic, strong) VideoController* videoController;
-@property (nonatomic, strong) LogViewController* logViewController;
+@property (nonatomic, strong) LogViewController* log;
 @property (nonatomic, strong) SynthesiaController* synthesia;
 @property (nonatomic, strong) PreferencesWindowController* preferences;
 @property (nonatomic, strong) ApplicationObserver* observer;
@@ -61,12 +61,12 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 {
     usbAvailable = NO;
 
-    _logViewController = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
+    _log = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
 
     NSString *appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
     NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
     NSString *commit = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
-    [_logViewController logLine:[NSString stringWithFormat:@"%@ %@.%@", appName, version, commit]];
+    [_log logLine:[NSString stringWithFormat:@"%@ %@.%@", appName, version, commit]];
 
     // First thing, we assert that a bunch of interlopers are kept from interfering
     // with controlling the Native Instruments hardware.
@@ -91,9 +91,9 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     for (int i = 0; i < kAlienItemCount; i++) {
         if ([ApplicationObserver applicationIsRunning:items[i]] == YES) {
             ++awaitingAlienCount;
-            [self.logViewController logLine:[NSString stringWithFormat:fmtAssert, items[i]]];
+            [self.log logLine:[NSString stringWithFormat:fmtAssert, items[i]]];
         } else {
-            [self.logViewController logLine:[NSString stringWithFormat:fmtSkipping, items[i]]];
+            [self.log logLine:[NSString stringWithFormat:fmtSkipping, items[i]]];
         }
     }
 
@@ -109,7 +109,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
         }
         restartAlien[i] = [_observer terminateApplication:items[i] completion:^(BOOL complete){
             if (complete == NO) {
-                [self.logViewController logLine:[NSString stringWithFormat:fmtFailed, items[i]]];
+                [self.log logLine:[NSString stringWithFormat:fmtFailed, items[i]]];
 
                 NSDictionary *userInfo = @{
                     NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to terminate %@", items[i]],
@@ -123,7 +123,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
                 return;
             }
 
-            [self.logViewController logLine:[NSString stringWithFormat:fmtStopped, items[i]]];
+            [self.log logLine:[NSString stringWithFormat:fmtStopped, items[i]]];
 
             --self->awaitingAlienCount;
             
@@ -141,11 +141,11 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     
     usbAvailable = usbHighwayOpen;
     
-    _synthesia = [[SynthesiaController alloc] initWithLogViewController:_logViewController
+    _synthesia = [[SynthesiaController alloc] initWithLogViewController:_log
                                                                delegate:self];
     [_synthesia cachedAssertSynthesiaConfiguration];
 
-    _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_logViewController
+    _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_log
                                                                    delegate:self
                                                                       error:&error];
     if (_midi2hidController == nil) {
@@ -159,13 +159,28 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
         usbAvailable = NO;
     }
 
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
 
     [userDefaults registerDefaults:@{kAppDefaultActivateSynthesia: @(YES)}];
     _midi2hidController.forwardButtonsToSynthesiaOnly = [userDefaults boolForKey:kAppDefaultActivateSynthesia];
 
+    if ([SynthesiaController synthesiaRunning] == NO) {
+        [_log logLine:@"Synthesia not running, starting it now"];
+        [self bootstrapSynthesia:self withCompletion:^(){
+            [self applicationDidFinishInitializingWithSynthesiaRunning];
+        }];
+    }
+    [self applicationDidFinishInitializingWithSynthesiaRunning];
+}
+
+- (void)applicationDidFinishInitializingWithSynthesiaRunning
+{
+    NSError* error = nil;
+
+    NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+
     if (usbAvailable == YES) {
-        _videoController = [[VideoController alloc] initWithLogViewController:_logViewController
+        _videoController = [[VideoController alloc] initWithLogViewController:_log
                                                                         error:&error];
         if (_videoController == nil) {
             [[NSAlert alertWithError:error] runModal];
@@ -337,7 +352,8 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 - (void)preferencesUpdatedMirror
 {
     [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdFunction5 
-                                   color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorMediumWhite : kKompleteKontrolColorWhite];
+                                   color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorMediumWhite : kKompleteKontrolColorWhite
+                         bufferIntensity:YES];
     [_midi2hidController.hid updateButtonLightMap:nil];
 
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
