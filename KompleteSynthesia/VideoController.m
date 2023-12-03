@@ -115,13 +115,13 @@ const int kHeaderHeight = 26;
 - (void)teardown
 {
     [self stopUpdatingAndWait:YES];
-    [usb waitForTransfersWithTimeout:kTimeoutDelay];
+    [usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
 
     [self clearScreen:0 error:nil];
-    [usb waitForTransfersWithTimeout:kTimeoutDelay];
+    [usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
 
     [self clearScreen:1 error:nil];
-    [usb waitForTransfersWithTimeout:kTimeoutDelay];
+    [usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
 }
 
 - (BOOL)startUpdating
@@ -146,7 +146,7 @@ const int kHeaderHeight = 26;
                         y:0
          skipHeaderHeight:0
                     error:nil];
-        [self->usb waitForTransfersWithTimeout:kTimeoutDelay];
+        [self->usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
 
         [self drawCGImage:cgi
                    screen:0
@@ -154,7 +154,7 @@ const int kHeaderHeight = 26;
                         y:0
          skipHeaderHeight:0
                     error:nil];
-        [self->usb waitForTransfersWithTimeout:kTimeoutDelay];
+        [self->usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
 
         atomic_fetch_or(&self->screenUpdateActive, 1);
 
@@ -181,7 +181,10 @@ const int kHeaderHeight = 26;
                     NSLog(@"usb transfer failed right away, lets stop this");
                     goto doneUpdating;
                 }
-                [self->usb waitForTransfersWithTimeout:kTimeoutDelay];
+                // Allow for one bulk write buffer in flight for efficiency reasons -- this
+                // works fine for me, not sure if it does for others. The performance gain
+                // is about 20%. The perceived smoothness seems higher.
+                [self->usb waitAllowingFor:1 withTimeout:kTimeoutDelay];
             } else {
                 // FIXME: this is used only until we do control display overlays - stay tuned!
                 [NSThread sleepForTimeInterval:kRefreshDelay];
@@ -190,7 +193,7 @@ const int kHeaderHeight = 26;
 
     doneUpdating:
         [self clearScreen:0 error:nil];
-        [self->usb waitForTransfersWithTimeout:kTimeoutDelay];
+        [self->usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
 
         atomic_fetch_and(&self->screenUpdateActive, 0);
         

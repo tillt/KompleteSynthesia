@@ -7,6 +7,7 @@
 
 #import "AppDelegate.h"
 #import "MIDI2HIDController.h"
+#import "HIDController.h"
 #import "LogViewController.h"
 #import "VideoController.h"
 #import "PreferencesWindowController.h"
@@ -180,6 +181,8 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
             [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
             return;
         }
+
+        [self preferencesUpdatedMirror];
     }
     
     // Hide application icon.
@@ -258,6 +261,13 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     [_midi2hidController swoosh];
 }
 
+- (void)toggleMirror:(id)sender
+{
+    _videoController.mirrorSynthesiaApplicationWindow = !_videoController.mirrorSynthesiaApplicationWindow;
+    [_videoController reset:nil];
+    [self preferencesUpdatedMirror];
+}
+
 - (void)showLog:(id)sender
 {
     if (self.popover == nil) {
@@ -326,6 +336,10 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 
 - (void)preferencesUpdatedMirror
 {
+    [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdFunction5 
+                                   color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorBrightWhite : kKompleteKontrolColorWhite];
+    [_midi2hidController.hid updateButtonLightMap:nil];
+
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setBool:_videoController.mirrorSynthesiaApplicationWindow
                    forKey:kAppDefaultMirrorSynthesia];

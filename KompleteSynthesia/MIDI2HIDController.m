@@ -98,6 +98,11 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     return self;
 }
 
+- (HIDController*)hid
+{
+    return hid;
+}
+
 - (int)mk
 {
     return hid.mk;
@@ -349,6 +354,10 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         case kKompleteKontrolButtonIdScene:
             [log logLine:@"SCENE -> starting Synthesia"];
             [self boostrapSynthesia];
+            break;
+        case kKompleteKontrolButtonIdFunction5:
+            [log logLine:@"FUNCTION 5 -> toggle mirroring"];
+            [_delegate toggleMirror:self];
             break;
     }
 

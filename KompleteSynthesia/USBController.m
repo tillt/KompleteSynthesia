@@ -87,7 +87,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
     // When our runloop is killed which happens on application termination, the async
     // callbacks wont get called anymore and thus the timeout may kick in here - make it
     // a safe value for being sure we can rely on the device status.
-    [self waitForTransfersWithTimeout:0.01];
+    [self waitAllowingFor:0 withTimeout:0.1];
 }
 
 - (NSString*)status
@@ -493,18 +493,23 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     return YES;
 }
 
-- (BOOL)waitForTransfersWithTimeout:(NSTimeInterval)timeout
+- (BOOL)waitAllowingFor:(unsigned int)maxActive withTimeout:(NSTimeInterval)timeout
 {
+//    NSDate *start = [NSDate date];
     NSTimeInterval roundDelay = 0.001;
     unsigned int roundsUntilTimeout = timeout / roundDelay;
-    while (atomic_load(&transferActive) > 0 && roundsUntilTimeout) {
+    while (atomic_load(&transferActive) > maxActive && roundsUntilTimeout) {
         [NSThread sleepForTimeInterval:roundDelay];
         --roundsUntilTimeout;
     };
     if (roundsUntilTimeout == 0) {
         NSLog(@"waiting for bulk transfer timed out");
     }
-    return atomic_load(&transferActive) == 0;
+
+//    NSTimeInterval waitInterval = [start timeIntervalSinceNow];
+//    NSLog(@"refresh delay: %f", waitInterval);
+    
+    return atomic_load(&transferActive) == maxActive;
 }
 
 @end

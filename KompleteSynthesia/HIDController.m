@@ -308,6 +308,7 @@ typedef struct {
         { 1, 0x20, kKompleteKontrolButtonIdFunction2 },
         { 1, 0x40, kKompleteKontrolButtonIdFunction3 },
         { 1, 0x80, kKompleteKontrolButtonIdFunction4 },
+        { 1, 0x01, kKompleteKontrolButtonIdFunction5 },
         { 2, 0x10, kKompleteKontrolButtonIdPlay },
         { 3, 0x80, kKompleteKontrolButtonIdPageLeft },
         { 3, 0x20, kKompleteKontrolButtonIdPageRight },

@@ -70,8 +70,6 @@ For finding out about the detected controller, click on the icon which will show
     - Make sure you followed the [Setup](#setup) documentation on [Configuring Synthesia](SETUP.md#configuring-synthesia)
 
 - All Keyboard LEDs show blue lights
-    - Did you possibly push the "Instance" button?
-        - On macOS the NI component listening for controller button pushes does re-initialize the controller into a mode incompatible with KompleteSynthesia
     - Are you running any other NI applications while running KompleteSynthesia?
         - Some NI tools like KompleteKontrol.app do set the keyboard into something KompleteSynthesia just can not work with
         - Exit KompleteKontrol.app - you wont need it while using Synthesia
