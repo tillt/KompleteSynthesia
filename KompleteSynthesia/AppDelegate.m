@@ -337,7 +337,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 - (void)preferencesUpdatedMirror
 {
     [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdFunction5 
-                                   color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorBrightWhite : kKompleteKontrolColorWhite];
+                                   color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorMediumWhite : kKompleteKontrolColorWhite];
     [_midi2hidController.hid updateButtonLightMap:nil];
 
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];

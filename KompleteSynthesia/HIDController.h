@@ -20,6 +20,7 @@ extern const unsigned char kKompleteKontrolColorBrightWhite;
 extern const unsigned char kKompleteKontrolColorRed;
 
 extern const uint8_t kKompleteKontrolColorWhite;
+extern const uint8_t kKompleteKontrolColorMediumWhite;
 extern const uint8_t kKompleteKontrolColorBrightWhite;
 
 extern const uint8_t kKeyColorUnpressed;

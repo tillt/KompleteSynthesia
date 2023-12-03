@@ -56,6 +56,7 @@ const uint8_t kKompleteKontrolColorLightYellow = kKompleteKontrolColorYellow | k
 const uint8_t kKompleteKontrolColorLightOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityHigh;
 const uint8_t kKompleteKontrolColorBrightOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityBright;
 
+const uint8_t kKompleteKontrolColorMediumWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityMedium;
 const uint8_t kKompleteKontrolColorLightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityHigh;
 const uint8_t kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityBright;
 
@@ -284,14 +285,16 @@ typedef struct {
     const unsigned int identifier;
 } EventReport;
 
-- (void)feedbackWithEvent:(const int)event
+- (void)feedbackWithEvent:(const unsigned int)identifier
 {
-    [self lightButton:event color:kKompleteKontrolColorBrightWhite];
+    NSLog(@"feedback for identifier: %d", identifier);
+    [self lightButton:identifier color:kKompleteKontrolColorBrightWhite];
     [self updateButtonLightMap:nil];
 }
 
 - (void)resetFeedback
 {
+    NSLog(@"reset feedback");
     [self lightButton:kKompleteKontrolButtonIdFunction1 color:kKompleteKontrolColorWhite];
     [self lightButton:kKompleteKontrolButtonIdFunction2 color:kKompleteKontrolColorWhite];
     [self lightButton:kKompleteKontrolButtonIdFunction3 color:kKompleteKontrolColorWhite];
