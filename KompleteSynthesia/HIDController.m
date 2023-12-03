@@ -37,7 +37,7 @@ const uint8_t kKompleteKontrolColorPurple = 0x34;
 const uint8_t kKompleteKontrolColorPink = 0x38;
 const uint8_t kKompleteKontrolColorWhite = 0x44;
 
-const uint8_t kKompleteKontrolColorMask = 0xfc;
+const uint8_t kKompleteKontrolColorMask = 0xFC;
 const uint8_t kKompleteKontrolIntensityMask = 0x03;
 
 const uint8_t kKompleteKontrolIntensityLow = 0x00;
@@ -140,10 +140,12 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 }
 
 @interface HIDController ()
+@property (assign, nonatomic) unsigned char* feedbackIntensityBuffer;
 @end
 
 @implementation HIDController {
     unsigned char lightGuideUpdateMessage[kKompleteKontrolLightGuideMessageSize];
+    unsigned char buttonLightingFeedback[kKompleteKontrolButtonsMessageSize];
     unsigned char buttonLightingUpdateMessage[kKompleteKontrolButtonsMessageSize];
     // FIXME: This may need double-buffering, not sure.
     unsigned char inputBuffer[kInputBufferSize];
@@ -188,22 +190,24 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         [self lightKeysWithColor:kKeyColorUnpressed];
 
         _buttons = &buttonLightingUpdateMessage[1];
+        _feedbackIntensityBuffer = &buttonLightingFeedback[1];
 
         memset(_buttons, 0, kKompleteKontrolButtonsMapSize);
+        memset(_feedbackIntensityBuffer,0, kKompleteKontrolButtonsMapSize);
 
-        _buttons[kKompleteKontrolButtonIdPlay] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdJogDown] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdJogUp] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdJogLeft] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdJogRight] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdPageLeft] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdPageRight] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdPlay] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdJogDown] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdJogUp] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdJogLeft] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdJogRight] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdPageLeft] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdPageRight] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdFunction1] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdFunction2] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdFunction3] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdFunction4] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdSetup] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdClear] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdSetup] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdClear] = kKompleteKontrolColorWhite;
 
         if ([self updateButtonLightMap:error] == NO) {
             return nil;
@@ -288,17 +292,18 @@ typedef struct {
 - (void)feedbackWithEvent:(const unsigned int)identifier
 {
     NSLog(@"feedback for identifier: %d", identifier);
-    [self lightButton:identifier color:kKompleteKontrolColorBrightWhite];
+    
+    _feedbackIntensityBuffer[identifier] = _buttons[identifier] & kKompleteKontrolIntensityMask;
+    _buttons[identifier] |= kKompleteKontrolIntensityBright;
+    
     [self updateButtonLightMap:nil];
 }
 
 - (void)resetFeedback
 {
-    NSLog(@"reset feedback");
-    [self lightButton:kKompleteKontrolButtonIdFunction1 color:kKompleteKontrolColorWhite];
-    [self lightButton:kKompleteKontrolButtonIdFunction2 color:kKompleteKontrolColorWhite];
-    [self lightButton:kKompleteKontrolButtonIdFunction3 color:kKompleteKontrolColorWhite];
-    [self lightButton:kKompleteKontrolButtonIdFunction4 color:kKompleteKontrolColorWhite];
+    for (int i=0; i < kKompleteKontrolButtonIdUnused1; i++) {
+        _buttons[i] = (_buttons[i] & kKompleteKontrolColorMask) | _feedbackIntensityBuffer[i];
+    }
     [self updateButtonLightMap:nil];
 }
 
@@ -340,23 +345,7 @@ typedef struct {
         { 6, 0x84, kKompleteKontrolButtonIdJogRight },
         { 6, 0x0C, kKompleteKontrolButtonIdJogPress },
     };
-    
-    // FIXME: This shouldnt be a loop - have a proper map instead.
-    for (int i=0;i < (sizeof(keyEvents) / sizeof(EventReport));i++) {
-        if (report[keyEvents[i].index] == keyEvents[i].value) {
-            // Feedback for the first four function keys.
-            if (keyEvents[i].identifier >= kKompleteKontrolButtonIdFunction1 &&
-                keyEvents[i].identifier <= kKompleteKontrolButtonIdFunction4)
-            {
-                [self feedbackWithEvent:keyEvents[i].identifier];
-            }
-            
-            [_delegate receivedEvent:keyEvents[i].identifier
-                               value:0];
-            return;
-        }
-    }
-    
+
     if (report[7] == 0x01) {
         static int lastVolumeKnobValue = INTMAX_C(16);
         const int newValue = *(int*)(&report[24]);
@@ -369,6 +358,21 @@ typedef struct {
         }
         lastVolumeKnobValue = newValue;
         return;
+    }
+
+    // FIXME: This shouldnt be a loop - have a proper map instead.
+    for (int i=0;i < (sizeof(keyEvents) / sizeof(EventReport));i++) {
+        if (report[keyEvents[i].index] == keyEvents[i].value) {
+            // Provide some feedback for most controls when the user activated them.
+            if (keyEvents[i].identifier <= kKompleteKontrolButtonIdUnused1) {
+                [self feedbackWithEvent:keyEvents[i].identifier];
+            }
+
+            [_delegate receivedEvent:keyEvents[i].identifier
+                               value:0];
+
+            return;
+        }
     }
 
     // Reset feedback lighting as no such button was pressed anymore.

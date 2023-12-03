@@ -440,13 +440,13 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     BOOL synthesiaRunning = [SynthesiaController synthesiaRunning];
 
     [hid lightButton:kKompleteKontrolButtonIdScene
-               color:synthesiaRunning ? kKompleteKontrolButtonLightOff : kKompleteKontrolColorBrightWhite];
+               color:synthesiaRunning ? kKompleteKontrolButtonLightOff : kKompleteKontrolColorWhite];
 
     [hid lightButton:kKompleteKontrolButtonIdFunction1
-               color:synthesiaRunning ? kKompleteKontrolColorBrightWhite : kKompleteKontrolButtonLightOff];
+               color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff];
 
     [hid lightButton:kKompleteKontrolButtonIdClear
-               color:synthesiaRunning ? kKompleteKontrolColorBrightWhite : kKompleteKontrolButtonLightOff];
+               color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff];
     
     [hid updateButtonLightMap:nil];
 }
