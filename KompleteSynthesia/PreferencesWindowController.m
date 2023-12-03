@@ -98,7 +98,6 @@
 {
     _midi2hid.forwardButtonsToSynthesiaOnly = self.forwardButtonsOnlyToSynthesia.state == NSControlStateValueOn;
     [self.delegate preferencesUpdatedActivate];
-
 }
 
 - (IBAction)mirroringValueChanged:(id)sender

@@ -197,10 +197,10 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         _buttons[kKompleteKontrolButtonIdJogRight] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIdPageLeft] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIdPageRight] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdFunction1] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdFunction2] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdFunction3] = kKompleteKontrolColorBrightWhite;
-        _buttons[kKompleteKontrolButtonIdFunction4] = kKompleteKontrolColorBrightWhite;
+        _buttons[kKompleteKontrolButtonIdFunction1] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdFunction2] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdFunction3] = kKompleteKontrolColorWhite;
+        _buttons[kKompleteKontrolButtonIdFunction4] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdSetup] = kKompleteKontrolColorBrightWhite;
         _buttons[kKompleteKontrolButtonIdClear] = kKompleteKontrolColorBrightWhite;
 
@@ -284,6 +284,21 @@ typedef struct {
     const unsigned int identifier;
 } EventReport;
 
+- (void)feedbackWithEvent:(const int)event
+{
+    [self lightButton:event color:kKompleteKontrolColorBrightWhite];
+    [self updateButtonLightMap:nil];
+}
+
+- (void)resetFeedback
+{
+    [self lightButton:kKompleteKontrolButtonIdFunction1 color:kKompleteKontrolColorWhite];
+    [self lightButton:kKompleteKontrolButtonIdFunction2 color:kKompleteKontrolColorWhite];
+    [self lightButton:kKompleteKontrolButtonIdFunction3 color:kKompleteKontrolColorWhite];
+    [self lightButton:kKompleteKontrolButtonIdFunction4 color:kKompleteKontrolColorWhite];
+    [self updateButtonLightMap:nil];
+}
+
 - (void)receivedReport:(unsigned char*)report
 {
     if (report[0] != 0x01) {
@@ -326,6 +341,13 @@ typedef struct {
     // FIXME: This shouldnt be a loop - have a proper map instead.
     for (int i=0;i < (sizeof(keyEvents) / sizeof(EventReport));i++) {
         if (report[keyEvents[i].index] == keyEvents[i].value) {
+            // Feedback for the first four function keys.
+            if (keyEvents[i].identifier >= kKompleteKontrolButtonIdFunction1 &&
+                keyEvents[i].identifier <= kKompleteKontrolButtonIdFunction4)
+            {
+                [self feedbackWithEvent:keyEvents[i].identifier];
+            }
+            
             [_delegate receivedEvent:keyEvents[i].identifier
                                value:0];
             return;
@@ -334,7 +356,7 @@ typedef struct {
     
     if (report[7] == 0x01) {
         static int lastVolumeKnobValue = INTMAX_C(16);
-        const int newValue = *(int*)&report[24];
+        const int newValue = *(int*)(&report[24]);
         if (lastVolumeKnobValue != INTMAX_C(16)) {
             int delta = newValue - lastVolumeKnobValue;
             if (delta != 0) {
@@ -345,6 +367,9 @@ typedef struct {
         lastVolumeKnobValue = newValue;
         return;
     }
+
+    // Reset feedback lighting as no such button was pressed anymore.
+    [self resetFeedback];
 }
 
 - (IOHIDDeviceRef)detectKeyboardController:(NSError**)error
