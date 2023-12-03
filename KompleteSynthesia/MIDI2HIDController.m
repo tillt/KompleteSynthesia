@@ -108,33 +108,6 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     return hid.mk;
 }
 
-- (void)boostrapSynthesia
-{
-    [SynthesiaController runSynthesiaWithCompletion:^{
-        // This should really not be done via polling.... instead use KVO on RunningApplication.
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-            // Wait for the Synthesia window to come up.
-            // TODO: I wonder if it was good enough to use KVO on application.hasLaunched - if that was good for asserting a Window was there, that would be cleaner.
-            int timeoutMs = 5000;
-            while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
-                [NSThread sleepForTimeInterval:0.01f];
-                timeoutMs -= 10;
-            };
-            if (timeoutMs <= 0) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self->log logLine:@"timeout waiting for Synthesia's application window"];
-                    [self.delegate reset:self];
-                });
-                return;
-            }
-            // Reset the VideoController.
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self.delegate reset:self];
-            });
-        });
-    }];
-}
-
 - (unsigned char*)colors
 {
     return colorMap;
@@ -351,10 +324,13 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             [log logLine:@"CLEAR -> reset"];
             [_delegate reset:self];
             break;
-        case kKompleteKontrolButtonIdScene:
+        case kKompleteKontrolButtonIdScene: {
             [log logLine:@"SCENE -> starting Synthesia"];
-            [self boostrapSynthesia];
+            [_delegate bootstrapSynthesia:self withCompletion:^(){
+                [_delegate reset:self];
+            }];
             break;
+        }
         case kKompleteKontrolButtonIdFunction5:
             [log logLine:@"FUNCTION 5 -> toggle mirroring"];
             [_delegate toggleMirror:self];
@@ -440,13 +416,13 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     BOOL synthesiaRunning = [SynthesiaController synthesiaRunning];
 
     [hid lightButton:kKompleteKontrolButtonIdScene
-               color:synthesiaRunning ? kKompleteKontrolButtonLightOff : kKompleteKontrolColorWhite bufferIntensity:YES];
+               color:synthesiaRunning ? kKompleteKontrolButtonLightOff : kKompleteKontrolColorWhite];
 
     [hid lightButton:kKompleteKontrolButtonIdFunction1
-               color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff bufferIntensity:YES];
+               color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff];
 
     [hid lightButton:kKompleteKontrolButtonIdClear
-               color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff bufferIntensity:YES];
+               color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff];
     
     [hid updateButtonLightMap:nil];
 }

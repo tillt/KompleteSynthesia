@@ -194,7 +194,8 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
         memset(_buttons, 0, kKompleteKontrolButtonsMapSize);
         memset(_feedbackIntensityBuffer,0, kKompleteKontrolButtonsMapSize);
-
+  
+        // Supported controls get illuminated with a low white.
         _buttons[kKompleteKontrolButtonIdPlay] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdJogDown] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdJogUp] = kKompleteKontrolColorWhite;
@@ -683,11 +684,9 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
                      error:error];
 }
 
-- (void)lightButton:(int)button color:(unsigned char)color bufferIntensity:(BOOL)buffer
+- (void)lightButton:(int)button color:(unsigned char)color
 {
-    if (buffer) {
-        _feedbackIntensityBuffer[button] = color & kKompleteKontrolIntensityMask;
-    }
+    _feedbackIntensityBuffer[button] = color & kKompleteKontrolIntensityMask;
     _buttons[button] = color;
 }
 

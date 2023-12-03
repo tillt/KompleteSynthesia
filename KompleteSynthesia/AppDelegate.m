@@ -225,12 +225,8 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     menu.delegate = self;
     self.statusMenu = menu;
     
-    if ([SynthesiaController synthesiaRunning] == NO) {
-        [_logViewController logLine:@"Synthesia not running, starting it now"];
-        [_midi2hidController boostrapSynthesia];
-    }
-    
     [_midi2hidController swoosh];
+
 }
 
 - (void)preferences:(id)sender
@@ -283,11 +279,36 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     [self preferencesUpdatedMirror];
 }
 
+- (void)bootstrapSynthesia:(id)sender withCompletion:(void(^)(void))completion
+{
+    [SynthesiaController runSynthesiaWithCompletion:^{
+        // This should really not be done via polling.... instead use KVO on RunningApplication.
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            // Wait for the Synthesia window to come up.
+            // TODO: I wonder if it was good enough to use KVO on application.hasLaunched - if that was good for asserting a Window was there, that would be cleaner.
+            int timeoutMs = 5000;
+            while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
+                [NSThread sleepForTimeInterval:0.01f];
+                timeoutMs -= 10;
+            };
+            if (timeoutMs <= 0) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [_log logLine:@"timeout waiting for Synthesia's application window"];
+                });
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion();
+            });
+        });
+    }];
+}
+
+
 - (void)showLog:(id)sender
 {
     if (self.popover == nil) {
         self.popover = [[NSPopover alloc] init];
-        self.popover.contentViewController = _logViewController;
+        self.popover.contentViewController = _log;
         self.popover.contentSize = NSMakeSize(600.0f, 300.0f);
         self.popover.animates = YES;
         self.popover.appearance = [NSAppearance currentDrawingAppearance];
@@ -352,8 +373,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 - (void)preferencesUpdatedMirror
 {
     [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdFunction5 
-                                   color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorMediumWhite : kKompleteKontrolColorWhite
-                         bufferIntensity:YES];
+                                   color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorMediumWhite : kKompleteKontrolColorWhite];
     [_midi2hidController.hid updateButtonLightMap:nil];
 
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
