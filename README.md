@@ -61,9 +61,6 @@ For finding out about the detected controller, click on the icon which will show
   
 - MIDI interface port 'LoopBe' not found
     - Make sure you followed the [Setup](#setup) documentation on [Creating the virtual MIDI interface](SETUP.md#creating-the-virtual-midi-interface)
-
-- Button background lighting changes when pushing Play or using the jogwheel
-    - Known issue happening due to Native Instruments components interfereing
     
 - Synthesia lighting only ever shows green keys (right hand), never blue (left hand)
     - Synthesia isn't setup the way we need it - we need "Finger-based channel" lighting
