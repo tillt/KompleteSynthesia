@@ -198,7 +198,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         memset(_buttons, 0, kKompleteKontrolButtonsMapSize);
         memset(_feedbackIntensityBuffer,0, kKompleteKontrolButtonsMapSize);
   
-        // Supported controls get illuminated with a low white.
+        // Supported controls get illuminated.
         _buttons[kKompleteKontrolButtonIdPlay] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdJogDown] = kKompleteKontrolColorWhite;
         _buttons[kKompleteKontrolButtonIdJogUp] = kKompleteKontrolColorWhite;
@@ -286,19 +286,9 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     [_delegate deviceRemoved];
 }
 
-typedef struct {
-    const unsigned char index;
-    const unsigned char value;
-
-    const unsigned int identifier;
-} EventReport;
-
 - (void)feedbackWithEvent:(const unsigned int)identifier
 {
-    NSLog(@"feedback for identifier: %d", identifier);
-    
     _buttons[identifier] |= kKompleteKontrolIntensityBright;
-    
     [self updateButtonLightMap:nil];
 }
 
@@ -328,6 +318,13 @@ typedef struct {
                            value:delta];
     }
     lastJogWheelValue = report[30];
+
+    typedef struct {
+        const unsigned char index;
+        const unsigned char value;
+
+        const unsigned int identifier;
+    } EventReport;
 
     EventReport keyEvents[] = {
         { 1, 0x10, kKompleteKontrolButtonIdFunction1 },
