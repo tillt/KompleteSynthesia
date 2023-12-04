@@ -10,14 +10,14 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern const unsigned char kKompleteKontrolColorBlue;
-extern const unsigned char kKompleteKontrolColorLightBlue;
-extern const unsigned char kKompleteKontrolColorBrightBlue;
-extern const unsigned char kKompleteKontrolColorGreen;
-extern const unsigned char kKompleteKontrolColorLightGreen;
-extern const unsigned char kKompleteKontrolColorBrightGreen;
-extern const unsigned char kKompleteKontrolColorBrightWhite;
-extern const unsigned char kKompleteKontrolColorRed;
+extern const uint8_t kKompleteKontrolColorBlue;
+extern const uint8_t kKompleteKontrolColorLightBlue;
+extern const uint8_t kKompleteKontrolColorBrightBlue;
+extern const uint8_t kKompleteKontrolColorGreen;
+extern const uint8_t kKompleteKontrolColorLightGreen;
+extern const uint8_t kKompleteKontrolColorBrightGreen;
+extern const uint8_t kKompleteKontrolColorBrightWhite;
+extern const uint8_t kKompleteKontrolColorRed;
 
 extern const uint8_t kKompleteKontrolColorWhite;
 extern const uint8_t kKompleteKontrolColorMediumWhite;
