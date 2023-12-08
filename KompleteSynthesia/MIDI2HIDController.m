@@ -54,7 +54,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     unsigned char colorMap[kColorMapSize];
 }
 
-- (id)initWithLogController:(LogViewController*)lc delegate:(id)delegate error:(NSError**)error
+- (id)initWithLogController:(LogViewController*)lc delegate:(id)delegate
 {
     self = [super init];
     if (self) {
@@ -88,9 +88,9 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         [userDefaults registerDefaults:@{@"kColorMapRightPressed": @(kKompleteKontrolColorBrightGreen)}];
         colorMap[kColorMapRightPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapRightPressed"];
         
-        if ([self resetWithError:error] == NO) {
-            return nil;
-        }
+        hid = [[HIDController alloc] initWithDelegate:self];
+
+        midi = [[MIDIController alloc] initWithDelegate:self];
     }
     
     return self;
@@ -113,14 +113,13 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
 - (BOOL)resetWithError:(NSError**)error
 {
-    hid = [[HIDController alloc] initWithDelegate:self error:error];
-    if (hid == nil) {
+    if (![hid setupWithError:error]) {
         return NO;
     }
+
     [log logLine:[NSString stringWithFormat:@"detected %@ HID device", hid.deviceName]];
 
-    midi = [[MIDIController alloc] initWithDelegate:self error:error];
-    if (midi == nil) {
+    if (![midi setupWithError:error]) {
         return NO;
     }
 

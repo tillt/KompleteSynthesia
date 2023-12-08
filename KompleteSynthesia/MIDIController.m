@@ -53,96 +53,100 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     return message;
 }
 
-- (id)initWithDelegate:(id)delegate error:(NSError**)error
+- (id)initWithDelegate:(id)delegate
 {
     self = [super init];
     if (self) {
         _delegate = delegate;
-        portLight = 0;
-        portKeyboard = 0;
-        
-        __weak MIDIController* weakSelf = self;
+    }
+    return self;
+}
 
-        OSStatus status = MIDIClientCreateWithBlock((CFStringRef)@"KompleteSynthesia",
-                                                    &client,
-                                                    ^(const MIDINotification * _Nonnull message) {
-            if (message->messageID == kMIDIMsgSetupChanged) {
-                if (![weakSelf rescanMIDI]) {
-                    NSLog(@"failed to create midi client interface connections");
-                }
-            }
-        });
-        if (status != 0) {
-            NSLog(@"MIDIClientCreate: %d", status);
-            if (error != nil) {
-                NSDictionary *userInfo = @{
-                    NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
-                    NSLocalizedRecoverySuggestionErrorKey: @"Try switching it off and on again."
-                };
-                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
-            }
-            return nil;
-        }
-        MIDIReceiveBlock receiveBlockLightLoopback = ^void (const MIDIEventList *evtlist, void *srcConRef) {
-            [weakSelf receivedMIDIEvents:evtlist interface:kMIDIConnectionInterfaceLightLoopback];
-        };
-        
-        status = MIDIInputPortCreateWithProtocol(client,
-                                                 (__bridge CFStringRef)kMIDIInputInterfaceLightLoopback,
-                                                 kMIDIProtocol_1_0,
-                                                 &portLight,
-                                                 receiveBlockLightLoopback);
-        if (status != 0) {
-            NSLog(@"MIDIInputPortCreate: %d", status);
-            if (error != nil) {
-                NSDictionary *userInfo = @{
-                    NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
-                    NSLocalizedRecoverySuggestionErrorKey: @"Try to restart this application."
-                };
-                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
-            }
-            return nil;
-        }
+- (BOOL)setupWithError:(NSError**)error
+{
+    __weak MIDIController* weakSelf = self;
 
-        // It was so nice, we do it twice...
-        
-        MIDIReceiveBlock receiveBlockKeyboard = ^void (const MIDIEventList *evtlist, void *srcConRef) {
-            [weakSelf receivedMIDIEvents:evtlist interface:kMIDIConnectionInterfaceKeyboard];
-        };
+    portLight = 0;
+    portKeyboard = 0;
 
-        status = MIDIInputPortCreateWithProtocol(client,
-                                                 (__bridge CFStringRef)kMIDIInputInterfaceKeyboard,
-                                                 kMIDIProtocol_1_0,
-                                                 &portKeyboard,
-                                                 receiveBlockKeyboard);
-        if (status != 0) {
-            NSLog(@"MIDIInputPortCreate: %d", status);
-            if (error != nil) {
-                NSDictionary *userInfo = @{
-                    NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
-                    NSLocalizedRecoverySuggestionErrorKey: @"Try to restart this application."
-                };
-                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+    OSStatus status = MIDIClientCreateWithBlock((CFStringRef)@"KompleteSynthesia",
+                                                &client,
+                                                ^(const MIDINotification * _Nonnull message) {
+        if (message->messageID == kMIDIMsgSetupChanged) {
+            if (![weakSelf rescanMIDI]) {
+                NSLog(@"failed to create midi client interface connections");
             }
-            return nil;
         }
+    });
+    if (status != 0) {
+        NSLog(@"MIDIClientCreate: %d", status);
+        if (error != nil) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
+                NSLocalizedRecoverySuggestionErrorKey: @"Try switching it off and on again."
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+        }
+        return NO;
+    }
+    MIDIReceiveBlock receiveBlockLightLoopback = ^void (const MIDIEventList *evtlist, void *srcConRef) {
+        [weakSelf receivedMIDIEvents:evtlist interface:kMIDIConnectionInterfaceLightLoopback];
+    };
 
-        if ([self rescanMIDI] == NO) {
-            NSLog(@"MIDI interfaces ports not found");
-            if (error != nil) {
-                NSDictionary *userInfo = @{
-                    NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI interface ports \'%@\' and \'%@' not found",
-                                                kMIDIInputInterfaceLightLoopback,
-                                                kMIDIInputInterfaceKeyboard],
-                    NSLocalizedRecoverySuggestionErrorKey: @"Make sure you setup the interface port as documented."
-                };
-                *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
-            }
-           return nil;
+    status = MIDIInputPortCreateWithProtocol(client,
+                                             (__bridge CFStringRef)kMIDIInputInterfaceLightLoopback,
+                                             kMIDIProtocol_1_0,
+                                             &portLight,
+                                             receiveBlockLightLoopback);
+    if (status != 0) {
+        NSLog(@"MIDIInputPortCreate: %d", status);
+        if (error != nil) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
+                NSLocalizedRecoverySuggestionErrorKey: @"Try to restart this application."
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
         }
+        return NO;
     }
 
-    return self;
+    // It was so nice, we do it twice...
+
+    MIDIReceiveBlock receiveBlockKeyboard = ^void (const MIDIEventList *evtlist, void *srcConRef) {
+        [weakSelf receivedMIDIEvents:evtlist interface:kMIDIConnectionInterfaceKeyboard];
+    };
+
+    status = MIDIInputPortCreateWithProtocol(client,
+                                             (__bridge CFStringRef)kMIDIInputInterfaceKeyboard,
+                                             kMIDIProtocol_1_0,
+                                             &portKeyboard,
+                                             receiveBlockKeyboard);
+    if (status != 0) {
+        NSLog(@"MIDIInputPortCreate: %d", status);
+        if (error != nil) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
+                NSLocalizedRecoverySuggestionErrorKey: @"Try to restart this application."
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+        }
+        return NO;
+    }
+
+    if ([self rescanMIDI] == NO) {
+        NSLog(@"MIDI interfaces ports not found");
+        if (error != nil) {
+            NSDictionary *userInfo = @{
+                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI interface ports \'%@\' and \'%@' not found",
+                                            kMIDIInputInterfaceLightLoopback,
+                                            kMIDIInputInterfaceKeyboard],
+                NSLocalizedRecoverySuggestionErrorKey: @"Make sure you setup the interface port as documented."
+            };
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
+        }
+        return NO;
+    }
+    return YES;
 }
 
 - (NSString*)status

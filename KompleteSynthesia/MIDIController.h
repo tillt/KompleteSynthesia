@@ -25,7 +25,8 @@ extern const int kMIDIConnectionInterfaceKeyboard;
 @property (nonatomic, copy) NSString* status;
 
 + (NSString*)readableNote:(unsigned char)note;
-- (id)initWithDelegate:delegate error:(NSError**)error;
+- (id)initWithDelegate:delegate;
+- (BOOL)setupWithError:(NSError**)error;
 @end
 
 NS_ASSUME_NONNULL_END

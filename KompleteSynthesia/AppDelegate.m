@@ -157,14 +157,18 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     NSError* error = nil;
 
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_log
-                                                                   delegate:self
-                                                                      error:&error];
+                                                                   delegate:self];
     if (_midi2hidController == nil) {
         [[NSAlert alertWithError:error] runModal];
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
         return;
     }
     
+    if ([_midi2hidController resetWithError:&error] == NO) {
+        [[NSAlert alertWithError:error] runModal];
+        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+    }
+
     // We won't need any bulk USB access for MK1 controllers - they have no screens.
     if (_midi2hidController.mk == 1) {
         usbAvailable = NO;

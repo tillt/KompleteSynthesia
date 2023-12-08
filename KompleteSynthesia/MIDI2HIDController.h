@@ -46,8 +46,7 @@ typedef enum colorMapState {
 @property (nonatomic, weak) id<MIDI2HIDControllerDelegate> delegate;
 
 - (id)initWithLogController:(LogViewController*)lc
-                   delegate:(id)delegate
-                      error:(NSError**)error;
+                   delegate:(id)delegate;
 
 - (BOOL)resetWithError:(NSError**)error;
 - (HIDController*)hid;

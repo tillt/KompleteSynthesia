@@ -175,7 +175,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
                            alpha:1.0f];
 }
 
-- (id)initWithDelegate:(id)delegate error:(NSError**)error
+- (id)initWithDelegate:(id)delegate
 {
     self = [super init];
     if (self) {
@@ -184,46 +184,50 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
         lastVolumeKnobValue = INTMAX_C(16);
         
         swooshQueue = dispatch_queue_create("KompleteSynthesia.SwooshQueue", NULL);
-
-        device = [self detectKeyboardController:error];
-        if (device == nil) {
-            return nil;
-        }
-
-        if ([self initKeyboardController:error] == NO) {
-            return nil;
-        }
-
-        _keys = &lightGuideUpdateMessage[1];
-
-        [self lightKeysWithColor:kKeyColorUnpressed];
-
-        _buttons = &buttonLightingUpdateMessage[1];
-        _feedbackIntensityBuffer = &buttonLightingFeedback[1];
-
-        memset(_buttons, 0, kKompleteKontrolButtonsMapSize);
-        memset(_feedbackIntensityBuffer,0, kKompleteKontrolButtonsMapSize);
-  
-        // Supported controls get illuminated.
-        _buttons[kKompleteKontrolButtonIdPlay] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdJogDown] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdJogUp] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdJogLeft] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdJogRight] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdPageLeft] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdPageRight] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdFunction1] = kKompleteKontrolColorOrange;
-        _buttons[kKompleteKontrolButtonIdFunction2] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdFunction3] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdFunction4] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdSetup] = kKompleteKontrolColorWhite;
-        _buttons[kKompleteKontrolButtonIdClear] = kKompleteKontrolColorWhite;
-
-        if ([self updateButtonLightMap:error] == NO) {
-            return nil;
-        }
     }
     return self;
+}
+
+- (BOOL)setupWithError:(NSError**)error
+{
+    device = [self detectKeyboardController:error];
+    if (device == nil) {
+        return NO;
+    }
+
+    if ([self initKeyboardController:error] == NO) {
+        return NO;
+    }
+
+    _keys = &lightGuideUpdateMessage[1];
+
+    [self lightKeysWithColor:kKeyColorUnpressed];
+
+    _buttons = &buttonLightingUpdateMessage[1];
+    _feedbackIntensityBuffer = &buttonLightingFeedback[1];
+
+    memset(_buttons, 0, kKompleteKontrolButtonsMapSize);
+    memset(_feedbackIntensityBuffer,0, kKompleteKontrolButtonsMapSize);
+
+    // Supported controls get illuminated.
+    _buttons[kKompleteKontrolButtonIdPlay] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdJogDown] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdJogUp] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdJogLeft] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdJogRight] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdPageLeft] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdPageRight] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdFunction1] = kKompleteKontrolColorOrange;
+    _buttons[kKompleteKontrolButtonIdFunction2] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdFunction3] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdFunction4] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdSetup] = kKompleteKontrolColorWhite;
+    _buttons[kKompleteKontrolButtonIdClear] = kKompleteKontrolColorWhite;
+
+    if ([self updateButtonLightMap:error] == NO) {
+        return NO;
+    }
+    return YES;
 }
 
 - (void)dealloc
