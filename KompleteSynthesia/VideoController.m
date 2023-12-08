@@ -288,9 +288,9 @@ const int kHeaderHeight = 26;
     if (width > _screenSize.width || height > _screenSize.height ) {
         vImage_Buffer resizedBuffer = {
             imageConversionScaleBuffer,
-            _screenSize.height,
-            _screenSize.width,
-            _screenSize.width * (((unsigned int)CGImageGetBitsPerPixel(source)) >> 3)
+            destination->height,
+            destination->width,
+            destination->width * (((unsigned int)CGImageGetBitsPerPixel(source)) >> 3)
         };
 
         vImageScale_ARGB8888(&sourceBuffer, 
