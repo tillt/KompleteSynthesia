@@ -153,6 +153,8 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     // FIXME: This may need double-buffering, not sure.
     unsigned char inputBuffer[kInputBufferSize];
     IOHIDDeviceRef device;
+    short int lastVolumeKnobValue;
+    dispatch_queue_t swooshQueue;
 }
 
 + (NSColor*)colorWithKeyState:(const unsigned char)keyState
@@ -178,6 +180,10 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     self = [super init];
     if (self) {
         _delegate = delegate;
+        
+        lastVolumeKnobValue = INTMAX_C(16);
+        
+        swooshQueue = dispatch_queue_create("KompleteSynthesia.SwooshQueue", NULL);
 
         device = [self detectKeyboardController:error];
         if (device == nil) {
@@ -347,16 +353,15 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     };
 
     if (report[7] == 0x01) {
-        static int lastVolumeKnobValue = INTMAX_C(16);
-        const int newValue = *(int*)(&report[24]);
+        const short int* newValue = (short int*)&report[24];
         if (lastVolumeKnobValue != INTMAX_C(16)) {
-            int delta = newValue - lastVolumeKnobValue;
+            int delta = *newValue - lastVolumeKnobValue;
             if (delta != 0) {
                 [_delegate receivedEvent:kKompleteKontrolButtonIdKnob8
                                    value:delta];
             }
         }
-        lastVolumeKnobValue = newValue;
+        lastVolumeKnobValue = *newValue;
         return;
     }
 
