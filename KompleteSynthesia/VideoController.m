@@ -43,6 +43,8 @@ const int kHeaderHeight = 26;
     atomic_int screenUpdateActive;
     atomic_int mirror;
 
+    dispatch_queue_t mirrorQueue;
+
     NSMutableData* stream;
 }
 
@@ -52,6 +54,7 @@ const int kHeaderHeight = 26;
     if (self) {
         screenBuffer[0] = NULL;
         screenBuffer[1] = NULL;
+
         atomic_fetch_and(&stopScreenUpdating, 0);
         atomic_fetch_and(&screenUpdateActive, 0);
         atomic_fetch_and(&mirror, 0);
@@ -75,12 +78,14 @@ const int kHeaderHeight = 26;
 
             // width * height * 2 (261120) + commands (36)
             stream = [[NSMutableData alloc] initWithCapacity:(_screenSize.width * 2 * _screenSize.height) + 36];
-            
+
             for (int i=0;i < _screenCount;i++) {
                 if (screenBuffer[i] == NULL) {
                     screenBuffer[i] = malloc(_screenSize.width * 2 * _screenSize.height);
                 }
             }
+
+            mirrorQueue = dispatch_queue_create("KompleteSynthesia.MirrorQueue", NULL);
         } else {
             return nil;
         }
@@ -136,7 +141,7 @@ const int kHeaderHeight = 26;
 
     [log logLine:@"starting screen update loop"];
 
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+    dispatch_async(mirrorQueue, ^{
         NSImage* image = [NSImage imageNamed:@"ScreenOne"];
         CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
 
