@@ -111,7 +111,7 @@ const int kHeaderHeight = 26;
     atomic_fetch_or(&stopScreenUpdating, 1);
 
     if (wait == YES) {
-        while (screenUpdateActive != 0) {
+        while (atomic_load(&screenUpdateActive) != 0) {
             [NSThread sleepForTimeInterval:0.01f];
         };
     }
