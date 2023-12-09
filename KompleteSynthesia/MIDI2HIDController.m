@@ -13,7 +13,7 @@
 #import <Carbon/Carbon.h>
 
 #import "LogViewController.h"
-#import "VirtualEventController.h"
+#import "VirtualEvent.h"
 
 const CGKeyCode kVK_ArrowLeft = 0x7B;
 const CGKeyCode kVK_ArrowRight = 0x7C;
@@ -347,63 +347,63 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     switch(event) {
         case kKompleteKontrolButtonIdPlay:
             [log logLine:@"PLAY button -> sending SPACE key"];
-            [VirtualEventController triggerKeyEvents:kVK_Space];
+            [VirtualEvent triggerKeyEvents:kVK_Space];
             break;
         case kKompleteKontrolButtonIdJogPress:
             [log logLine:@"JOG PRESS -> sending RETURN key"];
-            [VirtualEventController triggerKeyEvents:kVK_Return];
+            [VirtualEvent triggerKeyEvents:kVK_Return];
             break;
         case kKompleteKontrolButtonIdJogLeft:
             [log logLine:@"JOG LEFT -> sending ARROW LEFT key"];
-            [VirtualEventController triggerKeyEvents:kVK_ArrowLeft];
+            [VirtualEvent triggerKeyEvents:kVK_ArrowLeft];
             break;
         case kKompleteKontrolButtonIdJogRight:
             [log logLine:@"JOG RIGHT -> sending ARROW RIGHT key"];
-            [VirtualEventController triggerKeyEvents:kVK_ArrowRight];
+            [VirtualEvent triggerKeyEvents:kVK_ArrowRight];
             break;
         case kKompleteKontrolButtonIdJogUp:
             [log logLine:@"JOG UP -> sending ARROW UP key"];
-            [VirtualEventController triggerKeyEvents:kVK_ArrowUp];
+            [VirtualEvent triggerKeyEvents:kVK_ArrowUp];
             break;
         case kKompleteKontrolButtonIdPageLeft:
             [log logLine:@"PAGE LEFT -> sending PAGE UP key"];
-            [VirtualEventController triggerKeyEvents:kVK_ANSI_Z];
+            [VirtualEvent triggerKeyEvents:kVK_ANSI_Z];
             break;
         case kKompleteKontrolButtonIdPageRight:
             [log logLine:@"PAGE RIGHT -> sending PAGE DOWN key"];
-            [VirtualEventController triggerKeyEvents:kVK_ANSI_X];
+            [VirtualEvent triggerKeyEvents:kVK_ANSI_X];
             break;
         case kKompleteKontrolButtonIdJogDown:
             [log logLine:@"JOG DOWN -> sending ARROW DOWN key"];
-            [VirtualEventController triggerKeyEvents:kVK_ArrowDown];
+            [VirtualEvent triggerKeyEvents:kVK_ArrowDown];
             break;
         case kKompleteKontrolButtonIdFunction1:
             [log logLine:@"FUNCTION1 -> sending ESCAPE key"];
-            [VirtualEventController triggerKeyEvents:kVK_Escape];
+            [VirtualEvent triggerKeyEvents:kVK_Escape];
             break;
         case kKompleteKontrolButtonIdFunction2:
             [log logLine:@"FUNCTION2 -> sending F2 key"];
-            [VirtualEventController triggerKeyEvents:kVK_F2];
+            [VirtualEvent triggerKeyEvents:kVK_F2];
             break;
         case kKompleteKontrolButtonIdFunction3:
             [log logLine:@"FUNCTION3 -> sending F3 key"];
-            [VirtualEventController triggerKeyEvents:kVK_F3];
+            [VirtualEvent triggerKeyEvents:kVK_F3];
             break;
         case kKompleteKontrolButtonIdFunction4:
             [log logLine:@"FUNCTION4 -> sending F4 key"];
-            [VirtualEventController triggerKeyEvents:kVK_F4];
+            [VirtualEvent triggerKeyEvents:kVK_F4];
             break;
         case kKompleteKontrolButtonIdJogScroll:
             [log logLine:@"JOG SCROLL -> sending mouse WHEEL"];
-            [VirtualEventController triggerMouseWheelEvent:-value];
+            [VirtualEvent triggerMouseWheelEvent:-value];
             break;
         case kKompleteKontrolButtonIdKnob8:
             if (value > 0) {
                 [log logLine:@"KNOB8 -> sending volume up"];
-                [VirtualEventController triggerAuxKeyEvents:0];
+                [VirtualEvent triggerAuxKeyEvents:0];
             } else if (value < 0) {
                 [log logLine:@"KNOB8 -> sending volume down"];
-                [VirtualEventController triggerAuxKeyEvents:1];
+                [VirtualEvent triggerAuxKeyEvents:1];
             }
             break;
     }

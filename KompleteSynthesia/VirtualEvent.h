@@ -1,5 +1,5 @@
 //
-//  VirtualEventController.h
+//  VirtualEvent.h
 //  KompleteSynthesia
 //
 //  Created by Till Toenshoff on 04.11.23.
@@ -10,7 +10,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface VirtualEventController : NSObject
+@interface VirtualEvent : NSObject
 
 + (void)triggerKeyEvents:(CGKeyCode)keyCode;
 + (void)triggerAuxKeyEvents:(uint32_t)keyCode;

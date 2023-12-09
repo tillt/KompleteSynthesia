@@ -1,13 +1,13 @@
 //
-//  VirtualEventController.m
+//  VirtualEvent.m
 //  KompleteSynthesia
 //
 //  Created by Till Toenshoff on 04.11.23.
 //
-#import "VirtualEventController.h"
+#import "VirtualEvent.h"
 #import <AppKit/AppKit.h>
 
-@implementation VirtualEventController
+@implementation VirtualEvent
 
 + (void)triggerKeyEvents:(CGKeyCode)keyCode
 {
