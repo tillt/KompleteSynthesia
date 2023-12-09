@@ -83,7 +83,7 @@ const size_t kKompleteKontrolButtonsMessageSize = 80;
 const size_t kKompleteKontrolButtonsMapSize = kKompleteKontrolButtonsMessageSize - 1;
 
 // Funky defaults - users might hate me - but I like orange, eat it!
-const uint8_t kKeyColorUnpressed = kKompleteKontrolColorOrange;
+const uint8_t kKeyColorUnpressed = kKompleteKontrolKeyStateLightOff;
 const uint8_t kKeyColorPressed = kKompleteKontrolColorLightOrange;
 
 const float kLightsSwooshTick = 1.0f / 24.0;
