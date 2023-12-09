@@ -186,9 +186,6 @@ const int kHeaderHeight = 26;
                     NSLog(@"usb transfer failed right away, lets stop this");
                     goto doneUpdating;
                 }
-                // Allow for one bulk write buffer in flight for efficiency reasons -- this
-                // works fine for me, not sure if it does for others. The performance gain
-                // is about 20%. The perceived smoothness seems higher.
                 [self->usb waitForBulkTransfer:kTimeoutDelay];
             } else {
                 // FIXME: this is used only until we do control display overlays - stay tuned!
