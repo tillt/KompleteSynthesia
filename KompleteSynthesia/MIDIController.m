@@ -53,15 +53,6 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     return message;
 }
 
-- (id)initWithDelegate:(id)delegate
-{
-    self = [super init];
-    if (self) {
-        _delegate = delegate;
-    }
-    return self;
-}
-
 - (BOOL)setupWithError:(NSError**)error
 {
     __weak MIDIController* weakSelf = self;

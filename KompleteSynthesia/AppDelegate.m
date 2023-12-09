@@ -19,6 +19,7 @@
 @property (nonatomic, strong) MIDI2HIDController* midi2hidController;
 @property (nonatomic, strong) VideoController* videoController;
 @property (nonatomic, strong) HIDController* hidController;
+@property (nonatomic, strong) MIDIController* midiController;
 @property (nonatomic, strong) LogViewController* log;
 @property (nonatomic, strong) SynthesiaController* synthesia;
 @property (nonatomic, strong) PreferencesWindowController* preferences;
@@ -158,9 +159,12 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     NSError* error = nil;
 
     _hidController = [[HIDController alloc] init];
+    
+    _midiController = [[MIDIController alloc] init];
 
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_log
                                                               hidController:_hidController
+                                                             midiController:_midiController
                                                                    delegate:self];
     if (_midi2hidController == nil) {
         [[NSAlert alertWithError:error] runModal];

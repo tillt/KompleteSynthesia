@@ -47,6 +47,7 @@ typedef enum colorMapState {
 
 - (id)initWithLogController:(LogViewController*)lc
               hidController:(HIDController*)hc
+             midiController:(MIDIController*)mc
                    delegate:(id)delegate;
 
 - (BOOL)resetWithError:(NSError**)error;

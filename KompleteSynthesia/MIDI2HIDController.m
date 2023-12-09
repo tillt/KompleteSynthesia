@@ -54,7 +54,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     unsigned char colorMap[kColorMapSize];
 }
 
-- (id)initWithLogController:(LogViewController*)lc hidController:(HIDController*)hc delegate:(id)delegate
+- (id)initWithLogController:(LogViewController*)lc hidController:(HIDController*)hc midiController:(MIDIController*)mc delegate:(id)delegate
 {
     self = [super init];
     if (self) {
@@ -90,8 +90,9 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         
         hid = hc;
         hid.delegate = self;
-
-        midi = [[MIDIController alloc] initWithDelegate:self];
+        
+        midi = mc;
+        midi.delegate = self;
     }
     
     return self;
