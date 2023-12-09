@@ -42,7 +42,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
     IOUSBInterfaceInterface942** interface;
     uint8_t endpointCount;
     uint8_t endpointAddresses[32];
-    atomic_int transferActive;
+    dispatch_semaphore_t transfers;
 }
 
 + (NSString*)descriptionWithIOReturn:(IOReturn)err
@@ -57,7 +57,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
     if (self) {
         _connected = NO;
         _deviceInterfaceEndpoint = kUSBDeviceInterfaceEndpoint;
-        //transferActive = 0;
+        transfers = dispatch_semaphore_create(0);
         if ([self detectDevice:error] == NULL) {
             return nil;
         }
@@ -87,7 +87,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
     // When our runloop is killed which happens on application termination, the async
     // callbacks wont get called anymore and thus the timeout may kick in here - make it
     // a safe value for being sure we can rely on the device status.
-    [self waitAllowingFor:0 withTimeout:0.1];
+    [self waitForBulkTransfer:0.1];
 }
 
 - (NSString*)status
@@ -243,9 +243,8 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
 
 static void asyncCallback (void *refcon, IOReturn result, void* arg0)
 {
-    atomic_int* transferActive = (atomic_int*)refcon;
-    atomic_fetch_sub(transferActive, 1);
-
+    dispatch_semaphore_t transfers = (__bridge dispatch_semaphore_t)refcon;
+    dispatch_semaphore_signal(transfers);
     if (result != kIOReturnSuccess) {
         NSLog(@"async transfer failed");
     }
@@ -291,8 +290,6 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
 
     assert(transferType == kUSBBulk);
     assert(data.length % maxPacketSize);
-    
-    atomic_fetch_add(&transferActive, 1);
 
     ret = (*interface)->WritePipeAsyncTO(interface,
                                          pipeRef,
@@ -301,7 +298,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
                                          0,
                                          0,
                                          asyncCallback,
-                                         &transferActive);
+                                         (__bridge void*)transfers);
     if (ret != kIOReturnSuccess) {
         NSLog(@"(*interface)->WritePipeAsync failed");
         if (error) {
@@ -493,24 +490,10 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     return YES;
 }
 
-- (BOOL)waitAllowingFor:(unsigned int)maxActive withTimeout:(NSTimeInterval)timeout
+- (BOOL)waitForBulkTransfer:(NSTimeInterval)timeout
 {
-//    NSDate *start = [NSDate date];
-    NSTimeInterval roundDelay = 0.001;
-    unsigned int roundsUntilTimeout = timeout / roundDelay;
-    while (atomic_load(&transferActive) > maxActive && roundsUntilTimeout) {
-        // FIXME: semaphores!
-        [NSThread sleepForTimeInterval:roundDelay];
-        --roundsUntilTimeout;
-    };
-    if (roundsUntilTimeout == 0) {
-        NSLog(@"waiting for bulk transfer timed out");
-    }
-
-//    NSTimeInterval waitInterval = [start timeIntervalSinceNow];
-//    NSLog(@"refresh delay: %f", waitInterval);
-    
-    return atomic_load(&transferActive) == maxActive;
+    return dispatch_semaphore_wait(transfers,
+                                   dispatch_time(DISPATCH_TIME_NOW, timeout * NSEC_PER_SEC)) == 0;
 }
 
 @end

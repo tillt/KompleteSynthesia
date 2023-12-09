@@ -120,13 +120,13 @@ const int kHeaderHeight = 26;
 - (void)teardown
 {
     [self stopUpdatingAndWait:YES];
-    [usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
+    [usb waitForBulkTransfer:kTimeoutDelay];
 
     [self clearScreen:0 error:nil];
-    [usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
+    [usb waitForBulkTransfer:kTimeoutDelay];
 
     [self clearScreen:1 error:nil];
-    [usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
+    [usb waitForBulkTransfer:kTimeoutDelay];
 }
 
 - (BOOL)startUpdating
@@ -151,7 +151,7 @@ const int kHeaderHeight = 26;
                         y:0
          skipHeaderHeight:0
                     error:nil];
-        [self->usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
+        [self->usb waitForBulkTransfer:kTimeoutDelay];
 
         [self drawCGImage:cgi
                    screen:0
@@ -159,7 +159,7 @@ const int kHeaderHeight = 26;
                         y:0
          skipHeaderHeight:0
                     error:nil];
-        [self->usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
+        [self->usb waitForBulkTransfer:kTimeoutDelay];
 
         atomic_fetch_or(&self->screenUpdateActive, 1);
 
@@ -189,7 +189,7 @@ const int kHeaderHeight = 26;
                 // Allow for one bulk write buffer in flight for efficiency reasons -- this
                 // works fine for me, not sure if it does for others. The performance gain
                 // is about 20%. The perceived smoothness seems higher.
-                [self->usb waitAllowingFor:1 withTimeout:kTimeoutDelay];
+                [self->usb waitForBulkTransfer:kTimeoutDelay];
             } else {
                 // FIXME: this is used only until we do control display overlays - stay tuned!
                 [NSThread sleepForTimeInterval:kRefreshDelay];
@@ -198,7 +198,7 @@ const int kHeaderHeight = 26;
 
     doneUpdating:
         [self clearScreen:0 error:nil];
-        [self->usb waitAllowingFor:0 withTimeout:kTimeoutDelay];
+        [self->usb waitForBulkTransfer:kTimeoutDelay];
 
         atomic_fetch_and(&self->screenUpdateActive, 0);
         
