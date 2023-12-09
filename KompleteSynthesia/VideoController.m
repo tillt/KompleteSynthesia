@@ -120,13 +120,8 @@ const int kHeaderHeight = 26;
 - (void)teardown
 {
     [self stopUpdatingAndWait:YES];
-    [usb waitForBulkTransfer:kTimeoutDelay];
-
     [self clearScreen:0 error:nil];
-    [usb waitForBulkTransfer:kTimeoutDelay];
-
     [self clearScreen:1 error:nil];
-    [usb waitForBulkTransfer:kTimeoutDelay];
 }
 
 - (BOOL)startUpdating
@@ -151,7 +146,6 @@ const int kHeaderHeight = 26;
                         y:0
          skipHeaderHeight:0
                     error:nil];
-        [self->usb waitForBulkTransfer:kTimeoutDelay];
 
         [self drawCGImage:cgi
                    screen:0
@@ -159,7 +153,6 @@ const int kHeaderHeight = 26;
                         y:0
          skipHeaderHeight:0
                     error:nil];
-        [self->usb waitForBulkTransfer:kTimeoutDelay];
 
         atomic_fetch_or(&self->screenUpdateActive, 1);
 
@@ -186,7 +179,6 @@ const int kHeaderHeight = 26;
                     NSLog(@"usb transfer failed right away, lets stop this");
                     goto doneUpdating;
                 }
-                [self->usb waitForBulkTransfer:kTimeoutDelay];
             } else {
                 // FIXME: this is used only until we do control display overlays - stay tuned!
                 [NSThread sleepForTimeInterval:kRefreshDelay];
@@ -195,7 +187,6 @@ const int kHeaderHeight = 26;
 
     doneUpdating:
         [self clearScreen:0 error:nil];
-        [self->usb waitForBulkTransfer:kTimeoutDelay];
 
         atomic_fetch_and(&self->screenUpdateActive, 0);
         
@@ -339,6 +330,8 @@ const int kHeaderHeight = 26;
 
 - (BOOL)drawNIImage:(NIImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
 {
+    stream.length = 0;
+
     const unsigned char commandBlob1[] = { 0x84, 0x00, screen, 0x60, 0x00, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob1 length:sizeof(commandBlob1)];
 
@@ -363,8 +356,8 @@ const int kHeaderHeight = 26;
     [stream appendBytes:commandBlob3 length:sizeof(commandBlob3)];
 
     BOOL ret = [usb bulkWriteData:stream error:error];
-
-    stream.length = 0;
+    
+    [usb waitForBulkTransfer:kTimeoutDelay];
 
     return ret;
 }
