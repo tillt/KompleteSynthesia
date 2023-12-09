@@ -15,7 +15,7 @@
 
 @interface AppDelegate ()
 
-@property (nonatomic, strong) IBOutlet NSWindow *window;
+@property (nonatomic, strong) IBOutlet NSWindow* window;
 @property (nonatomic, strong) MIDI2HIDController* midi2hidController;
 @property (nonatomic, strong) VideoController* videoController;
 @property (nonatomic, strong) HIDController* hidController;
@@ -25,9 +25,9 @@
 @property (nonatomic, strong) PreferencesWindowController* preferences;
 @property (nonatomic, strong) ApplicationObserver* observer;
 
-@property (nonatomic, strong) NSPopover *popover;
-@property (nonatomic, strong) NSMenu *statusMenu;
-@property (strong, nonatomic) NSStatusItem *statusItem;
+@property (nonatomic, strong) NSPopover* popover;
+@property (nonatomic, strong) NSMenu* statusMenu;
+@property (strong, nonatomic) NSStatusItem* statusItem;
 
 @end
 
