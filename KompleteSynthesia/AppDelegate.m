@@ -18,6 +18,7 @@
 @property (nonatomic, strong) IBOutlet NSWindow *window;
 @property (nonatomic, strong) MIDI2HIDController* midi2hidController;
 @property (nonatomic, strong) VideoController* videoController;
+@property (nonatomic, strong) HIDController* hidController;
 @property (nonatomic, strong) LogViewController* log;
 @property (nonatomic, strong) SynthesiaController* synthesia;
 @property (nonatomic, strong) PreferencesWindowController* preferences;
@@ -91,9 +92,9 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     for (int i = 0; i < kAlienItemCount; i++) {
         if ([ApplicationObserver applicationIsRunning:items[i]] == YES) {
             ++awaitingAlienCount;
-            [self.log logLine:[NSString stringWithFormat:fmtAssert, items[i]]];
+            [_log logLine:[NSString stringWithFormat:fmtAssert, items[i]]];
         } else {
-            [self.log logLine:[NSString stringWithFormat:fmtSkipping, items[i]]];
+            [_log logLine:[NSString stringWithFormat:fmtSkipping, items[i]]];
         }
     }
 
@@ -156,7 +157,10 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 {
     NSError* error = nil;
 
+    _hidController = [[HIDController alloc] init];
+
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_log
+                                                              hidController:_hidController
                                                                    delegate:self];
     if (_midi2hidController == nil) {
         [[NSAlert alertWithError:error] runModal];
@@ -170,7 +174,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     }
 
     // We won't need any bulk USB access for MK1 controllers - they have no screens.
-    if (_midi2hidController.mk == 1) {
+    if (_hidController.mk == 1) {
         usbAvailable = NO;
     }
 
@@ -256,6 +260,13 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 {
     NSError* error = nil;
     
+    if ([_midi2hidController swooshIsActive]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self->_log logLine:@"ignoring reset request as we are still swooshing"];
+        });
+        return;
+    }
+
     if (usbAvailable) {
         if ([_videoController reset:&error] == NO) {
             [[NSAlert alertWithError:error] runModal];

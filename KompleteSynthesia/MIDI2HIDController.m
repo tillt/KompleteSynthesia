@@ -54,7 +54,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     unsigned char colorMap[kColorMapSize];
 }
 
-- (id)initWithLogController:(LogViewController*)lc delegate:(id)delegate
+- (id)initWithLogController:(LogViewController*)lc hidController:(HIDController*)hc delegate:(id)delegate
 {
     self = [super init];
     if (self) {
@@ -88,7 +88,8 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         [userDefaults registerDefaults:@{@"kColorMapRightPressed": @(kKompleteKontrolColorBrightGreen)}];
         colorMap[kColorMapRightPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapRightPressed"];
         
-        hid = [[HIDController alloc] initWithDelegate:self];
+        hid = hc;
+        hid.delegate = self;
 
         midi = [[MIDIController alloc] initWithDelegate:self];
     }
@@ -99,11 +100,6 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 - (HIDController*)hid
 {
     return hid;
-}
-
-- (int)mk
-{
-    return hid.mk;
 }
 
 - (unsigned char*)colors
@@ -124,6 +120,11 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     }
 
     return YES;
+}
+
+- (BOOL)swooshIsActive
+{
+    return [hid swooshIsActive];
 }
 
 - (void)swoosh

@@ -7,6 +7,8 @@
 
 #import "HIDController.h"
 
+#include <stdatomic.h>
+
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
 
@@ -155,6 +157,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     IOHIDDeviceRef device;
     short int lastVolumeKnobValue;
     dispatch_queue_t swooshQueue;
+    atomic_int swooshActive;
 }
 
 + (NSColor*)colorWithKeyState:(const unsigned char)keyState
@@ -175,14 +178,12 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
                            alpha:1.0f];
 }
 
-- (id)initWithDelegate:(id)delegate
+- (id)init
 {
     self = [super init];
     if (self) {
-        _delegate = delegate;
-        
         lastVolumeKnobValue = INTMAX_C(16);
-        
+        atomic_fetch_and(&swooshActive, 0);
         swooshQueue = dispatch_queue_create("KompleteSynthesia.SwooshQueue", NULL);
     }
     return self;
@@ -190,6 +191,11 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
 - (BOOL)setupWithError:(NSError**)error
 {
+    if (device != 0) {
+        IOHIDDeviceUnscheduleFromRunLoop(device, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
+        IOHIDDeviceClose(device, kIOHIDOptionsTypeNone);
+    }
+
     device = [self detectKeyboardController:error];
     if (device == nil) {
         return NO;
@@ -597,13 +603,19 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
     return keyColor | keyIntensity;
 }
 
+- (BOOL)swooshIsActive
+{
+    return atomic_load(&swooshActive) != 0;
+}
+
 - (void)lightsSwooshTo:(unsigned char)unpressedKeyState
 {
-    // FIXME: Currently MK1 controllers are not supported for extra beauty.
-    if (_mk != 2) {
+    if (atomic_load(&swooshActive) != 0) {
         return;
     }
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+
+    dispatch_async(swooshQueue, ^{
+        atomic_fetch_or(&self->swooshActive, 1);
         const int midIndex = self.keyCount / 2;
 
         // Total number of ticks this animation will be using.
@@ -683,6 +695,8 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
         // FIXME: This shouldnt be needed - but it is right now.
         // Assert final state on all keys - if the above left some garbage.
         [self lightKeysWithColor:unpressedKeyState];
+
+        atomic_fetch_and(&self->swooshActive, 0);
     });
 }
 

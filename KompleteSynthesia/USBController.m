@@ -499,6 +499,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     NSTimeInterval roundDelay = 0.001;
     unsigned int roundsUntilTimeout = timeout / roundDelay;
     while (atomic_load(&transferActive) > maxActive && roundsUntilTimeout) {
+        // FIXME: semaphores!
         [NSThread sleepForTimeInterval:roundDelay];
         --roundsUntilTimeout;
     };
