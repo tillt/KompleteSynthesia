@@ -136,6 +136,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 - (void)teardown
 {
     [hid lightsOff];
+    [hid buttonsOff];
 }
 
 - (NSString*)hidStatus

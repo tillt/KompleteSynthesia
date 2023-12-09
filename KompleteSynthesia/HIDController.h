@@ -124,6 +124,7 @@ enum {
 - (BOOL)setupWithError:(NSError**)error;
 
 - (void)lightButton:(int)button color:(unsigned char)color;
+- (void)buttonsOff;
 - (void)lightKey:(int)note color:(unsigned char)color;
 - (void)lightsOff;
 - (void)lightKeysWithColor:(unsigned char)color;

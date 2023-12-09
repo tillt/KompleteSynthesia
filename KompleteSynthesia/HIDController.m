@@ -713,4 +713,15 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
     _buttons[button] = color;
 }
 
+- (void)lightButtonsWithColor:(unsigned char)color
+{
+    memset(_buttons, color, kKompleteKontrolButtonsMapSize);
+    [self updateButtonLightMap:nil];
+}
+
+- (void)buttonsOff
+{
+    [self lightButtonsWithColor:kKompleteKontrolButtonLightOff];
+}
+
 @end
