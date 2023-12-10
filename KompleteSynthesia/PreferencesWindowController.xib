@@ -9,6 +9,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PreferencesWindowController">
             <connections>
+                <outlet property="checkForUpdates" destination="ZAD-im-Rhl" id="24T-Ff-5AE"/>
                 <outlet property="colorLeft" destination="stV-Ul-nZS" id="rCb-lz-ND7"/>
                 <outlet property="colorLeftPressed" destination="zoC-pY-pYp" id="3Bq-hw-Z1e"/>
                 <outlet property="colorLeftThumb" destination="0MB-gR-9Ea" id="yoo-A4-3Cd"/>
@@ -19,7 +20,9 @@
                 <outlet property="colorUnpressed" destination="0Hf-sh-MQb" id="j2R-b7-OXM"/>
                 <outlet property="forwardButtonsOnlyToSynthesia" destination="IYA-Ho-9yy" id="vYE-Rs-pYT"/>
                 <outlet property="mirrorSynthesiaToControllerScreen" destination="Sdc-LV-BaN" id="Mok-ZX-5hG"/>
+                <outlet property="progress" destination="FSg-8Q-ivY" id="QAR-GE-xjc"/>
                 <outlet property="tabView" destination="qrt-pB-3fV" id="3MD-ul-L0g"/>
+                <outlet property="updateStatusField" destination="GnD-vb-rq1" id="ZeG-y6-ye4"/>
                 <outlet property="window" destination="F0z-JX-Cv5" id="gIp-Ho-8D9"/>
             </connections>
         </customObject>
@@ -64,6 +67,41 @@
                                             </buttonCell>
                                             <connections>
                                                 <action selector="fowardingValueChanged:" target="-2" id="YZk-dv-wMI"/>
+                                            </connections>
+                                        </button>
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FjY-bN-YkU">
+                                            <rect key="frame" x="10" y="124" width="148" height="32"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <buttonCell key="cell" type="push" title="Check for Updates" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="G5i-ik-qwW">
+                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="checkForUpdate:" target="-2" id="ZPK-nT-JmF"/>
+                                            </connections>
+                                        </button>
+                                        <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="GnD-vb-rq1">
+                                            <rect key="frame" x="181" y="131" width="280" height="16"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <textFieldCell key="cell" lineBreakMode="clipping" id="53G-pC-VTn">
+                                                <font key="font" metaFont="system" size="11"/>
+                                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <progressIndicator fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="FSg-8Q-ivY">
+                                            <rect key="frame" x="159" y="134" width="16" height="16"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                        </progressIndicator>
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ZAD-im-Rhl">
+                                            <rect key="frame" x="15" y="91" width="444" height="34"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                            <buttonCell key="cell" type="check" title="Automatically check for updates on startup" bezelStyle="regularSquare" imagePosition="left" inset="2" id="YSW-IP-A5l">
+                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                <font key="font" metaFont="smallSystem"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="updatesValueChanged:" target="-2" id="OgA-Ua-HRE"/>
                                             </connections>
                                         </button>
                                     </subviews>

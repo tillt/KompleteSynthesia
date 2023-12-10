@@ -9,6 +9,7 @@
 #import "SynthesiaController.h"
 #import "MIDI2HIDController.h"
 #import "VideoController.h"
+#import "UpdateManager.h"
 
 /// Preferences window controller.
 
@@ -40,10 +41,11 @@
         colorField.keyState = _midi2hid.colors[key];
         colorField.rounded = YES;
     }
-
+    
     [self.forwardButtonsOnlyToSynthesia setState:_midi2hid.forwardButtonsToSynthesiaOnly ? NSControlStateValueOn : NSControlStateValueOff];
     self.mirrorSynthesiaToControllerScreen.enabled = _video != nil;
     [self.mirrorSynthesiaToControllerScreen setState:_video.mirrorSynthesiaApplicationWindow ? NSControlStateValueOn : NSControlStateValueOff];
+    [self.checkForUpdates setState:[UpdateManager CheckForUpdates] ? NSControlStateValueOn : NSControlStateValueOff];
 }
 
 - (IBAction)selectKeyState:(id)sender
@@ -107,6 +109,11 @@
     [self.delegate preferencesUpdatedMirror];
 }
 
+- (IBAction)updatesValueChanged:(id)sender
+{
+    [self.delegate preferencesUpdatedUpdates:self.checkForUpdates.state == NSControlStateValueOn];
+}
+
 - (IBAction)assertSynthesiaConfig:(id)sender
 {
     NSError* error = nil;
@@ -127,6 +134,15 @@
             [alert runModal];
         }
     }
+}
+
+- (IBAction)checkForUpdate:(id)sender
+{
+    [self.progress startAnimation:self];
+    [UpdateManager UpdateCheckWithCompletion:^(NSString* status) {
+        [self.progress stopAnimation:self];
+        [self.updateStatusField setStringValue:status];
+    }];
 }
 
 @end

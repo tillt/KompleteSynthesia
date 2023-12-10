@@ -12,6 +12,7 @@
 #import "VideoController.h"
 #import "PreferencesWindowController.h"
 #import "ApplicationObserver.h"
+#import "UpdateManager.h"
 
 @interface AppDelegate ()
 
@@ -233,6 +234,15 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     
     [_midi2hidController swoosh];
     [self updateButtonStates];
+
+    [userDefaults registerDefaults:@{kAppDefaultCheckForUpdate: @(YES)}];
+    BOOL checkForUpdate = [userDefaults boolForKey:kAppDefaultCheckForUpdate];
+    if (checkForUpdate) {
+        [UpdateManager UpdateCheckWithCompletion:^(NSString* state) {
+            NSString* message = [NSString stringWithFormat:@"update check: %@", state];
+            [self.log logLine:message];
+        }];
+    }
 }
 
 - (void)preferences:(id)sender
@@ -401,6 +411,13 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setBool:_midi2hidController.forwardButtonsToSynthesiaOnly
                    forKey:kAppDefaultActivateSynthesia];
+}
+
+- (void)preferencesUpdatedUpdates:(BOOL)enabled
+{
+    NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults setBool:enabled
+                   forKey:kAppDefaultCheckForUpdate];
 }
 
 - (void)preferencesUpdatedMirror

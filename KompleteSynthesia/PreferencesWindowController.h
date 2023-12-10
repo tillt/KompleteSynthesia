@@ -18,7 +18,7 @@ NS_ASSUME_NONNULL_BEGIN
 @protocol PreferencesDelegate <NSObject>
 - (void)preferencesUpdatedActivate;
 - (void)preferencesUpdatedMirror;
-//- (void)preferencesUpdatedMirror:(id)sender;
+- (void)preferencesUpdatedUpdates:(BOOL)enabled;
 - (void)preferencesUpdatedKeyState:(int)keyState forKeyIndex:(int)index;
 
 @end
@@ -26,7 +26,9 @@ NS_ASSUME_NONNULL_BEGIN
 @interface PreferencesWindowController : NSWindowController<PaletteViewControllerDelegate>
 
 @property (weak, nonatomic) IBOutlet NSTabView *tabView;
+
 @property (weak, nonatomic) IBOutlet NSButton *forwardButtonsOnlyToSynthesia;
+@property (weak, nonatomic) IBOutlet NSButton *checkForUpdates;
 @property (weak, nonatomic) IBOutlet NSButton *mirrorSynthesiaToControllerScreen;
 @property (weak, nonatomic) IBOutlet ColorField* colorUnpressed;
 @property (weak, nonatomic) IBOutlet ColorField* colorPressed;
@@ -41,9 +43,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (weak, nonatomic) MIDI2HIDController* midi2hid;
 @property (weak, nonatomic) VideoController* video;
 
+@property (weak, nonatomic) IBOutlet NSTextField* updateStatusField;
+@property (weak, nonatomic) IBOutlet NSProgressIndicator* progress;
+
 @property (nonatomic, weak) id<PreferencesDelegate> delegate;
 
 - (IBAction)assertSynthesiaConfig:(id)sender;
+- (IBAction)checkForUpdate:(id)sender;
 
 @end
 
