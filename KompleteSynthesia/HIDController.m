@@ -275,6 +275,9 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
 static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned char* destination)
 {
+    if (destination == NULL) {
+        return;
+    }
     if (mk2ColorCode == kKompleteKontrolKeyStateLightOff) {
         destination[0] = 0x00;
         destination[1] = 0x00;
@@ -450,14 +453,16 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     }
 
     NSLog(@"No Native Instruments keyboard controller HID device detected");
-    if (error != nil) {
+    if (error != nil || _mk == 0) {
         NSDictionary *userInfo = @{
             NSLocalizedDescriptionKey : @"No Native Instruments controller detected",
             NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
         };
-        *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
-                                     code:-1
-                                 userInfo:userInfo];
+        if (error != nil) {
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:-1
+                                     userInfo:userInfo];
+        }
     }
 
     free(devices);
@@ -562,6 +567,9 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
 
 - (void)lightKeysWithColor:(unsigned char)color
 {
+    if (_keys == NULL) {
+        return;
+    }
     if (_mk == 2) {
         memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
     } else {
@@ -709,12 +717,18 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
 
 - (void)lightButton:(int)button color:(unsigned char)color
 {
+    if (_buttons == NULL || _feedbackIntensityBuffer == NULL) {
+        return;
+    }
     _feedbackIntensityBuffer[button] = color & kKompleteKontrolIntensityMask;
     _buttons[button] = color;
 }
 
 - (void)lightButtonsWithColor:(unsigned char)color
 {
+    if (_buttons == NULL) {
+        return;
+    }
     memset(_buttons, color, kKompleteKontrolButtonsMapSize);
     [self updateButtonLightMap:nil];
 }
