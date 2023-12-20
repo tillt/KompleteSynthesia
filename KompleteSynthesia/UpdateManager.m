@@ -88,7 +88,7 @@ NSString* kProject = @"KompleteSynthesia";
                 long index = [alert runModal];
                 if (index == 1000) {
                     NSString* binaryName = [NSString stringWithFormat:@"KompleteSynthesia.%@.dmg", tag];
-                    NSString* updateUrl = [NSString stringWithFormat:@"https://github.com/%@/releases/download/%@/%@/%@", kOwner, kProject, tag, binaryName];
+                    NSString* updateUrl = [NSString stringWithFormat:@"https://github.com/%@/%@/releases/download/%@/%@", kOwner, kProject, tag, binaryName];
                     [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:updateUrl]];
                 }
             }
