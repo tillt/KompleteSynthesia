@@ -334,7 +334,10 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
 
     io_registry_entry_t entry = 0;
 
-    entry = IORegistryGetRootEntry(kIOMainPortDefault);
+
+    // NOTE: macOS 10.15 (Catalina) does not know about `kIOMainPortDefault`. Doesnt really
+    // make a difference as it is an alias to zero anyway.
+    entry = IORegistryGetRootEntry(0);
     if (entry == 0) {
         return nil;
     }
