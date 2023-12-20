@@ -84,6 +84,10 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
         [weakSelf receivedMIDIEvents:evtlist interface:kMIDIConnectionInterfaceLightLoopback];
     };
 
+    // MIDIInputPortCreateWithProtocol does not exist on macOS 10.15. We could replace this
+    // logic with `MIDIInputPortCreateWithBlock` which works based on MIDIPackets and not
+    // MIDIEvents - that in turn makes the parser a more complex and prone to failurea. But
+    // it would give us 10.15 (catalina) compatiblity.
     status = MIDIInputPortCreateWithProtocol(client,
                                              (__bridge CFStringRef)kMIDIInputInterfaceLightLoopback,
                                              kMIDIProtocol_1_0,
