@@ -140,7 +140,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
     return kIOReturnSuccess;
 }
 
-- (IOReturn)endpoints
+- (IOReturn)gatherEndpoints
 {
     IOReturn ret = (*interface)->GetNumEndpoints(interface, &endpointCount);
     if (ret != kIOReturnSuccess) {
@@ -475,7 +475,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
         return NO;
     }
 
-    ret = [self endpoints];
+    ret = [self gatherEndpoints];
     if (ret != kIOReturnSuccess) {
         if (error) {
             NSDictionary *userInfo = @{
