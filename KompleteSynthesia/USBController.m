@@ -444,24 +444,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
         }
         return NO;
     }
-    
-    IOUSBConfigurationDescriptorPtr desc = NULL;
-    uint8_t config_index = 0;
-    
-    ret = (*device)->GetConfigurationDescriptorPtr(device, config_index, &desc);
-    if (ret != kIOReturnSuccess) {
-        NSLog(@"GetConfigurationDescriptorPtr failed");
-        if (error) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
-                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
-            };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
-        }
-        return NO;
-    }
-    
+
     ret = [self openDeviceInterface:kUSBDeviceInterface];
     if (ret != kIOReturnSuccess) {
         if (error) {
