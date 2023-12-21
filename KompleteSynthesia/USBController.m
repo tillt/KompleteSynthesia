@@ -258,7 +258,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
         NSLog(@"endpoint doesnt exist");
         if (error) {
             NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey: @"USB Error: endpoint does not exist",
+                NSLocalizedDescriptionKey: @"USB error: endpoint does not exist",
                 NSLocalizedRecoverySuggestionErrorKey: @"This is entirely unexpected - how did you get here?"
             };
             *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:1 userInfo:userInfo];
@@ -279,7 +279,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
         NSLog(@"GetPipeProperties failed");
         if (error) {
             NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB error when querying interface pipe: %@",
                                              [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
@@ -303,7 +303,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
         NSLog(@"(*interface)->WritePipeAsync failed");
         if (error) {
             NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB error when writing to interface pipe: %@",
                                              [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
@@ -436,7 +436,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
         NSLog(@"USBDeviceOpen failed");
         if (error) {
             NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB error when trying to open the device: %@",
                                              [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
@@ -466,7 +466,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     if (ret != kIOReturnSuccess) {
         if (error) {
             NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB error when trying to open the device interface: %@",
                                              [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
@@ -479,7 +479,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     if (ret != kIOReturnSuccess) {
         if (error) {
             NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB Error: %@",
+                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB error: %@",
                                              [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
