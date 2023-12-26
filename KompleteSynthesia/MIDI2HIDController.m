@@ -405,6 +405,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
                 [log logLine:@"KNOB8 -> sending volume down"];
                 [VirtualEvent triggerAuxKeyEvents:1];
             }
+            [_delegate updateVolume:self];
             break;
     }
 }

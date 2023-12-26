@@ -33,6 +33,7 @@ typedef enum colorMapState {
 - (void)reset:(id)sender;
 - (void)toggleMirror:(id)sender;
 - (void)bootstrapSynthesia:(id)sender withCompletion:(void(^)(void))completion;
+- (void)updateVolume:(id)sender;
 @end
 
 @interface MIDI2HIDController : NSObject <MIDIControllerDelegate, HIDControllerDelegate>

@@ -170,9 +170,9 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     BOOL connectedToKeyboard = NO;
 
     // Try to locate the input endpoints we are configured for and connect.
-    // FIXME(tillt): This seems not entirely correct - the MIDI input scanning and
-    // connection setup seems weirdly redundant the way this is now implemented.
-    // But hey, it works for me!
+    // FIXME: This seems not entirely correct - the MIDI input scanning and
+    // FIXME: connection setup seems weirdly redundant the way this is now implemented.
+    // FIXME: But hey, it works for me!
     MIDIEndpointRef source = 0;
     for (ItemCount i = 0; i < MIDIGetNumberOfSources(); ++i) {
         source = MIDIGetSource(i);
