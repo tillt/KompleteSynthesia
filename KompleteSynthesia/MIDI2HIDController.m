@@ -397,7 +397,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             [log logLine:@"JOG SCROLL -> sending mouse WHEEL"];
             [VirtualEvent triggerMouseWheelEvent:-value];
             break;
-        case kKompleteKontrolButtonIdKnob8:
+        case kKompleteKontrolButtonIdKnob1:
             if (value > 0) {
                 [log logLine:@"KNOB8 -> sending volume up"];
                 [VirtualEvent triggerAuxKeyEvents:0];

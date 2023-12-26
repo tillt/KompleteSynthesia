@@ -365,14 +365,12 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
         { 6, 0x0C, kKompleteKontrolButtonIdJogPress },
     };
 
-    if (report[7] == 0x01) {
-        const short int* newValue = (short int*)&report[24];
+    if (report[7] == 0x80) {
+        const short int* newValue = (short int*)&report[10];
         if (lastVolumeKnobValue != INTMAX_C(16)) {
             int delta = *newValue - lastVolumeKnobValue;
-            if (delta != 0) {
-                [_delegate receivedEvent:kKompleteKontrolButtonIdKnob8
-                                   value:delta];
-            }
+            [_delegate receivedEvent:kKompleteKontrolButtonIdKnob1
+                               value:delta];
         }
         lastVolumeKnobValue = *newValue;
         return;
