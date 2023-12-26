@@ -12,7 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface ApplicationObserver : NSObject
 
-+ (NSRunningApplication*)runningApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
++ (nullable NSRunningApplication*)runningApplicationWithBundleIdentifier:(NSString*)bundleIdentifier;
 + (BOOL)applicationIsRunning:(NSString*)bundleIdentifier;
 + (BOOL)applicationHasFocus:(NSString*)bundleIdentifier;
 

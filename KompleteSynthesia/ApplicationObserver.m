@@ -27,7 +27,7 @@ const NSTimeInterval kShutdownTimeout = 5.0;
     return self;
 }
 
-+ (NSRunningApplication*)runningApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
++ (nullable NSRunningApplication*)runningApplicationWithBundleIdentifier:(NSString*)bundleIdentifier
 {
     NSArray* apps = [[NSWorkspace sharedWorkspace] runningApplications];
     for (NSRunningApplication* app in apps) {
