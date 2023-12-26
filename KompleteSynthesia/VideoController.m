@@ -73,8 +73,7 @@ const int kHeaderHeight = 26;
 
         if (usb.mk > 1) {
             _screenCount = usb.mk == 2 ? 2 : 1;
-            // FIXME: We don't know the resolution the MK3 screen.
-            _screenSize = usb.mk == 2 ? CGSizeMake(480.0f, 272.0f) : CGSizeMake(480.0f, 272.0f);
+            _screenSize = usb.mk == 2 ? CGSizeMake(480.0f, 272.0f) : CGSizeMake(1280.0f, 480.0f);
 
             // width * height * 2 (261120) + commands (36)
             stream = [[NSMutableData alloc] initWithCapacity:(_screenSize.width * 2 * _screenSize.height) + 36];
