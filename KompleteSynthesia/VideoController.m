@@ -46,6 +46,10 @@ const int kHeaderHeight = 26;
     dispatch_queue_t mirrorQueue;
 
     NSMutableData* stream;
+
+    NSView* osdView;
+    NSTimer* osdHideTimer;
+    BOOL showValue;
 }
 
 - (id)initWithLogViewController:(LogViewController*)lc error:(NSError**)error
@@ -75,14 +79,46 @@ const int kHeaderHeight = 26;
             _screenCount = usb.mk == 2 ? 2 : 1;
             _screenSize = usb.mk == 2 ? CGSizeMake(480.0f, 272.0f) : CGSizeMake(1280.0f, 480.0f);
 
-            // width * height * 2 (261120) + commands (36)
-            stream = [[NSMutableData alloc] initWithCapacity:(_screenSize.width * 2 * _screenSize.height) + 36];
+            // width * height * 2 (261120) + commands (36) * number-of-screens
+            stream = [[NSMutableData alloc] initWithCapacity:_screenCount * ((_screenSize.width * 2 * _screenSize.height) + 36)];
+
+            showValue = NO;
 
             for (int i=0;i < _screenCount;i++) {
                 if (screenBuffer[i] == NULL) {
                     screenBuffer[i] = malloc(_screenSize.width * 2 * _screenSize.height);
                 }
             }
+
+            osdView = [[NSView alloc] initWithFrame:CGRectMake(0, 0, 180, 100)];
+            osdView.wantsLayer = YES;
+            osdView.layer.backgroundColor = [[NSColor blackColor] colorWithAlphaComponent:0.90].CGColor;
+
+            NSTextField* tf = [[NSTextField alloc] initWithFrame:NSMakeRect(20.0,
+                                                                50.0,
+                                                                160,
+                                                                32.0)];
+            tf.editable = NO;
+            tf.font = [NSFont systemFontOfSize:21.0];
+            tf.drawsBackground = NO;
+            tf.bordered = NO;
+            tf.alignment = NSTextAlignmentLeft;
+            tf.textColor = [NSColor tertiaryLabelColor];
+            tf.stringValue = @"Volume";
+            [osdView addSubview:tf];
+
+            tf = [[NSTextField alloc] initWithFrame:NSMakeRect(20.0,
+                                                                0.0,
+                                                                160,
+                                                                42.0)];
+            tf.editable = NO;
+            tf.font = [NSFont systemFontOfSize:31.0];
+            tf.drawsBackground = NO;
+            tf.bordered = NO;
+            tf.alignment = NSTextAlignmentLeft;
+            tf.textColor = [NSColor secondaryLabelColor];
+            [osdView addSubview:tf];
+            _volumeValue = tf;
 
             mirrorQueue = dispatch_queue_create("KompleteSynthesia.MirrorQueue", NULL);
         } else {
@@ -123,6 +159,33 @@ const int kHeaderHeight = 26;
     [self clearScreen:1 error:nil];
 }
 
+- (CGImageRef)renderOverlayOntoCGImage:(CGImageRef)original
+{
+    CGRect originalRect = CGRectMake(0, 0, CGImageGetWidth(original), CGImageGetHeight(original));
+
+    // FIXME: Allow for pre-allocated data.
+    CGContextRef context = CGBitmapContextCreate(NULL,
+                                                 originalRect.size.width,
+                                                 originalRect.size.height,
+                                                 CGImageGetBitsPerComponent(original),
+                                                 CGImageGetBytesPerRow(original),
+                                                 CGImageGetColorSpace(original),
+                                                 CGImageGetAlphaInfo(original));
+
+    // Draw original
+    CGContextDrawImage(context, originalRect, original);
+    NSGraphicsContext* c = [NSGraphicsContext graphicsContextWithCGContext:context flipped:NO];
+    if (showValue) {
+        // We are drawing UI elements in a non main thread, that would normally cause issues.
+        // Hope is that given this entirely virtual element, things are not that bad. It stinks
+        // still.
+        [osdView displayRectIgnoringOpacity:osdView.frame inContext:c];
+    }
+    CGImageRef image = CGBitmapContextCreateImage(c.CGContext);
+    CGContextRelease(context);
+    return image;
+}
+
 - (BOOL)startUpdating
 {
     atomic_fetch_and(&stopScreenUpdating, 0);
@@ -139,23 +202,34 @@ const int kHeaderHeight = 26;
         NSImage* image = [NSImage imageNamed:@"ScreenOne"];
         CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
 
-        [self drawCGImage:cgi 
-                   screen:1
-                        x:0
-                        y:0
-         skipHeaderHeight:0
-                    error:nil];
+        [self beginEncoding];
 
-        [self drawCGImage:cgi
-                   screen:0
-                        x:0
-                        y:0
-         skipHeaderHeight:0
-                    error:nil];
+        [self encodeCGImage:cgi
+                     screen:0
+                          x:0
+                          y:0
+           skipHeaderHeight:0];
+
+        [self encodeCGImage:cgi
+                     screen:1
+                          x:0
+                          y:0
+           skipHeaderHeight:0];
+
+        if (![self sendStreamWithError:nil]) {
+            return;
+        }
 
         atomic_fetch_or(&self->screenUpdateActive, 1);
 
+        static mach_timebase_info_data_t sTimebaseInfo;
+        mach_timebase_info(&sTimebaseInfo);
+        uint64_t lastTime = mach_absolute_time();
+
         while(atomic_load(&self->stopScreenUpdating) == 0) {
+            // Reset the output stream.
+            [self beginEncoding];
+
             if (atomic_load(&self->mirror) == 1) {
                 CGImageRef original = CGWindowListCreateImage(CGRectNull,
                                                               kCGWindowListOptionIncludingWindow,
@@ -165,23 +239,29 @@ const int kHeaderHeight = 26;
                     NSLog(@"window disappeared, lets stop this");
                     goto doneUpdating;
                 }
-                
-                BOOL drawSetupDone = [self drawCGImage:original
-                                                screen:0
-                                                     x:0
-                                                     y:0
-                                      skipHeaderHeight:kHeaderHeight
-                                                 error:nil];
-                
+
+                CGImageRef overlayed = [self renderOverlayOntoCGImage:original];
                 CGImageRelease(original);
-                if (!drawSetupDone) {
+
+                [self encodeCGImage:overlayed
+                             screen:0
+                                  x:0
+                                  y:0
+                   skipHeaderHeight:kHeaderHeight];
+                CGImageRelease(overlayed);
+
+                if (![self sendStreamWithError:nil]) {
                     NSLog(@"usb transfer failed right away, lets stop this");
                     goto doneUpdating;
                 }
-            } else {
-                // FIXME: this is used only until we do control display overlays - stay tuned!
-                [NSThread sleepForTimeInterval:kRefreshDelay];
             }
+
+            uint64_t currentTime = mach_absolute_time();
+            uint64_t elapsedNano = (currentTime - lastTime) * sTimebaseInfo.numer / sTimebaseInfo.denom;
+
+            self->_framesPerSecond = 1000000000.0 / (float)elapsedNano;
+
+            lastTime = currentTime;
         };
 
     doneUpdating:
@@ -195,6 +275,17 @@ const int kHeaderHeight = 26;
     });
     
     return YES;
+}
+
+- (void)showOSD
+{
+    if (osdHideTimer != nil) {
+        [osdHideTimer invalidate];
+    }
+    showValue = YES;
+    osdHideTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 repeats:NO block:^(NSTimer* timer){
+        self->showValue = NO;
+    }];
 }
 
 - (BOOL)reset:(NSError**)error
@@ -327,10 +418,13 @@ const int kHeaderHeight = 26;
     CFRelease(raw);
 }
 
-- (BOOL)drawNIImage:(NIImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y error:(NSError**)error
+- (void)beginEncoding
 {
     stream.length = 0;
+}
 
+- (void)encodeImage:(NIImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y
+{
     const unsigned char commandBlob1[] = { 0x84, 0x00, screen, 0x60, 0x00, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob1 length:sizeof(commandBlob1)];
 
@@ -353,32 +447,44 @@ const int kHeaderHeight = 26;
 
     const unsigned char commandBlob3[] = { 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00 };
     [stream appendBytes:commandBlob3 length:sizeof(commandBlob3)];
+}
 
+- (BOOL)asyncSendStreamWithError:(NSError**)error
+{
+    return [usb bulkWriteData:stream error:error];
+}
+
+- (BOOL)sendStreamWithError:(NSError**)error
+{
     BOOL ret = [usb bulkWriteData:stream error:error];
-    
+
+    // TODO: Use double-buffering so we can grab a new screen while the last one is being transfered.
+
     [usb waitForBulkTransfer:kTimeoutDelay];
 
     return ret;
 }
 
-- (BOOL)drawCGImage:(CGImageRef)image
-             screen:(const uint8_t)screen
-                  x:(const unsigned int)x
-                  y:(const unsigned int)y
-   skipHeaderHeight:(const unsigned int)headerHeight
-              error:(NSError**)error
+- (void)encodeCGImage:(CGImageRef)image
+               screen:(const uint8_t)screen
+                    x:(const unsigned int)x
+                    y:(const unsigned int)y
+     skipHeaderHeight:(const unsigned int)headerHeight
 {
     const unsigned int width = MIN(CGImageGetWidth(image), _screenSize.width);
     const unsigned int height = MIN(CGImageGetHeight(image), _screenSize.height);
+
     NIImage convertedImage = {
         width,
         height,
         screenBuffer[screen]
     };
-    [self NIImageFromCGImage:image 
+
+    [self NIImageFromCGImage:image
                  destination:&convertedImage
             skipHeaderHeight:headerHeight];
-    return [self drawNIImage:&convertedImage screen:screen x:x y:y error:error];
+
+    [self encodeImage:&convertedImage screen:screen x:x y:y];
 }
 
 - (BOOL)clearScreen:(uint8_t)screen error:(NSError**)error
@@ -389,7 +495,9 @@ const int kHeaderHeight = 26;
         _screenSize.height,
         screenBuffer[screen]
     };
-    return [self drawNIImage:&image screen:screen x:0 y:0 error:error];
+    [self beginEncoding];
+    [self encodeImage:&image screen:screen x:0 y:0];
+    return [self sendStreamWithError:error];
 }
 
 @end

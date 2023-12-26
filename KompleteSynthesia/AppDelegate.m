@@ -6,13 +6,15 @@
 //
 
 #import "AppDelegate.h"
-#import "MIDI2HIDController.h"
+
+#import "ApplicationObserver.h"
+#import "CoreAudioTools.h"
 #import "HIDController.h"
 #import "LogViewController.h"
-#import "VideoController.h"
+#import "MIDI2HIDController.h"
 #import "PreferencesWindowController.h"
-#import "ApplicationObserver.h"
 #import "UpdateManager.h"
+#import "VideoController.h"
 
 @interface AppDelegate ()
 
@@ -296,6 +298,12 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     [self updateButtonStates];
 
     [_midi2hidController swoosh];
+}
+
+- (void)updateVolume:(id)sender
+{
+    _videoController.volumeValue.stringValue = [NSString stringWithFormat:@"%f", [[self class] volume]];
+    [_videoController showOSD];
 }
 
 - (void)toggleMirror:(id)sender
