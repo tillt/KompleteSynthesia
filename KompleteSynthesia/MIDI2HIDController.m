@@ -399,10 +399,10 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             break;
         case kKompleteKontrolButtonIdKnob1:
             if (value > 0) {
-                [log logLine:@"KNOB8 -> sending volume up"];
+                [log logLine:@"KNOB1 -> sending volume up"];
                 [VirtualEvent triggerAuxKeyEvents:0];
             } else if (value < 0) {
-                [log logLine:@"KNOB8 -> sending volume down"];
+                [log logLine:@"KNOB1 -> sending volume down"];
                 [VirtualEvent triggerAuxKeyEvents:1];
             }
             [_delegate updateVolume:self];
