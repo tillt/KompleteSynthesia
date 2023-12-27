@@ -2,7 +2,14 @@
 
 git=$(sh /etc/profile; which git)
 git_release_version=$("$git" describe --tags --abbrev=0)
+
+dots="${git_release_version//[^s|.]}"
+
 number_commits_since_release_version=$("$git" rev-list $git_release_version..HEAD --count)
+
+if [ "$dots" -gt "1" ]; then
+  number_commits_since_release_version=0
+fi
 
 target_plist="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
 dsym_plist="$DWARF_DSYM_FOLDER_PATH/$DWARF_DSYM_FILE_NAME/Contents/Info.plist"
