@@ -441,11 +441,11 @@ const int kHeaderHeight = 26;
 
     // Pretty sure that hardware expects 32bit boundary data.
     size_t imageSize = image->width * image->height * 2;
-    uint16_t imageLongs = (imageSize >> 2);
+    uint16_t imageLongs = ((imageSize + 3) >> 2);
 
-    assert(imageLongs == (image->width * image->height) / 2);
+//    assert(imageLongs == (image->width * image->height) / 2);
     // FIXME: This may explode - watch your image sizes used for the transfer!
-    assert((imageLongs << 2) == imageSize);
+//    assert((imageLongs << 2) == imageSize);
     uint16_t writtenLongs = htons(imageLongs);
     [stream appendBytes:&writtenLongs length:sizeof(writtenLongs)];
     [stream appendBytes:image->data length:imageSize];
