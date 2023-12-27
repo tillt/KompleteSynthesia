@@ -1,7 +1,6 @@
 #!/bin/bash
 
-git=$(sh /etc/profile; which git)
-version=$("$git" describe --tags --abbrev=0)
+version="v"$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${BUILD_ROOT}/${INFOPLIST_PATH}")
 destination_path="KompleteSynthesia.${version}/"
 
 rm "KompleteSynthesia.${version}.dmg"
