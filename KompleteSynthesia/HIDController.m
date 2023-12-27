@@ -268,7 +268,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 // TODO: Make this MK1 compatible
 - (unsigned char)keyColor:(int)note
 {
-    assert(_mk == 2);
+    assert(_mk != 1);
     assert(note < kKompleteKontrolLightGuideKeyMapSize);
     return _keys[note];
 }
@@ -413,7 +413,7 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     
 #ifdef DEBUG_FAKE_CONTROLLER
     _keyCount = 88;
-    _mk2Controller = YES;
+    _mk = 2;
     _keyOffset = -21;
     lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK2;
     // FIXME: This is likely wrong for MK1 devices!
@@ -445,7 +445,10 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
             lightGuideUpdateMessage[0] = _mk == 2 ? kCommandLightGuideUpdateMK2 : kCommandLightGuideUpdateMK1;
             // FIXME: This is likely wrong for MK1 devices!
             buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
-            _deviceName = [NSString stringWithFormat:@"Komplete Kontrol S%d MK%d", _keyCount, _mk];
+            _deviceName = [NSString stringWithFormat:@"%@Kontrol S%d MK%d",
+                           _mk != 3 ? @"Komplete " : @"",
+                           _keyCount,
+                           _mk];
             return devices[i];
         }
     }
@@ -555,7 +558,7 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
 
 - (void)lightKey:(int)key color:(unsigned char)color
 {
-    if (_mk == 2) {
+    if (_mk != 1) {
         _keys[key] = color;
     } else {
         setMk1ColorWithMk2ColorCode(color, &_keys[key*3]);
@@ -568,7 +571,7 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     if (_keys == NULL) {
         return;
     }
-    if (_mk == 2) {
+    if (_mk != 1) {
         memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
     } else {
         for (unsigned int i = 0; i < kKompleteKontrolLightGuideKeyMapSize; i += 3) {
