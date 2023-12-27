@@ -156,7 +156,9 @@ const int kHeaderHeight = 26;
 {
     [self stopUpdatingAndWait:YES];
     [self clearScreen:0 error:nil];
-    [self clearScreen:1 error:nil];
+    if (_screenCount > 1) {
+        [self clearScreen:1 error:nil];
+    }
 }
 
 - (CGImageRef)renderOverlayOntoCGImage:(CGImageRef)original
@@ -211,11 +213,13 @@ const int kHeaderHeight = 26;
                           y:0
            skipHeaderHeight:0];
 
-        [self encodeCGImage:cgi
-                     screen:1
-                          x:0
-                          y:0
-           skipHeaderHeight:0];
+        if (_screenCount > 1) {
+            [self encodeCGImage:cgi
+                         screen:1
+                              x:0
+                              y:0
+               skipHeaderHeight:0];
+        }
 
         if (![self sendStreamWithError:nil]) {
             return;
