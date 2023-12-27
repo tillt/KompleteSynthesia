@@ -302,7 +302,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 
 - (void)updateVolume:(id)sender
 {
-    _videoController.volumeValue.stringValue = [NSString stringWithFormat:@"%f", [[self class] volume]];
+    _videoController.volumeValue.stringValue = [NSString stringWithFormat:@"%f", [CoreAudioTools volume]];
     [_videoController showOSD];
 }
 
