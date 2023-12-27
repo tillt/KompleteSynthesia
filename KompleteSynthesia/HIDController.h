@@ -130,7 +130,6 @@ enum {
 - (void)lightKeysWithColor:(unsigned char)color;
 - (void)lightsSwooshTo:(unsigned char)color;
 - (BOOL)swooshIsActive;
-- (void)receivedReport:(unsigned char*)report;
 - (BOOL)updateButtonLightMap:(NSError**)error;
 
 - (void)deviceRemoved;

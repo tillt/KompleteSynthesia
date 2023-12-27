@@ -112,23 +112,7 @@ const unsigned char kMK2Palette[17][3] = {
     { 0xFF, 0xFF, 0xFF }    // 16: white
 };
 
-//#define DEBUG_HID_INPUT
-
-static void HIDInputCallback(void* context,
-                             IOReturn result,
-                             void* sender,
-                             IOHIDReportType type,
-                             uint32_t reportID,
-                             uint8_t *report,
-                             CFIndex reportLength)
-{
-    HIDController* controller = (__bridge HIDController*)context;
-    
-    assert(report);
-    if (reportLength > 8) {
-        [controller receivedReport:report];
-    }
-}
+#define DEBUG_HID_INPUT
 
 static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sender)
 {
@@ -311,11 +295,11 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     [self updateButtonLightMap:nil];
 }
 
-- (void)receivedReport:(unsigned char*)report
+- (void)receivedReport:(unsigned char*)report length:(int)length
 {
 #ifdef DEBUG_HID_INPUT
     NSMutableString* hex = [NSMutableString string];
-    for (int i=0; i < reportLength; i++) {
+    for (int i=0; i < length; i++) {
         [hex appendFormat:@"%02x ", report[i]];
     }
     NSLog(@"hid report: %@", hex);
@@ -393,6 +377,22 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
 
     // Reset feedback lighting as no such button was pressed anymore.
     [self resetFeedback];
+}
+
+static void HIDInputCallback(void* context,
+                             IOReturn result,
+                             void* sender,
+                             IOHIDReportType type,
+                             uint32_t reportID,
+                             uint8_t *report,
+                             CFIndex reportLength)
+{
+    HIDController* controller = (__bridge HIDController*)context;
+
+    assert(report);
+    if (reportLength > 8) {
+        [controller receivedReport:report length:(int)reportLength];
+    }
 }
 
 - (IOHIDDeviceRef)detectKeyboardController:(NSError**)error
