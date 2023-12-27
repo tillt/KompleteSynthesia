@@ -186,6 +186,11 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
         usbAvailable = NO;
     }
 
+    // FIXME: Actively disable USB bulk transfer on MK3 until further notice...
+    if (_hidController.mk == 3) {
+        usbAvailable = NO;
+    }
+
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
 
     [userDefaults registerDefaults:@{kAppDefaultActivateSynthesia: @(YES)}];
