@@ -442,7 +442,7 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
             _keyCount = [supportedDevices[@(product)][@"keys"] intValue];
             _mk = [supportedDevices[@(product)][@"mk"] intValue];
             _keyOffset = [supportedDevices[@(product)][@"offset"] intValue];
-            lightGuideUpdateMessage[0] = _mk == 2 ? kCommandLightGuideUpdateMK2 : kCommandLightGuideUpdateMK1;
+            lightGuideUpdateMessage[0] = _mk == 1 ? kCommandLightGuideUpdateMK1 : kCommandLightGuideUpdateMK2;
             // FIXME: This is likely wrong for MK1 devices!
             buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
             _deviceName = [NSString stringWithFormat:@"%@Kontrol S%d MK%d",
