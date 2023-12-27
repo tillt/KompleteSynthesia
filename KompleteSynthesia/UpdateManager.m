@@ -6,6 +6,7 @@
 //
 
 #import "UpdateManager.h"
+
 #import <Cocoa/Cocoa.h>
 
 /// Checks if we are currently running the latest version or if GitHub has a newer one available.

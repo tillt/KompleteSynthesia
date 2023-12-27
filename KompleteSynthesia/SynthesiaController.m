@@ -6,7 +6,9 @@
 //
 
 #import "SynthesiaController.h"
+
 #import <AppKit/AppKit.h>
+
 #import "LogViewController.h"
 #import "ApplicationObserver.h"
 

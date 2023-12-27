@@ -5,6 +5,7 @@
 //  Created by Till Toenshoff on 04.11.23.
 //
 #import "VirtualEvent.h"
+
 #import <AppKit/AppKit.h>
 
 @implementation VirtualEvent

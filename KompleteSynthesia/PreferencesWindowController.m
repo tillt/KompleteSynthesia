@@ -6,10 +6,11 @@
 //
 
 #import "PreferencesWindowController.h"
-#import "SynthesiaController.h"
+
 #import "MIDI2HIDController.h"
-#import "VideoController.h"
+#import "SynthesiaController.h"
 #import "UpdateManager.h"
+#import "VideoController.h"
 
 /// Preferences window controller.
 

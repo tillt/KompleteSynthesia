@@ -6,6 +6,7 @@
 //
 
 #import "ApplicationObserver.h"
+
 #import <AppKit/AppKit.h>
 
 /// Provides a collection of workspace application queries and commands.

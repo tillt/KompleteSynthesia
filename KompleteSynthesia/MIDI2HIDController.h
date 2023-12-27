@@ -6,10 +6,11 @@
 //
 
 #import <Foundation/Foundation.h>
+
 #import "HIDController.h"
-#import "USBController.h"
 #import "MIDIController.h"
 #import "SynthesiaController.h"
+#import "USBController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
