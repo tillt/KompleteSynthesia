@@ -124,14 +124,6 @@ static void HIDInputCallback(void* context,
 {
     HIDController* controller = (__bridge HIDController*)context;
     
-#ifdef DEBUG_HID_INPUT
-    NSMutableString* hex = [NSMutableString string];
-    for (int i=0; i < reportLength; i++) {
-        [hex appendFormat:@"%02x ", report[i]];
-    }
-    NSLog(@"hid report: %@", hex);
-#endif
-    
     assert(report);
     if (reportLength > 8) {
         [controller receivedReport:report];
@@ -321,6 +313,14 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
 
 - (void)receivedReport:(unsigned char*)report
 {
+#ifdef DEBUG_HID_INPUT
+    NSMutableString* hex = [NSMutableString string];
+    for (int i=0; i < reportLength; i++) {
+        [hex appendFormat:@"%02x ", report[i]];
+    }
+    NSLog(@"hid report: %@", hex);
+#endif
+    
     if (report[0] != 0x01) {
         NSLog(@"ignoring report %02Xh", report[0]);
         return;
