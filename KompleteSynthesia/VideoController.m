@@ -90,6 +90,9 @@ const int kHeaderHeight = 26;
                 }
             }
 
+            // FIXME: OSD needs to get scaled to screensize.
+            // FIXME: OSD needs to get scaled to screensize.
+            // FIXME: OSD needs to get scaled to screensize.
             osdView = [[NSView alloc] initWithFrame:CGRectMake(0, 0, 180, 100)];
             osdView.wantsLayer = YES;
             osdView.layer.backgroundColor = [[NSColor blackColor] colorWithAlphaComponent:0.90].CGColor;
