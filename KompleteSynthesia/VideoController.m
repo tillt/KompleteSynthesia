@@ -199,7 +199,8 @@ const int kHeaderHeight = 26;
     [log logLine:@"starting screen update loop"];
 
     dispatch_async(mirrorQueue, ^{
-        NSImage* image = [NSImage imageNamed:@"ScreenOne"];
+        NSImage* image = [NSImage imageNamed:[NSString stringWithFormat:@"ScreenMK%d", self->usb.mk]];
+        assert(image);
         CGImageRef cgi = [image CGImageForProposedRect:NULL context:NULL hints:NULL];
 
         [self beginEncoding];
