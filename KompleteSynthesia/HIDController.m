@@ -456,7 +456,7 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     NSLog(@"No Native Instruments keyboard controller HID device detected");
     if (error != nil || _mk == 0) {
         NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : @"No Native Instruments controller detected",
+            NSLocalizedDescriptionKey : @"No Native Instruments HID controller detected",
             NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
         };
         if (error != nil) {

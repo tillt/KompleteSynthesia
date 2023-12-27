@@ -414,7 +414,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     NSLog(@"No Native Instruments keyboard controller USB device detected");
     if (error != nil) {
         NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : @"No Native Instruments controller detected",
+            NSLocalizedDescriptionKey : @"No Native Instruments USB controller detected",
             NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
         };
         *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
