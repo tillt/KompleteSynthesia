@@ -161,9 +161,9 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 {
     NSError* error = nil;
 
-    _hidController = [[HIDController alloc] init];
+    _hidController = [[HIDController alloc] initWithLogViewController:_log];
     
-    _midiController = [[MIDIController alloc] init];
+    _midiController = [[MIDIController alloc] initWithLogViewController:_log];
 
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_log
                                                               hidController:_hidController

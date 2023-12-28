@@ -18,6 +18,7 @@
 #import <IOKit/usb/IOUSBLib.h>
 
 #import "USBController.h"
+#import "LogViewController.h"
 
 /// Detects a Komplete Kontrol S-series controller. Listens for any incoming button presses and forwards them
 /// to the delegate.
@@ -125,13 +126,19 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 @end
 
 @implementation HIDController {
+    LogViewController* log;
+
     unsigned char lightGuideUpdateMessage[kKompleteKontrolLightGuideMessageSize];
     unsigned char buttonLightingFeedback[kKompleteKontrolButtonsMessageSize];
     unsigned char buttonLightingUpdateMessage[kKompleteKontrolButtonsMessageSize];
+
     // FIXME: This may need double-buffering, not sure.
     unsigned char inputBuffer[kInputBufferSize];
+
     IOHIDDeviceRef device;
+
     short int lastVolumeKnobValue;
+
     dispatch_queue_t swooshQueue;
     atomic_int swooshActive;
 }
@@ -154,10 +161,11 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
                            alpha:1.0f];
 }
 
-- (id)init
+- (id)initWithLogViewController:(LogViewController*)lc
 {
     self = [super init];
     if (self) {
+        log = lc;
         lastVolumeKnobValue = INTMAX_C(16);
         atomic_fetch_and(&swooshActive, 0);
         swooshQueue = dispatch_queue_create("KompleteSynthesia.SwooshQueue", NULL);
@@ -303,24 +311,13 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
         [hex appendFormat:@"%02x ", report[i]];
     }
     NSLog(@"hid report: %@", hex);
+    [log logLine:[NSString stringWithFormat:@"hid report: %@", hex]];
 #endif
     
     if (report[0] != 0x01) {
         NSLog(@"ignoring report %02Xh", report[0]);
         return;
     }
-    static int lastJogWheelValue = 0;
-    int delta = report[30] - lastJogWheelValue;
-    if (delta == 15) {
-        delta = -1;
-    } else if (delta == -15) {
-        delta = 1;
-    }
-    if (delta != 0) {
-        [_delegate receivedEvent:kKompleteKontrolButtonIdJogScroll
-                           value:delta];
-    }
-    lastJogWheelValue = report[30];
 
     typedef struct {
         const unsigned char index;
@@ -374,6 +371,19 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
             return;
         }
     }
+
+    static int lastJogWheelValue = INT_MAX;
+    int delta = lastJogWheelValue == INT_MAX ? 0 : report[30] - lastJogWheelValue;
+    if (delta == 15) {
+        delta = -1;
+    } else if (delta == -15) {
+        delta = 1;
+    }
+    if (delta != 0) {
+        [_delegate receivedEvent:kKompleteKontrolButtonIdJogScroll
+                           value:delta];
+    }
+    lastJogWheelValue = report[30];
 
     // Reset feedback lighting as no such button was pressed anymore.
     [self resetFeedback];

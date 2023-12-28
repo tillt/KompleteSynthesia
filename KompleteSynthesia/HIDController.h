@@ -104,6 +104,8 @@ enum {
     kKompleteKontrolButtonIdJogScroll = 99,
 };
 
+@class LogViewController;
+
 @protocol HIDControllerDelegate <NSObject>
 - (void)receivedEvent:(const int)event value:(int)value;
 - (void)deviceRemoved;
@@ -120,6 +122,8 @@ enum {
 @property (nonatomic, weak) id<HIDControllerDelegate> delegate;
 
 + (NSColor*)colorWithKeyState:(const unsigned char)keyState;
+
+- (id)initWithLogViewController:(LogViewController*)lc;
 
 - (BOOL)setupWithError:(NSError**)error;
 

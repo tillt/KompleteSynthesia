@@ -12,6 +12,8 @@ NS_ASSUME_NONNULL_BEGIN
 extern const int kMIDIConnectionInterfaceLightLoopback;
 extern const int kMIDIConnectionInterfaceKeyboard;
 
+@class LogViewController;
+
 @protocol MIDIControllerDelegate <NSObject>
 -(void)receivedMIDIEvent:(unsigned char)cv
                  channel:(unsigned char)channel
@@ -25,6 +27,8 @@ extern const int kMIDIConnectionInterfaceKeyboard;
 @property (nonatomic, copy) NSString* status;
 
 + (NSString*)readableNote:(unsigned char)note;
+
+- (id)initWithLogViewController:(LogViewController*)lc;
 - (BOOL)setupWithError:(NSError**)error;
 @end
 

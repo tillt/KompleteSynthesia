@@ -6,7 +6,10 @@
 //
 
 #import "MIDIController.h"
+
 #import <CoreMIDI/CoreMIDI.h>
+
+#import "LogViewController.h"
 
 NSString* kMIDIInputInterfaceLightLoopback = @"LoopBe";
 NSString* kMIDIInputInterfaceKeyboard = @"Port 1";
@@ -51,6 +54,15 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     }
 
     return message;
+}
+
+- (id)initWithLogViewController:(LogViewController*)lc
+{
+    self = [super init];
+    if (self) {
+        log = lc;
+    }
+    return self;
 }
 
 - (BOOL)setupWithError:(NSError**)error
