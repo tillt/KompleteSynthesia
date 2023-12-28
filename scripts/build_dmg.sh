@@ -1,6 +1,7 @@
 #!/bin/bash
 
-version="v"$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "${BUILD_ROOT}/${INFOPLIST_PATH}")
+version="v"$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "KompleteSynthesia.app/Contents/Info.plist")
+version="$version."$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "KompleteSynthesia.app/Contents/Info.plist")
 destination_path="KompleteSynthesia.${version}/"
 
 rm "KompleteSynthesia.${version}.dmg"
