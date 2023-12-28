@@ -22,9 +22,13 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
 
 @implementation MIDIController {
     MIDIClientRef client;
+
     MIDIPortRef portKeyboard;
     MIDIPortRef portLight;
+
     BOOL connected;
+
+    LogViewController* log;
 }
 
 + (NSString*)readableNote:(unsigned char)note
