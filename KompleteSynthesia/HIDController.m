@@ -448,6 +448,8 @@ static void HIDInputCallback(void* context,
 
         int product = [HIDController productIDWithDevice:devices[i]];
 
+        NSLog(@"Found a Native Instruments HID device: product-id is %xh", product);
+
         if ([supportedDevices objectForKey:@(product)] != nil) {
             _keyCount = [supportedDevices[@(product)][@"keys"] intValue];
             _mk = [supportedDevices[@(product)][@"mk"] intValue];
