@@ -27,12 +27,12 @@ const uint32_t kPID_S88MK1 = 0x1410;
 // MK2 controllers.
 const uint32_t kPID_S49MK2 = 0x1610;
 const uint32_t kPID_S61MK2 = 0x1620;
-const uint32_t kPID_S88MK2 = 0x1630;
+const uint32_t kPID_S88MK2 = 0x1710;
 
 // MK3 controllers.
-const uint32_t kPID_S49MK3 = 0x2200;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
-const uint32_t kPID_S61MK3 = 0x2210;    // Confirmed, thanks to @Bounga.
-const uint32_t kPID_S88MK3 = 0x2220;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
+const uint32_t kPID_S49MK3 = 0x2100;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
+const uint32_t kPID_S61MK3 = 0x2110;    // Confirmed, thanks to @Bounga.
+const uint32_t kPID_S88MK3 = 0x2120;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
 
 const uint32_t kUSBDeviceInterface = 0x03;          // FIXME: Possibly MK2 specific.
 const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 specific.
