@@ -75,6 +75,11 @@ const uint8_t kKompleteKontrolInit[] = { kCommandInit, 0x00, 0x00 };
 
 const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
 const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
+
+// FIXME: This appears to be wrong for MK3 devices -- instead of lighting keys, we are
+// FIXME: lighting the touchstrip with 0x81.
+const uint8_t kCommandLightGuideUpdateMK3 = 0x81;
+
 const size_t kKompleteKontrolLightGuideMessageSize = 250;
 const size_t kKompleteKontrolLightGuideKeyMapSize = kKompleteKontrolLightGuideMessageSize - 1;
 
