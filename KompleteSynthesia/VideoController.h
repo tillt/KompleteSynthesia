@@ -5,9 +5,9 @@
 //  Created by Till Toenshoff on 02.02.23.
 //
 
-#import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

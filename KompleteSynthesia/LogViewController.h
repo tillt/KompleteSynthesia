@@ -10,7 +10,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface LogViewController : NSViewController
-@property (weak, nonatomic) IBOutlet NSTextView *textView;
+@property (weak, nonatomic) IBOutlet NSTextView* textView;
 
 - (void)logLine:(NSString*)l;
 

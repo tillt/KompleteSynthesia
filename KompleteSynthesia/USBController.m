@@ -13,8 +13,8 @@
 #import <IOKit/IOKitLib.h>
 #import <IOKit/usb/IOUSBLib.h>
 
-/// Detects a Komplete Kontrol S-series USB controller. Supports USB bulk write for transmitting large amounts of data as
-/// needed for graphics data transfer to the LCD screens.
+/// Detects a Komplete Kontrol S-series USB controller. Supports USB bulk write for transmitting large amounts of data
+/// as needed for graphics data transfer to the LCD screens.
 
 const uint32_t kVendorID_NativeInstruments = 0x17CC;
 
@@ -30,12 +30,12 @@ const uint32_t kPID_S61MK2 = 0x1620;
 const uint32_t kPID_S88MK2 = 0x1630;
 
 // MK3 controllers.
-const uint32_t kPID_S49MK3 = 0x2100;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
-const uint32_t kPID_S61MK3 = 0x2110;    // Confirmed, thanks to @Bounga.
-const uint32_t kPID_S88MK3 = 0x2120;    // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
+const uint32_t kPID_S49MK3 = 0x2100; // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
+const uint32_t kPID_S61MK3 = 0x2110; // Confirmed, thanks to @Bounga.
+const uint32_t kPID_S88MK3 = 0x2120; // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
 
-const uint32_t kUSBDeviceInterface = 0x03;          // FIXME: Possibly MK2 specific.
-const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 specific.
+const uint32_t kUSBDeviceInterface = 0x03;         // FIXME: Possibly MK2 specific.
+const uint32_t kUSBDeviceInterfaceEndpoint = 0x03; // FIXME: Possibly MK2 specific.
 
 @implementation USBController {
     IOUSBDeviceInterface942** device;
@@ -47,8 +47,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
 
 + (NSString*)descriptionWithIOReturn:(IOReturn)err
 {
-    return [NSString stringWithCString:mach_error_string(err)
-                              encoding:NSStringEncodingConversionAllowLossy];
+    return [NSString stringWithCString:mach_error_string(err) encoding:NSStringEncodingConversionAllowLossy];
 }
 
 - (id)initWithError:(NSError**)error
@@ -103,7 +102,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
         if (CFGetTypeID(cfNumber) == CFNumberGetTypeID()) {
             success = CFNumberGetValue(cfNumber, type, p) != 0;
         }
-        CFRelease (cfNumber);
+        CFRelease(cfNumber);
     }
     return success;
 }
@@ -154,19 +153,14 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
         UInt8 number;
         UInt8 dont_care1, dont_care3;
         UInt16 dont_care2;
-        ret = (*interface)->GetPipeProperties(interface,
-                                              i,
-                                              &direction,
-                                              &number,
-                                              &dont_care1,
-                                              &dont_care2,
-                                              &dont_care3);
+        ret = (*interface)->GetPipeProperties(interface, i, &direction, &number, &dont_care1, &dont_care2, &dont_care3);
         if (ret != kIOReturnSuccess) {
             NSLog(@"GetPipeProperties failed");
             return ret;
         }
         endpointAddresses[i - 1] = (((kUSBIn == direction) << kUSBRqDirnShift) | (number & 0x0f));
-        NSLog(@"pipe: %d, direction: %d, number: %d", i, endpointAddresses[i - 1] >> kUSBRqDirnShift, endpointAddresses[i - 1] & 0x0F);
+        NSLog(@"pipe: %d, direction: %d, number: %d", i, endpointAddresses[i - 1] >> kUSBRqDirnShift,
+              endpointAddresses[i - 1] & 0x0F);
     }
     return kIOReturnSuccess;
 }
@@ -181,12 +175,9 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
     }
 
     SInt32 score;
-    IOCFPlugInInterface **pluginInterface = NULL;
-    ret = IOCreatePlugInInterfaceForService(usbInterface,
-                                            kIOUSBInterfaceUserClientTypeID,
-                                            kIOCFPlugInInterfaceID,
-                                            &pluginInterface,
-                                            &score);
+    IOCFPlugInInterface** pluginInterface = NULL;
+    ret = IOCreatePlugInInterfaceForService(usbInterface, kIOUSBInterfaceUserClientTypeID, kIOCFPlugInInterfaceID,
+                                            &pluginInterface, &score);
     IOObjectRelease(usbInterface);
     if (ret != kIOReturnSuccess) {
         NSLog(@"IOCreatePlugInInterfaceForService failed");
@@ -197,9 +188,8 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
         return kIOReturnIOError;
     }
 
-    ret = (*pluginInterface)->QueryInterface(pluginInterface,
-                                             CFUUIDGetUUIDBytes(kIOUSBInterfaceInterfaceID),
-                                             (LPVOID)&interface);
+    ret = (*pluginInterface)
+              ->QueryInterface(pluginInterface, CFUUIDGetUUIDBytes(kIOUSBInterfaceInterfaceID), (LPVOID)&interface);
     (*pluginInterface)->Release(pluginInterface);
     if (ret != kIOReturnSuccess) {
         NSLog(@"pluginInterface->QueryInterface failed");
@@ -241,7 +231,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03;  // FIXME: Possibly MK2 speci
     return NO;
 }
 
-static void asyncCallback (void *refcon, IOReturn result, void* arg0)
+static void asyncCallback(void* refcon, IOReturn result, void* arg0)
 {
     dispatch_semaphore_t transfers = (__bridge dispatch_semaphore_t)refcon;
     dispatch_semaphore_signal(transfers);
@@ -257,33 +247,33 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     if ([self endpoint:_deviceInterfaceEndpoint pipeRef:&pipeRef] == NO) {
         NSLog(@"endpoint doesnt exist");
         if (error) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey: @"USB error: endpoint does not exist",
-                NSLocalizedRecoverySuggestionErrorKey: @"This is entirely unexpected - how did you get here?"
+            NSDictionary* userInfo = @{
+                NSLocalizedDescriptionKey : @"USB error: endpoint does not exist",
+                NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:1 userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:1
+                                     userInfo:userInfo];
         }
         return NO;
     }
-    
+
     uint8_t transferType, direction, number, interval;
     uint16_t maxPacketSize;
-    IOReturn ret = (*interface)->GetPipeProperties(interface,
-                                                   pipeRef,
-                                                   &direction,
-                                                   &number,
-                                                   &transferType,
-                                                   &maxPacketSize,
-                                                   &interval);
+    IOReturn ret =
+        (*interface)
+            ->GetPipeProperties(interface, pipeRef, &direction, &number, &transferType, &maxPacketSize, &interval);
     if (ret != kIOReturnSuccess) {
         NSLog(@"GetPipeProperties failed");
         if (error) {
-            NSDictionary *userInfo = @{
+            NSDictionary* userInfo = @{
                 NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB error when querying interface pipe: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
+                                                                       [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:ret
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -291,49 +281,45 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     assert(transferType == kUSBBulk);
     assert(data.length % maxPacketSize);
 
-    ret = (*interface)->WritePipeAsyncTO(interface,
-                                         pipeRef,
-                                         (void*)data.bytes,
-                                         (UInt32)data.length,
-                                         0,
-                                         0,
-                                         asyncCallback,
-                                         (__bridge void*)transfers);
+    ret = (*interface)
+              ->WritePipeAsyncTO(interface, pipeRef, (void*)data.bytes, (UInt32)data.length, 0, 0, asyncCallback,
+                                 (__bridge void*)transfers);
     if (ret != kIOReturnSuccess) {
         NSLog(@"(*interface)->WritePipeAsync failed");
         if (error) {
-            NSDictionary *userInfo = @{
+            NSDictionary* userInfo = @{
                 NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB error when writing to interface pipe: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
+                                                                       [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:ret
+                                     userInfo:userInfo];
         }
         return NO;
     }
-    
+
     return YES;
 }
 
 - (IOUSBDeviceInterface942**)detectDevice:(NSError**)error
 {
     NSDictionary* supportedDevices = @{
-        @(kPID_S25MK1): @{ @"keys": @(25), @"mk": @(1) },
-        @(kPID_S49MK1): @{ @"keys": @(49), @"mk": @(1) },
-        @(kPID_S61MK1): @{ @"keys": @(61), @"mk": @(1) },
-        @(kPID_S88MK1): @{ @"keys": @(88), @"mk": @(1) },
+        @(kPID_S25MK1) : @{@"keys" : @(25), @"mk" : @(1)},
+        @(kPID_S49MK1) : @{@"keys" : @(49), @"mk" : @(1)},
+        @(kPID_S61MK1) : @{@"keys" : @(61), @"mk" : @(1)},
+        @(kPID_S88MK1) : @{@"keys" : @(88), @"mk" : @(1)},
 
-        @(kPID_S49MK2): @{ @"keys": @(49), @"mk": @(2) },
-        @(kPID_S61MK2): @{ @"keys": @(61), @"mk": @(2) },
-        @(kPID_S88MK2): @{ @"keys": @(88), @"mk": @(2) },
+        @(kPID_S49MK2) : @{@"keys" : @(49), @"mk" : @(2)},
+        @(kPID_S61MK2) : @{@"keys" : @(61), @"mk" : @(2)},
+        @(kPID_S88MK2) : @{@"keys" : @(88), @"mk" : @(2)},
 
-        @(kPID_S49MK3): @{ @"keys": @(49), @"mk": @(3) },
-        @(kPID_S61MK3): @{ @"keys": @(61), @"mk": @(3) },
-        @(kPID_S88MK3): @{ @"keys": @(88), @"mk": @(3) },
+        @(kPID_S49MK3) : @{@"keys" : @(49), @"mk" : @(3)},
+        @(kPID_S61MK3) : @{@"keys" : @(61), @"mk" : @(3)},
+        @(kPID_S88MK3) : @{@"keys" : @(88), @"mk" : @(3)},
     };
 
     io_registry_entry_t entry = 0;
-
 
     // NOTE: macOS 10.15 (Catalina) does not know about `kIOMainPortDefault`. Doesnt really
     // make a difference as it is an alias to zero anyway.
@@ -360,21 +346,18 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
         //
         // This would fail if the user did not allow for this application to access
         // USB devices as requested via our entitlements.
-        ret = IOCreatePlugInInterfaceForService(service,
-                                                kIOUSBDeviceUserClientTypeID,
-                                                kIOCFPlugInInterfaceID,
-                                                &plug,
+        ret = IOCreatePlugInInterfaceForService(service, kIOUSBDeviceUserClientTypeID, kIOCFPlugInInterfaceID, &plug,
                                                 &score);
         IOObjectRelease(service);
-        
+
         if (ret != KERN_SUCCESS || plug == NULL) {
             NSLog(@"IOCreatePlugInInterfaceForService failed");
             continue;
         }
 
         IOUSBDeviceInterface942** dev = NULL;
-        
-        ret = (*plug)->QueryInterface(plug, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID942), (void *)&dev);
+
+        ret = (*plug)->QueryInterface(plug, CFUUIDGetUUIDBytes(kIOUSBDeviceInterfaceID942), (void*)&dev);
         (*plug)->Release(plug);
         if (ret != kIOReturnSuccess || dev == NULL) {
             NSLog(@"QueryInterface failed");
@@ -413,7 +396,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
 
     NSLog(@"No Native Instruments keyboard controller USB device detected");
     if (error != nil) {
-        NSDictionary *userInfo = @{
+        NSDictionary* userInfo = @{
             NSLocalizedDescriptionKey : @"No Native Instruments USB controller detected",
             NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
         };
@@ -435,12 +418,14 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     if (ret != kIOReturnSuccess && ret != kIOReturnExclusiveAccess) {
         NSLog(@"USBDeviceOpen failed");
         if (error) {
-            NSDictionary *userInfo = @{
+            NSDictionary* userInfo = @{
                 NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB error when trying to open the device: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
+                                                                       [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:ret
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -448,12 +433,15 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     ret = [self openDeviceInterface:kUSBDeviceInterface];
     if (ret != kIOReturnSuccess) {
         if (error) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB error when trying to open the device interface: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
+            NSDictionary* userInfo = @{
+                NSLocalizedDescriptionKey :
+                    [NSString stringWithFormat:@"USB error when trying to open the device interface: %@",
+                                               [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:ret
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -461,16 +449,18 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
     ret = [self gatherEndpoints];
     if (ret != kIOReturnSuccess) {
         if (error) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"USB error: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
+            NSDictionary* userInfo = @{
+                NSLocalizedDescriptionKey :
+                    [NSString stringWithFormat:@"USB error: %@", [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:ret userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:ret
+                                     userInfo:userInfo];
         }
         return NO;
     }
-    
+
     _connected = YES;
 
     return YES;
@@ -478,8 +468,7 @@ static void asyncCallback (void *refcon, IOReturn result, void* arg0)
 
 - (BOOL)waitForBulkTransfer:(NSTimeInterval)timeout
 {
-    return dispatch_semaphore_wait(transfers,
-                                   dispatch_time(DISPATCH_TIME_NOW, timeout * NSEC_PER_SEC)) == 0;
+    return dispatch_semaphore_wait(transfers, dispatch_time(DISPATCH_TIME_NOW, timeout * NSEC_PER_SEC)) == 0;
 }
 
 @end

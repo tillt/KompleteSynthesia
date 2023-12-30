@@ -11,9 +11,9 @@
 
 @implementation CoreAudioTools
 
-+(AudioDeviceID)defaultOutputDeviceID
++ (AudioDeviceID)defaultOutputDeviceID
 {
-    AudioDeviceID   outputDeviceID = kAudioObjectUnknown;
+    AudioDeviceID outputDeviceID = kAudioObjectUnknown;
 
     // Get default output device.
     UInt32 propertySize = 0;
@@ -23,18 +23,17 @@
     propertyAOPA.mScope = kAudioObjectPropertyScopeGlobal;
     propertyAOPA.mElement = kAudioObjectPropertyElementMaster;
 
-    if (!AudioHardwareServiceHasProperty(kAudioObjectSystemObject, &propertyAOPA))
-    {
+    if (!AudioHardwareServiceHasProperty(kAudioObjectSystemObject, &propertyAOPA)) {
         NSLog(@"Cannot find default output device!");
         return outputDeviceID;
     }
 
     propertySize = sizeof(AudioDeviceID);
 
-    status = AudioHardwareServiceGetPropertyData(kAudioObjectSystemObject, &propertyAOPA, 0, NULL, &propertySize, &outputDeviceID);
+    status = AudioHardwareServiceGetPropertyData(kAudioObjectSystemObject, &propertyAOPA, 0, NULL, &propertySize,
+                                                 &outputDeviceID);
 
-    if(status)
-    {
+    if (status) {
         NSLog(@"Cannot find default output device!");
     }
     return outputDeviceID;
@@ -42,7 +41,7 @@
 
 + (float)volume
 {
-    Float32         outputVolume;
+    Float32 outputVolume;
 
     UInt32 propertySize = 0;
     OSStatus status = noErr;
@@ -53,14 +52,12 @@
 
     AudioDeviceID outputDeviceID = [[self class] defaultOutputDeviceID];
 
-    if (outputDeviceID == kAudioObjectUnknown)
-    {
+    if (outputDeviceID == kAudioObjectUnknown) {
         NSLog(@"Unknown device");
         return 0.0;
     }
 
-    if (!AudioHardwareServiceHasProperty(outputDeviceID, &propertyAOPA))
-    {
+    if (!AudioHardwareServiceHasProperty(outputDeviceID, &propertyAOPA)) {
         NSLog(@"No volume returned for device 0x%0x", outputDeviceID);
         return 0.0;
     }
@@ -69,13 +66,14 @@
 
     status = AudioHardwareServiceGetPropertyData(outputDeviceID, &propertyAOPA, 0, NULL, &propertySize, &outputVolume);
 
-    if (status)
-    {
+    if (status) {
         NSLog(@"No volume returned for device 0x%0x", outputDeviceID);
         return 0.0;
     }
 
-    if (outputVolume < 0.0 || outputVolume > 1.0) return 0.0;
+    if (outputVolume < 0.0 || outputVolume > 1.0) {
+        return 0.0;
+    }
 
     return outputVolume;
 }

@@ -6,8 +6,8 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import "PaletteViewController.h"
 #import "ColorField.h"
+#import "PaletteViewController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -23,13 +23,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface PreferencesWindowController : NSWindowController<PaletteViewControllerDelegate>
+@interface PreferencesWindowController : NSWindowController <PaletteViewControllerDelegate>
 
-@property (weak, nonatomic) IBOutlet NSTabView *tabView;
+@property (weak, nonatomic) IBOutlet NSTabView* tabView;
 
-@property (weak, nonatomic) IBOutlet NSButton *forwardButtonsOnlyToSynthesia;
-@property (weak, nonatomic) IBOutlet NSButton *checkForUpdates;
-@property (weak, nonatomic) IBOutlet NSButton *mirrorSynthesiaToControllerScreen;
+@property (weak, nonatomic) IBOutlet NSButton* forwardButtonsOnlyToSynthesia;
+@property (weak, nonatomic) IBOutlet NSButton* checkForUpdates;
+@property (weak, nonatomic) IBOutlet NSButton* mirrorSynthesiaToControllerScreen;
 @property (weak, nonatomic) IBOutlet ColorField* colorUnpressed;
 @property (weak, nonatomic) IBOutlet ColorField* colorPressed;
 @property (weak, nonatomic) IBOutlet ColorField* colorLeft;

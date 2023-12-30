@@ -5,8 +5,8 @@
 //  Created by Till Toenshoff on 15.01.23.
 //
 
-#import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -39,14 +39,12 @@ extern const uint32_t kPID_S88MK3;
 @property (nonatomic, assign) BOOL connected;
 @property (nonatomic, assign) uint32_t deviceInterfaceEndpoint;
 
-
 + (NSString*)descriptionWithIOReturn:(IOReturn)code;
 
 - (id)initWithError:(NSError**)error;
 - (BOOL)bulkWriteData:(NSData*)data error:(NSError**)error;
 - (BOOL)waitForBulkTransfer:(NSTimeInterval)timeout;
 - (void)teardown;
-
 
 @end
 

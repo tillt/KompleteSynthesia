@@ -27,25 +27,23 @@
 - (void)windowDidLoad
 {
     [super windowDidLoad];
-    
-    controls = @[ _colorUnpressed,
-                  _colorPressed,
-                  _colorLeft,
-                  _colorLeftThumb,
-                  _colorLeftPressed,
-                  _colorRight,
-                  _colorRightThumb,
-                  _colorRightPressed ];
 
-    for (int key = 0;key < controls.count;key++) {
+    controls = @[
+        _colorUnpressed, _colorPressed, _colorLeft, _colorLeftThumb, _colorLeftPressed, _colorRight, _colorRightThumb,
+        _colorRightPressed
+    ];
+
+    for (int key = 0; key < controls.count; key++) {
         ColorField* colorField = controls[key];
         colorField.keyState = _midi2hid.colors[key];
         colorField.rounded = YES;
     }
-    
-    [self.forwardButtonsOnlyToSynthesia setState:_midi2hid.forwardButtonsToSynthesiaOnly ? NSControlStateValueOn : NSControlStateValueOff];
+
+    [self.forwardButtonsOnlyToSynthesia
+        setState:_midi2hid.forwardButtonsToSynthesiaOnly ? NSControlStateValueOn : NSControlStateValueOff];
     self.mirrorSynthesiaToControllerScreen.enabled = _video != nil;
-    [self.mirrorSynthesiaToControllerScreen setState:_video.mirrorSynthesiaApplicationWindow ? NSControlStateValueOn : NSControlStateValueOff];
+    [self.mirrorSynthesiaToControllerScreen
+        setState:_video.mirrorSynthesiaApplicationWindow ? NSControlStateValueOn : NSControlStateValueOff];
     [self.checkForUpdates setState:[UpdateManager CheckForUpdates] ? NSControlStateValueOn : NSControlStateValueOff];
 }
 
@@ -55,13 +53,13 @@
         return;
     }
     ColorField* colorField = sender;
-    
+
     if (paletteViewController == nil) {
         paletteViewController = [[PaletteViewController alloc] initWithNibName:@"PaletteViewController" bundle:NULL];
         paletteViewController.delegate = self;
     }
     paletteViewController.keyState = colorField.keyState;
-    
+
     NSInteger key = [controls indexOfObject:colorField];
     assert(key != NSNotFound);
     assert(key < kColorMapSize);
@@ -82,18 +80,18 @@
 - (void)keyStatePicked:(const unsigned char)keyState index:(const unsigned char)index
 {
     NSLog(@"picked key state %02Xh for map index %d", keyState, index);
-    
+
     assert(index < kColorMapSize);
     _midi2hid.colors[index] = keyState;
     if (index == 0) {
         [_midi2hid lightsDefault];
     }
-    
+
     assert(controls.count > index);
     ColorField* colorField = controls[index];
     colorField.keyState = keyState;
     [colorField setNeedsDisplay:YES];
-    
+
     [self.delegate preferencesUpdatedKeyState:keyState forKeyIndex:index];
 }
 
@@ -126,8 +124,7 @@
         alert.messageText = message;
         [alert runModal];
     } else {
-        [[NSUserDefaults standardUserDefaults] setBool:YES 
-                                                forKey:@"initial_synthesia_config_assert_done"];
+        [[NSUserDefaults standardUserDefaults] setBool:YES forKey:@"initial_synthesia_config_assert_done"];
         if (message != nil) {
             NSAlert* alert = [NSAlert new];
             alert.messageText = message;
@@ -141,8 +138,8 @@
 {
     [self.progress startAnimation:self];
     [UpdateManager UpdateCheckWithCompletion:^(NSString* status) {
-        [self.progress stopAnimation:self];
-        [self.updateStatusField setStringValue:status];
+      [self.progress stopAnimation:self];
+      [self.updateStatusField setStringValue:status];
     }];
 }
 

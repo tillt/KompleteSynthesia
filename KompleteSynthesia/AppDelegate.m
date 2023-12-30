@@ -34,12 +34,7 @@
 
 @end
 
-enum {
-    kAlienHardwareAgent = 0,
-    kAlienHostIntegration,
-    kAlienDaemon,
-    kAlienItemCount
-};
+enum { kAlienHardwareAgent = 0, kAlienHostIntegration, kAlienDaemon, kAlienItemCount };
 
 @implementation AppDelegate {
     BOOL restartAlien[kAlienItemCount];
@@ -53,7 +48,8 @@ NSString* kHardwareAgentPath = @"/Library/Application Support/Native Instruments
 
 NSString* kHostIntegrationAgentName = @"NIHostIntegrationAgent.app";
 NSString* kHostIntegrationAgentBundleIdentifier = @"com.native-instruments.NIHostIntegrationAgent";
-NSString* kHostIntegrationAgentPath = @"/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app";
+NSString* kHostIntegrationAgentPath =
+    @"/Library/Application Support/Native Instruments/Hardware/NIHostIntegrationAgent.app";
 
 NSString* kDaemonName = @"NTKDaemon.app";
 NSString* kDaemonBundleIdentifier = @"com.native-instruments.NTKDaemon";
@@ -62,15 +58,15 @@ NSString* kDaemonPath = @"/Library/Application Support/Native Instruments/NTK/NT
 NSString* kAppDefaultActivateSynthesia = @"forward_buttons_to_synthesia_only";
 NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+- (void)applicationDidFinishLaunching:(NSNotification*)aNotification
 {
     usbAvailable = NO;
 
     _log = [[LogViewController alloc] initWithNibName:@"LogViewController" bundle:NULL];
 
-    NSString *appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
-    NSString *version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-    NSString *commit = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
+    NSString* appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
+    NSString* version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
+    NSString* commit = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleVersion"];
     [_log logLine:[NSString stringWithFormat:@"%@ %@.%@", appName, version, commit]];
 
     // First thing, we assert that a bunch of interlopers are kept from interfering
@@ -86,10 +82,11 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     NSString* fmtFailed = @"failed to stop %@";
     NSString* fmtSkipping = @"%@ is not running";
 
-    NSArray<NSString*>* items = @[ kHardwareAgentBundleIdentifier, kHostIntegrationAgentBundleIdentifier, kDaemonBundleIdentifier ];
-    
+    NSArray<NSString*>* items =
+        @[ kHardwareAgentBundleIdentifier, kHostIntegrationAgentBundleIdentifier, kDaemonBundleIdentifier ];
+
     awaitingAlienCount = 0;
-    
+
     assert(items.count == kAlienItemCount);
 
     // Identify unwanted processes.
@@ -112,30 +109,35 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
         if ([ApplicationObserver applicationIsRunning:items[i]] == NO) {
             continue;
         }
-        restartAlien[i] = [_observer terminateApplication:items[i] completion:^(BOOL complete){
-            if (complete == NO) {
-                [self.log logLine:[NSString stringWithFormat:fmtFailed, items[i]]];
+        restartAlien[i] = [_observer
+            terminateApplication:items[i]
+                      completion:^(BOOL complete) {
+                        if (complete == NO) {
+                            [self.log logLine:[NSString stringWithFormat:fmtFailed, items[i]]];
 
-                NSDictionary *userInfo = @{
-                    NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Failed to terminate %@", items[i]],
-                    NSLocalizedRecoverySuggestionErrorKey : @"USB bulk transfer is blocked, no screen updates possible."
-                };
-                [[NSAlert alertWithError:[NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
-                                                             code:-1
-                                                         userInfo:userInfo]] runModal];
+                            NSDictionary* userInfo = @{
+                                NSLocalizedDescriptionKey :
+                                    [NSString stringWithFormat:@"Failed to terminate %@", items[i]],
+                                NSLocalizedRecoverySuggestionErrorKey :
+                                    @"USB bulk transfer is blocked, no screen updates possible."
+                            };
+                            [[NSAlert alertWithError:[NSError errorWithDomain:[[NSBundle bundleForClass:[self class]]
+                                                                                  bundleIdentifier]
+                                                                         code:-1
+                                                                     userInfo:userInfo]] runModal];
 
-                [self applicationDidFinishInitializingWithUSBHighwayOpen:NO];
-                return;
-            }
+                            [self applicationDidFinishInitializingWithUSBHighwayOpen:NO];
+                            return;
+                        }
 
-            [self.log logLine:[NSString stringWithFormat:fmtStopped, items[i]]];
+                        [self.log logLine:[NSString stringWithFormat:fmtStopped, items[i]]];
 
-            --self->awaitingAlienCount;
-            
-            if (self->awaitingAlienCount == 0) {
-                [self applicationDidFinishInitializingWithUSBHighwayOpen:YES];
-            }
-        }];
+                        --self->awaitingAlienCount;
+
+                        if (self->awaitingAlienCount == 0) {
+                            [self applicationDidFinishInitializingWithUSBHighwayOpen:YES];
+                        }
+                      }];
         NSLog(@"restart %@ returned %d", items[i], restartAlien[i]);
     }
 }
@@ -143,15 +145,15 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 - (void)applicationDidFinishInitializingWithUSBHighwayOpen:(BOOL)usbHighwayOpen
 {
     usbAvailable = usbHighwayOpen;
-    _synthesia = [[SynthesiaController alloc] initWithLogViewController:_log
-                                                               delegate:self];
+    _synthesia = [[SynthesiaController alloc] initWithLogViewController:_log delegate:self];
     [_synthesia cachedAssertSynthesiaConfiguration];
 
     if ([SynthesiaController synthesiaRunning] == NO) {
         [_log logLine:@"Synthesia not running, starting it now"];
-        [self bootstrapSynthesia:self withCompletion:^(){
-            [self applicationDidFinishInitializingWithSynthesiaRunning];
-        }];
+        [self bootstrapSynthesia:self
+                  withCompletion:^() {
+                    [self applicationDidFinishInitializingWithSynthesiaRunning];
+                  }];
         return;
     }
     [self applicationDidFinishInitializingWithSynthesiaRunning];
@@ -162,7 +164,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     NSError* error = nil;
 
     _hidController = [[HIDController alloc] initWithLogViewController:_log];
-    
+
     _midiController = [[MIDIController alloc] initWithLogViewController:_log];
 
     _midi2hidController = [[MIDI2HIDController alloc] initWithLogController:_log
@@ -187,19 +189,18 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
 
-    [userDefaults registerDefaults:@{kAppDefaultActivateSynthesia: @(YES)}];
+    [userDefaults registerDefaults:@{kAppDefaultActivateSynthesia : @(YES)}];
     _midi2hidController.forwardButtonsToSynthesiaOnly = [userDefaults boolForKey:kAppDefaultActivateSynthesia];
 
     if (usbAvailable == YES) {
-        _videoController = [[VideoController alloc] initWithLogViewController:_log
-                                                                        error:&error];
+        _videoController = [[VideoController alloc] initWithLogViewController:_log error:&error];
         if (_videoController == nil) {
             [[NSAlert alertWithError:error] runModal];
             [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
             return;
         }
 
-        [userDefaults registerDefaults:@{kAppDefaultMirrorSynthesia: @(YES)}];
+        [userDefaults registerDefaults:@{kAppDefaultMirrorSynthesia : @(YES)}];
         _videoController.mirrorSynthesiaApplicationWindow = [userDefaults boolForKey:kAppDefaultMirrorSynthesia];
 
         if (![_videoController reset:&error]) {
@@ -208,19 +209,19 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
             return;
         }
     }
-    
+
     // Hide application icon.
     [[NSApplication sharedApplication] setActivationPolicy:NSApplicationActivationPolicyAccessory];
-    
+
     self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
     self.statusItem.button.action = @selector(showStatusMenu:);
     [self.statusItem.button sendActionOn:NSEventMaskLeftMouseDown | NSEventMaskRightMouseDown];
-    
-    NSImage *image = [NSImage imageNamed:@"StatusIcon"];
+
+    NSImage* image = [NSImage imageNamed:@"StatusIcon"];
     [image setTemplate:true];
     self.statusItem.button.image = image;
-    
-    NSMenu *menu = [[NSMenu alloc] init];
+
+    NSMenu* menu = [[NSMenu alloc] init];
     [menu addItemWithTitle:_midi2hidController.hidStatus action:nil keyEquivalent:@""];
     [menu addItemWithTitle:[SynthesiaController status] action:nil keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
@@ -230,19 +231,19 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     [menu addItemWithTitle:@"Show Log" action:@selector(showLog:) keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
     [menu addItemWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
-    
+
     menu.delegate = self;
     self.statusMenu = menu;
-    
+
     [_midi2hidController swoosh];
     [self updateButtonStates];
 
-    [userDefaults registerDefaults:@{kAppDefaultCheckForUpdate: @(YES)}];
+    [userDefaults registerDefaults:@{kAppDefaultCheckForUpdate : @(YES)}];
     BOOL checkForUpdate = [userDefaults boolForKey:kAppDefaultCheckForUpdate];
     if (checkForUpdate) {
         [UpdateManager UpdateCheckWithCompletion:^(NSString* state) {
-            NSString* message = [NSString stringWithFormat:@"update check: %@", state];
-            [self.log logLine:message];
+          NSString* message = [NSString stringWithFormat:@"update check: %@", state];
+          [self.log logLine:message];
         }];
     }
 }
@@ -258,7 +259,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     _preferences.video = _videoController;
 
     NSWindow* window = [_preferences window];
-    
+
     // We need to do some trickery here as the Application itself has no window. Not sure
     // if this really works in all cases but it does for me, so far.
     [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
@@ -275,10 +276,10 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 - (void)reset:(id)sender
 {
     NSError* error = nil;
-    
+
     if ([_midi2hidController swooshIsActive]) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self->_log logLine:@"ignoring reset request as we are still swooshing"];
+          [self->_log logLine:@"ignoring reset request as we are still swooshing"];
         });
         return;
     }
@@ -312,28 +313,28 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     [self preferencesUpdatedMirror];
 }
 
-- (void)bootstrapSynthesia:(id)sender withCompletion:(void(^)(void))completion
+- (void)bootstrapSynthesia:(id)sender withCompletion:(void (^)(void))completion
 {
     [SynthesiaController runSynthesiaWithCompletion:^{
-        // This should really not be done via polling.... instead use KVO on RunningApplication.
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-            // Wait for the Synthesia window to come up.
-            // TODO: I wonder if it was good enough to use KVO on application.hasLaunched - 
-            // if that was good for asserting a Window was there, that would be cleaner.
-            int timeoutMs = 5000;
-            while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
-                [NSThread sleepForTimeInterval:0.01f];
-                timeoutMs -= 10;
-            };
-            if (timeoutMs <= 0) {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self->_log logLine:@"timeout waiting for Synthesia's application window"];
-                });
-            }
+      // This should really not be done via polling.... instead use KVO on RunningApplication.
+      dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        // Wait for the Synthesia window to come up.
+        // TODO: I wonder if it was good enough to use KVO on application.hasLaunched -
+        // if that was good for asserting a Window was there, that would be cleaner.
+        int timeoutMs = 5000;
+        while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
+            [NSThread sleepForTimeInterval:0.01f];
+            timeoutMs -= 10;
+        };
+        if (timeoutMs <= 0) {
             dispatch_async(dispatch_get_main_queue(), ^{
-                completion();
+              [self->_log logLine:@"timeout waiting for Synthesia's application window"];
             });
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+          completion();
         });
+      });
     }];
 }
 
@@ -350,34 +351,38 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     if (self.popover.isShown) {
         [self.popover performClose:sender];
     } else {
-        [self.popover showRelativeToRect:self.statusItem.button.bounds ofView:self.statusItem.button preferredEdge:NSRectEdgeMinY];
+        [self.popover showRelativeToRect:self.statusItem.button.bounds
+                                  ofView:self.statusItem.button
+                           preferredEdge:NSRectEdgeMinY];
         __block AppDelegate* blocksafeSelf = self;
-        [NSEvent addGlobalMonitorForEventsMatchingMask:NSEventTypeLeftMouseDown | NSEventTypeRightMouseDown handler:^(NSEvent* event) {
-            [blocksafeSelf.popover performClose:nil];
-        }];
+        [NSEvent addGlobalMonitorForEventsMatchingMask:NSEventTypeLeftMouseDown | NSEventTypeRightMouseDown
+                                               handler:^(NSEvent* event) {
+                                                 [blocksafeSelf.popover performClose:nil];
+                                               }];
     }
 }
 
-- (void)applicationWillTerminate:(NSNotification *)aNotification
+- (void)applicationWillTerminate:(NSNotification*)aNotification
 {
     if (usbAvailable) {
         [_videoController teardown];
     }
     [_midi2hidController teardown];
-    
+
     NSArray<NSString*>* items = @[ kHardwareAgentPath, kHostIntegrationAgentPath, kDaemonPath ];
 
     assert(items.count == kAlienItemCount);
 
     for (int i = 0; i < kAlienItemCount; i++) {
         if (restartAlien[i]) {
-            const char* command = [[NSString stringWithFormat:@"open '%@'", items[i]] cStringUsingEncoding:NSStringEncodingConversionAllowLossy];
+            const char* command = [[NSString stringWithFormat:@"open '%@'", items[i]]
+                cStringUsingEncoding:NSStringEncodingConversionAllowLossy];
             system(command);
         }
     }
 }
 
-- (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
+- (BOOL)applicationSupportsSecureRestorableState:(NSApplication*)app
 {
     return YES;
 }
@@ -386,17 +391,22 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 {
     BOOL synthesiaRunning = [SynthesiaController synthesiaRunning];
 
-    [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdScene
-                                   color:synthesiaRunning ? kKompleteKontrolButtonLightOff : kKompleteKontrolColorWhite];
+    [_midi2hidController.hid
+        lightButton:kKompleteKontrolButtonIdScene
+              color:synthesiaRunning ? kKompleteKontrolButtonLightOff : kKompleteKontrolColorWhite];
 
-    [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdFunction1
-                                   color:synthesiaRunning ? kKompleteKontrolColorMediumOrange : kKompleteKontrolButtonLightOff];
+    [_midi2hidController.hid
+        lightButton:kKompleteKontrolButtonIdFunction1
+              color:synthesiaRunning ? kKompleteKontrolColorMediumOrange : kKompleteKontrolButtonLightOff];
 
-    [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdClear
-                                   color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff];
+    [_midi2hidController.hid
+        lightButton:kKompleteKontrolButtonIdClear
+              color:synthesiaRunning ? kKompleteKontrolColorWhite : kKompleteKontrolButtonLightOff];
 
-    [_midi2hidController.hid lightButton:kKompleteKontrolButtonIdFunction5
-                                   color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorMediumYellow : kKompleteKontrolColorYellow];
+    [_midi2hidController.hid
+        lightButton:kKompleteKontrolButtonIdFunction5
+              color:_videoController.mirrorSynthesiaApplicationWindow ? kKompleteKontrolColorMediumYellow
+                                                                      : kKompleteKontrolColorYellow];
 
     [_midi2hidController.hid updateButtonLightMap:nil];
 }
@@ -405,7 +415,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 
 - (void)synthesiaStateUpdate:(NSString*)status
 {
-    if(self.statusMenu.itemArray.count > 1) {
+    if (self.statusMenu.itemArray.count > 1) {
         NSMenuItem* item = self.statusMenu.itemArray[1];
         item.title = status;
     }
@@ -417,35 +427,28 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 - (void)preferencesUpdatedActivate
 {
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
-    [userDefaults setBool:_midi2hidController.forwardButtonsToSynthesiaOnly
-                   forKey:kAppDefaultActivateSynthesia];
+    [userDefaults setBool:_midi2hidController.forwardButtonsToSynthesiaOnly forKey:kAppDefaultActivateSynthesia];
 }
 
 - (void)preferencesUpdatedUpdates:(BOOL)enabled
 {
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
-    [userDefaults setBool:enabled
-                   forKey:kAppDefaultCheckForUpdate];
+    [userDefaults setBool:enabled forKey:kAppDefaultCheckForUpdate];
 }
 
 - (void)preferencesUpdatedMirror
 {
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
-    [userDefaults setBool:_videoController.mirrorSynthesiaApplicationWindow
-                   forKey:kAppDefaultMirrorSynthesia];
+    [userDefaults setBool:_videoController.mirrorSynthesiaApplicationWindow forKey:kAppDefaultMirrorSynthesia];
     [self updateButtonStates];
 }
 
 - (void)preferencesUpdatedKeyState:(int)keyState forKeyIndex:(int)index
 {
-    NSArray<NSString*>* userDefaultKeys = @[ @"kColorMapUnpressed",
-                                             @"kColorMapPressed",
-                                             @"kColorMapLeft",
-                                             @"kColorMapLeftThumb",
-                                             @"kColorMapLeftPressed",
-                                             @"kColorMapRight",
-                                             @"kColorMapRightThumb",
-                                             @"kColorMapRightPressed" ];
+    NSArray<NSString*>* userDefaultKeys = @[
+        @"kColorMapUnpressed", @"kColorMapPressed", @"kColorMapLeft", @"kColorMapLeftThumb", @"kColorMapLeftPressed",
+        @"kColorMapRight", @"kColorMapRightThumb", @"kColorMapRightPressed"
+    ];
 
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setInteger:keyState forKey:userDefaultKeys[index]];

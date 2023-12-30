@@ -25,7 +25,7 @@ NSString* kProject = @"KompleteSynthesia";
     // latest release.
     //
     // Releases have a single "." splitting the major and minor version number.
-    for(NSDictionary* release in releases) {
+    for (NSDictionary* release in releases) {
         NSString* tag = [release objectForKey:@"name"];
         unsigned long dots = [[tag componentsSeparatedByString:@"."] count] - 1;
         if (dots != 1) {
@@ -37,65 +37,68 @@ NSString* kProject = @"KompleteSynthesia";
     return nil;
 }
 
-+ (void)UpdateCheckWithCompletion:(void(^)(NSString* status))completion
++ (void)UpdateCheckWithCompletion:(void (^)(NSString* status))completion
 {
     NSString* repo = [NSString stringWithFormat:@"https://api.github.com/repos/%@/%@/tags", kOwner, kProject];
 
     NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:repo]];
     [request setHTTPMethod:@"GET"];
     NSURLSession* session = [NSURLSession sharedSession];
-    NSURLSessionDataTask* dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData* data,
-                                                                                                 NSURLResponse* response,
-                                                                                                 NSError* error) {
-        BOOL updateAvailable = NO;
-        NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse *)response;
-        NSString* status = @"";
-        NSString* tag = @"";
-        if (httpResponse.statusCode == 200) {
-            NSError* error = nil;
-            id object = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
-            if([object isKindOfClass:[NSArray class]]) {
-                NSArray* results = object;
-                tag = [UpdateManager LatestReleaseTag:results];
-                // FIXME: we are including pre-release tags and alike!
-                NSString* version = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
-                NSString* versionTag = [NSString stringWithFormat:@"v%@", version];
-                if ([tag compare:versionTag] != NSOrderedSame) {
-                    NSLog(@"there is a different version available");
-                    status = @"update available";
-                    updateAvailable = YES;
-                } else {
-                    NSLog(@"this is the latest version");
-                    status = @"using latest version";
-                }
-            } else {
-                NSLog(@"Expected array of tags but got something else");
-                status = @"received unexpected contents";
-            }
-        } else {
-            NSLog(@"HTTP status code %d", (int)httpResponse.statusCode);
-            status = [NSString stringWithFormat:@"received HTTP status %d", (int)httpResponse.statusCode];
-        }
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            completion(status);
-            
-            if (updateAvailable) {
-                NSAlert* alert = [NSAlert new];
-                alert.messageText = @"There is a new version of Komplete Synthesia available.";
-                alert.alertStyle = NSAlertStyleInformational;
-                [alert addButtonWithTitle:@"Download"];
-                [alert addButtonWithTitle:@"Cancel"];
-                long index = [alert runModal];
-                if (index == 1000) {
-                    NSString* binaryName = [NSString stringWithFormat:@"KompleteSynthesia.%@.dmg", tag];
-                    NSString* updateUrl = [NSString stringWithFormat:@"https://github.com/%@/%@/releases/download/%@/%@", kOwner, kProject, tag, binaryName];
-                    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:updateUrl]];
-                }
-            }
-        });
-    }];
-    
+    NSURLSessionDataTask* dataTask =
+        [session dataTaskWithRequest:request
+                   completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
+                     BOOL updateAvailable = NO;
+                     NSHTTPURLResponse* httpResponse = (NSHTTPURLResponse*)response;
+                     NSString* status = @"";
+                     NSString* tag = @"";
+                     if (httpResponse.statusCode == 200) {
+                         NSError* error = nil;
+                         id object = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
+                         if ([object isKindOfClass:[NSArray class]]) {
+                             NSArray* results = object;
+                             tag = [UpdateManager LatestReleaseTag:results];
+                             // FIXME: we are including pre-release tags and alike!
+                             NSString* version =
+                                 [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
+                             NSString* versionTag = [NSString stringWithFormat:@"v%@", version];
+                             if ([tag compare:versionTag] != NSOrderedSame) {
+                                 NSLog(@"there is a different version available");
+                                 status = @"update available";
+                                 updateAvailable = YES;
+                             } else {
+                                 NSLog(@"this is the latest version");
+                                 status = @"using latest version";
+                             }
+                         } else {
+                             NSLog(@"Expected array of tags but got something else");
+                             status = @"received unexpected contents";
+                         }
+                     } else {
+                         NSLog(@"HTTP status code %d", (int)httpResponse.statusCode);
+                         status = [NSString stringWithFormat:@"received HTTP status %d", (int)httpResponse.statusCode];
+                     }
+
+                     dispatch_async(dispatch_get_main_queue(), ^{
+                       completion(status);
+
+                       if (updateAvailable) {
+                           NSAlert* alert = [NSAlert new];
+                           alert.messageText = @"There is a new version of Komplete Synthesia available.";
+                           alert.alertStyle = NSAlertStyleInformational;
+                           [alert addButtonWithTitle:@"Download"];
+                           [alert addButtonWithTitle:@"Cancel"];
+                           long index = [alert runModal];
+                           if (index == 1000) {
+                               NSString* binaryName = [NSString stringWithFormat:@"KompleteSynthesia.%@.dmg", tag];
+                               NSString* updateUrl =
+                                   [NSString stringWithFormat:@"https://github.com/%@/%@/releases/download/%@/%@",
+                                                              kOwner, kProject, tag, binaryName];
+                               [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:updateUrl]];
+                           }
+                       }
+                     });
+                   }];
+
     [dataTask resume];
 }
 

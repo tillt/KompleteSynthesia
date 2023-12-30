@@ -5,8 +5,8 @@
 //  Created by Till Toenshoff on 06.01.23.
 //
 
-#import <Foundation/Foundation.h>
 #import <Appkit/Appkit.h>
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 

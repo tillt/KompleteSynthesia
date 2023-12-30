@@ -9,16 +9,16 @@
 
 #include <stdatomic.h>
 
-#import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
+#import <Foundation/Foundation.h>
 
-#import <IOKit/hid/IOHIDManager.h>
-#import <IOKit/hid/IOHIDKeys.h>
 #import <IOKit/IOKitLib.h>
+#import <IOKit/hid/IOHIDKeys.h>
+#import <IOKit/hid/IOHIDManager.h>
 #import <IOKit/usb/IOUSBLib.h>
 
-#import "USBController.h"
 #import "LogViewController.h"
+#import "USBController.h"
 
 /// Detects a Komplete Kontrol S-series controller. Listens for any incoming button presses and forwards them
 /// to the delegate.
@@ -71,7 +71,7 @@ const uint8_t kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kK
 // Seems to be overall device state/Mode Sending just 0xa0 initializes the
 // device and keyboard light control works.
 const uint8_t kCommandInit = 0xA0;
-const uint8_t kKompleteKontrolInit[] = { kCommandInit, 0x00, 0x00 };
+const uint8_t kKompleteKontrolInit[] = {kCommandInit, 0x00, 0x00};
 
 const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
 const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
@@ -99,28 +99,28 @@ const size_t kInputBufferSize = 64;
 // This is just a very rough, initial approximation of the actual palette of the S-series
 // MK2 controllers.
 const unsigned char kMK2Palette[17][3] = {
-    { 0xFF, 0x00, 0x00 },   // 0: red
-    { 0xFF, 0x3F, 0x00 },   // 1:
-    { 0xFF, 0x7F, 0x00 },   // 2: orange
-    { 0xFF, 0xCF, 0x00 },   // 3: orange-yellow
-    { 0xFF, 0xFF, 0x00 },   // 4: yellow
-    { 0x7F, 0xFF, 0x00 },   // 5: green-yellow
-    { 0x00, 0xFF, 0x00 },   // 6: green
-    { 0x00, 0xFF, 0x7F },   // 7:
-    { 0x00, 0xFF, 0xFF },   // 8:
-    { 0x00, 0x7F, 0xFF },   // 9:
-    { 0x00, 0x00, 0xFF },   // 10: blue
-    { 0x3F, 0x00, 0xFF },   // 11:
-    { 0x7F, 0x00, 0xFF },   // 12: purple
-    { 0xFF, 0x00, 0xFF },   // 13: pink
-    { 0xFF, 0x00, 0x7F },   // 14:
-    { 0xFF, 0x00, 0x3F },   // 15:
-    { 0xFF, 0xFF, 0xFF }    // 16: white
+    {0xFF, 0x00, 0x00}, // 0: red
+    {0xFF, 0x3F, 0x00}, // 1:
+    {0xFF, 0x7F, 0x00}, // 2: orange
+    {0xFF, 0xCF, 0x00}, // 3: orange-yellow
+    {0xFF, 0xFF, 0x00}, // 4: yellow
+    {0x7F, 0xFF, 0x00}, // 5: green-yellow
+    {0x00, 0xFF, 0x00}, // 6: green
+    {0x00, 0xFF, 0x7F}, // 7:
+    {0x00, 0xFF, 0xFF}, // 8:
+    {0x00, 0x7F, 0xFF}, // 9:
+    {0x00, 0x00, 0xFF}, // 10: blue
+    {0x3F, 0x00, 0xFF}, // 11:
+    {0x7F, 0x00, 0xFF}, // 12: purple
+    {0xFF, 0x00, 0xFF}, // 13: pink
+    {0xFF, 0x00, 0x7F}, // 14:
+    {0xFF, 0x00, 0x3F}, // 15:
+    {0xFF, 0xFF, 0xFF}  // 16: white
 };
 
 #define DEBUG_HID_INPUT
 
-static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sender)
+static void HIDDeviceRemovedCallback(void* context, IOReturn result, void* sender)
 {
     HIDController* controller = (__bridge HIDController*)context;
     [controller deviceRemoved];
@@ -153,7 +153,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     if (keyState < kKompleteKontrolColorIntensityLevelCount) {
         return [NSColor blackColor];
     }
-  
+
     const int intensityShift = 5;
     const int intensityDivider = intensityShift + 3;
     const unsigned char colorIndex = ((keyState >> 2) - 1) % kKompleteKontrolColorCount;
@@ -202,7 +202,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
     _feedbackIntensityBuffer = &buttonLightingFeedback[1];
 
     memset(_buttons, 0, kKompleteKontrolButtonsMapSize);
-    memset(_feedbackIntensityBuffer,0, kKompleteKontrolButtonsMapSize);
+    memset(_feedbackIntensityBuffer, 0, kKompleteKontrolButtonsMapSize);
 
     // Supported controls get illuminated.
     _buttons[kKompleteKontrolButtonIdPlay] = kKompleteKontrolColorWhite;
@@ -235,7 +235,7 @@ static void HIDDeviceRemovedCallback(void *context, IOReturn result, void *sende
 
 + (int)intProperty:(NSString*)property withDevice:(IOHIDDeviceRef)device
 {
-    CFTypeRef type = IOHIDDeviceGetProperty(device,  (__bridge CFStringRef)property);
+    CFTypeRef type = IOHIDDeviceGetProperty(device, (__bridge CFStringRef)property);
     if (type && CFGetTypeID(type) == CFNumberGetTypeID()) {
         int32_t value;
         CFNumberGetValue((CFNumberRef)type, kCFNumberSInt32Type, &value);
@@ -302,7 +302,7 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
 
 - (void)resetFeedback
 {
-    for (int i=0; i < kKompleteKontrolButtonIdUnused1; i++) {
+    for (int i = 0; i < kKompleteKontrolButtonIdUnused1; i++) {
         _buttons[i] = (_buttons[i] & kKompleteKontrolColorMask) | _feedbackIntensityBuffer[i];
     }
     [self updateButtonLightMap:nil];
@@ -312,13 +312,13 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
 {
 #ifdef DEBUG_HID_INPUT
     NSMutableString* hex = [NSMutableString string];
-    for (int i=0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
         [hex appendFormat:@"%02x ", report[i]];
     }
     NSLog(@"hid report: %@", hex);
     [log logLine:[NSString stringWithFormat:@"hid report: %@", hex]];
 #endif
-    
+
     if (report[0] != 0x01) {
         NSLog(@"ignoring report %02Xh", report[0]);
         return;
@@ -332,46 +332,36 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     } EventReport;
 
     EventReport keyEvents[] = {
-        { 1, 0x10, kKompleteKontrolButtonIdFunction1 },
-        { 1, 0x20, kKompleteKontrolButtonIdFunction2 },
-        { 1, 0x40, kKompleteKontrolButtonIdFunction3 },
-        { 1, 0x80, kKompleteKontrolButtonIdFunction4 },
-        { 1, 0x01, kKompleteKontrolButtonIdFunction5 },
-        { 2, 0x10, kKompleteKontrolButtonIdPlay },
-        { 3, 0x80, kKompleteKontrolButtonIdPageLeft },
-        { 3, 0x20, kKompleteKontrolButtonIdPageRight },
-        { 4, 0x04, kKompleteKontrolButtonIdScene },
-        { 4, 0x20, kKompleteKontrolButtonIdClear },
-        { 5, 0x02, kKompleteKontrolButtonIdPlugin },
-        { 5, 0x08, kKompleteKontrolButtonIdSetup },
-        { 6, 0x14, kKompleteKontrolButtonIdJogLeft },
-        { 6, 0x24, kKompleteKontrolButtonIdJogUp },
-        { 6, 0x44, kKompleteKontrolButtonIdJogDown },
-        { 6, 0x84, kKompleteKontrolButtonIdJogRight },
-        { 6, 0x0C, kKompleteKontrolButtonIdJogPress },
+        {1, 0x10, kKompleteKontrolButtonIdFunction1}, {1, 0x20, kKompleteKontrolButtonIdFunction2},
+        {1, 0x40, kKompleteKontrolButtonIdFunction3}, {1, 0x80, kKompleteKontrolButtonIdFunction4},
+        {1, 0x01, kKompleteKontrolButtonIdFunction5}, {2, 0x10, kKompleteKontrolButtonIdPlay},
+        {3, 0x80, kKompleteKontrolButtonIdPageLeft},  {3, 0x20, kKompleteKontrolButtonIdPageRight},
+        {4, 0x04, kKompleteKontrolButtonIdScene},     {4, 0x20, kKompleteKontrolButtonIdClear},
+        {5, 0x02, kKompleteKontrolButtonIdPlugin},    {5, 0x08, kKompleteKontrolButtonIdSetup},
+        {6, 0x14, kKompleteKontrolButtonIdJogLeft},   {6, 0x24, kKompleteKontrolButtonIdJogUp},
+        {6, 0x44, kKompleteKontrolButtonIdJogDown},   {6, 0x84, kKompleteKontrolButtonIdJogRight},
+        {6, 0x0C, kKompleteKontrolButtonIdJogPress},
     };
 
     if (report[7] == 0x80) {
         const short int* newValue = (short int*)&report[10];
         if (lastVolumeKnobValue != INTMAX_C(16)) {
             int delta = *newValue - lastVolumeKnobValue;
-            [_delegate receivedEvent:kKompleteKontrolButtonIdKnob1
-                               value:delta];
+            [_delegate receivedEvent:kKompleteKontrolButtonIdKnob1 value:delta];
         }
         lastVolumeKnobValue = *newValue;
         return;
     }
 
     // FIXME: This shouldnt be a loop - have a proper map instead.
-    for (int i=0;i < (sizeof(keyEvents) / sizeof(EventReport));i++) {
+    for (int i = 0; i < (sizeof(keyEvents) / sizeof(EventReport)); i++) {
         if (report[keyEvents[i].index] == keyEvents[i].value) {
             // Provide some feedback for most controls when the user activated them.
             if (keyEvents[i].identifier <= kKompleteKontrolButtonIdUnused1) {
                 [self feedbackWithEvent:keyEvents[i].identifier];
             }
 
-            [_delegate receivedEvent:keyEvents[i].identifier
-                               value:0];
+            [_delegate receivedEvent:keyEvents[i].identifier value:0];
 
             return;
         }
@@ -385,8 +375,7 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
         delta = 1;
     }
     if (delta != 0) {
-        [_delegate receivedEvent:kKompleteKontrolButtonIdJogScroll
-                           value:delta];
+        [_delegate receivedEvent:kKompleteKontrolButtonIdJogScroll value:delta];
     }
     lastJogWheelValue = report[30];
 
@@ -399,7 +388,7 @@ static void HIDInputCallback(void* context,
                              void* sender,
                              IOHIDReportType type,
                              uint32_t reportID,
-                             uint8_t *report,
+                             uint8_t* report,
                              CFIndex reportLength)
 {
     HIDController* controller = (__bridge HIDController*)context;
@@ -413,19 +402,19 @@ static void HIDInputCallback(void* context,
 - (IOHIDDeviceRef)detectKeyboardController:(NSError**)error
 {
     NSDictionary* supportedDevices = @{
-        @(kPID_S25MK1): @{ @"keys": @(25), @"mk": @(1), @"offset": @(-21) },
-        @(kPID_S49MK1): @{ @"keys": @(49), @"mk": @(1), @"offset": @(-36) },
-        @(kPID_S61MK1): @{ @"keys": @(61), @"mk": @(1), @"offset": @(-36) },
-        @(kPID_S88MK1): @{ @"keys": @(88), @"mk": @(1), @"offset": @(-21) },
+        @(kPID_S25MK1) : @{@"keys" : @(25), @"mk" : @(1), @"offset" : @(-21)},
+        @(kPID_S49MK1) : @{@"keys" : @(49), @"mk" : @(1), @"offset" : @(-36)},
+        @(kPID_S61MK1) : @{@"keys" : @(61), @"mk" : @(1), @"offset" : @(-36)},
+        @(kPID_S88MK1) : @{@"keys" : @(88), @"mk" : @(1), @"offset" : @(-21)},
 
-        @(kPID_S49MK2): @{ @"keys": @(49), @"mk": @(2), @"offset": @(-36) },
-        @(kPID_S61MK2): @{ @"keys": @(61), @"mk": @(2), @"offset": @(-36) },
-        @(kPID_S88MK2): @{ @"keys": @(88), @"mk": @(2), @"offset": @(-21) },
+        @(kPID_S49MK2) : @{@"keys" : @(49), @"mk" : @(2), @"offset" : @(-36)},
+        @(kPID_S61MK2) : @{@"keys" : @(61), @"mk" : @(2), @"offset" : @(-36)},
+        @(kPID_S88MK2) : @{@"keys" : @(88), @"mk" : @(2), @"offset" : @(-21)},
 
-        @(kPID_S61MK3): @{ @"keys": @(61), @"mk": @(3), @"offset": @(-36) },
-        @(kPID_S88MK3): @{ @"keys": @(88), @"mk": @(3), @"offset": @(-21) },
+        @(kPID_S61MK3) : @{@"keys" : @(61), @"mk" : @(3), @"offset" : @(-36)},
+        @(kPID_S88MK3) : @{@"keys" : @(88), @"mk" : @(3), @"offset" : @(-21)},
     };
-    
+
 #ifdef DEBUG_FAKE_CONTROLLER
     _keyCount = 88;
     _mk = 2;
@@ -439,11 +428,11 @@ static void HIDInputCallback(void* context,
     IOHIDManagerRef mgr = IOHIDManagerCreate(kCFAllocatorDefault, kIOHIDOptionsTypeNone);
     IOHIDManagerSetDeviceMatching(mgr, NULL);
     IOHIDManagerOpen(mgr, kIOHIDOptionsTypeNone);
-   
+
     CFSetRef deviceSet = IOHIDManagerCopyDevices(mgr);
     CFIndex deviceCount = CFSetGetCount(deviceSet);
     IOHIDDeviceRef* devices = calloc(deviceCount, sizeof(IOHIDDeviceRef));
-    CFSetGetValues(deviceSet, (const void **)devices);
+    CFSetGetValues(deviceSet, (const void**)devices);
 
     for (CFIndex i = 0; i < deviceCount; i++) {
         int vendor = [HIDController vendorIDWithDevice:devices[i]];
@@ -462,17 +451,15 @@ static void HIDInputCallback(void* context,
             lightGuideUpdateMessage[0] = _mk == 1 ? kCommandLightGuideUpdateMK1 : kCommandLightGuideUpdateMK2;
             // FIXME: This is likely wrong for MK1 devices!
             buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
-            _deviceName = [NSString stringWithFormat:@"%@Kontrol S%d MK%d",
-                           _mk != 3 ? @"Komplete " : @"",
-                           _keyCount,
-                           _mk];
+            _deviceName =
+                [NSString stringWithFormat:@"%@Kontrol S%d MK%d", _mk != 3 ? @"Komplete " : @"", _keyCount, _mk];
             return devices[i];
         }
     }
 
     NSLog(@"No Native Instruments keyboard controller HID device detected");
     if (error != nil || _mk == 0) {
-        NSDictionary *userInfo = @{
+        NSDictionary* userInfo = @{
             NSLocalizedDescriptionKey : @"No Native Instruments HID controller detected",
             NSLocalizedRecoverySuggestionErrorKey : @"Make sure the keyboard is connected and powered on."
         };
@@ -493,15 +480,15 @@ static void HIDInputCallback(void* context,
 - (BOOL)initKeyboardController:(NSError**)error
 {
     IOHIDDeviceRegisterRemovalCallback(device, HIDDeviceRemovedCallback, (__bridge void*)self);
-    
+
     // This would fail if we were not entitled to access USB devices - the result would be
     // "not permitted".
     IOReturn ret = IOHIDDeviceOpen(device, kIOHIDOptionsTypeNone);
     if (ret != kIOReturnSuccess) {
         if (error != nil) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
+            NSDictionary* userInfo = @{
+                NSLocalizedDescriptionKey :
+                    [NSString stringWithFormat:@"Keyboard Error: %@", [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
             *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
@@ -513,14 +500,16 @@ static void HIDInputCallback(void* context,
 
     memset(inputBuffer, 0, kInputBufferSize);
     IOHIDDeviceScheduleWithRunLoop(device, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-    IOHIDDeviceRegisterInputReportCallback(device, inputBuffer, sizeof(inputBuffer), HIDInputCallback, (__bridge void*)self);
-    
-    ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, kKompleteKontrolInit[0], kKompleteKontrolInit, sizeof(kKompleteKontrolInit));
+    IOHIDDeviceRegisterInputReportCallback(device, inputBuffer, sizeof(inputBuffer), HIDInputCallback,
+                                           (__bridge void*)self);
+
+    ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, kKompleteKontrolInit[0], kKompleteKontrolInit,
+                               sizeof(kKompleteKontrolInit));
     if (ret != kIOReturnSuccess) {
         if (error != nil) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@",
-                                             [USBController descriptionWithIOReturn:ret]],
+            NSDictionary* userInfo = @{
+                NSLocalizedDescriptionKey :
+                    [NSString stringWithFormat:@"Keyboard Error: %@", [USBController descriptionWithIOReturn:ret]],
                 NSLocalizedRecoverySuggestionErrorKey : @"This is entirely unexpected - how did you get here?"
             };
             *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
@@ -543,20 +532,16 @@ static void HIDInputCallback(void* context,
     if (device == NULL) {
         return NO;
     }
-    IOReturn ret = IOHIDDeviceSetReport(device,
-                                        kIOHIDReportTypeOutput,
-                                        report[0],
-                                        report,
-                                        length);
+    IOReturn ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, report[0], report, length);
     if (ret == kIOReturnSuccess) {
         return YES;
     }
 
     NSLog(@"couldnt set report");
     if (error != nil) {
-        NSDictionary *userInfo = @{
-            NSLocalizedDescriptionKey : [NSString stringWithFormat:@"Keyboard Error: %@",
-                                         [USBController descriptionWithIOReturn:ret]],
+        NSDictionary* userInfo = @{
+            NSLocalizedDescriptionKey :
+                [NSString stringWithFormat:@"Keyboard Error: %@", [USBController descriptionWithIOReturn:ret]],
             NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
         };
         *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
@@ -568,9 +553,7 @@ static void HIDInputCallback(void* context,
 
 - (BOOL)updateLightGuideMap:(NSError**)error
 {
-    return [self setReport:lightGuideUpdateMessage
-                    length:sizeof(lightGuideUpdateMessage)
-                     error:error];
+    return [self setReport:lightGuideUpdateMessage length:sizeof(lightGuideUpdateMessage) error:error];
 }
 
 - (void)lightKey:(int)key color:(unsigned char)color
@@ -578,7 +561,7 @@ static void HIDInputCallback(void* context,
     if (_mk != 1) {
         _keys[key] = color;
     } else {
-        setMk1ColorWithMk2ColorCode(color, &_keys[key*3]);
+        setMk1ColorWithMk2ColorCode(color, &_keys[key * 3]);
     }
     [self updateLightGuideMap:nil];
 }
@@ -615,7 +598,7 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
     if (lightUp == NO && keyIntensity == 0) {
         return endState;
     }
-        
+
     if (lightUp == NO) {
         --keyIntensity;
     } else {
@@ -641,96 +624,91 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
     }
 
     dispatch_async(swooshQueue, ^{
-        atomic_fetch_or(&self->swooshActive, 1);
-        const int midIndex = self.keyCount / 2;
+      atomic_fetch_or(&self->swooshActive, 1);
+      const int midIndex = self.keyCount / 2;
 
-        // Total number of ticks this animation will be using.
-        const unsigned int rainbowDuration = 10;
-        const unsigned int fadeInDuration = midIndex;
-        const unsigned int fadeOutDuration = midIndex;
-        const unsigned int totalDuration = rainbowDuration + fadeInDuration + fadeOutDuration;
-        const unsigned long int lastTick = midIndex * totalDuration;
-        // Animation tick to start fading into final state.
-        const unsigned long int fadeOutTick = midIndex * (rainbowDuration + fadeInDuration);
-        const unsigned long int rainbowTick = midIndex * fadeInDuration;
+      // Total number of ticks this animation will be using.
+      const unsigned int rainbowDuration = 10;
+      const unsigned int fadeInDuration = midIndex;
+      const unsigned int fadeOutDuration = midIndex;
+      const unsigned int totalDuration = rainbowDuration + fadeInDuration + fadeOutDuration;
+      const unsigned long int lastTick = midIndex * totalDuration;
+      // Animation tick to start fading into final state.
+      const unsigned long int fadeOutTick = midIndex * (rainbowDuration + fadeInDuration);
+      const unsigned long int rainbowTick = midIndex * fadeInDuration;
 
-        const unsigned char rainbowIntensity = kKompleteKontrolIntensityMedium;
+      const unsigned char rainbowIntensity = kKompleteKontrolIntensityMedium;
 
-        // We start dark for groovy effects...
-        [self lightsOff];
-        
-        // Depending on the users selection for the unpressed key state color, we need
-        // to ramp up or down the intensity for the fade into the final key state color.
-        const BOOL lightsUp = (unpressedKeyState & kKompleteKontrolIntensityMask) >= rainbowIntensity;
+      // We start dark for groovy effects...
+      [self lightsOff];
 
-        // Animate!
-        for (unsigned long int tick=0;tick < lastTick;tick++) {
-            const unsigned int keyIndex = tick % (midIndex + 1);
-            if (tick >= fadeOutTick)  {
-                // Fade into final state.
-                const unsigned int keysPerShade = 4;
-                const unsigned long normalizedTick = tick - fadeOutTick;
-                const unsigned long round = normalizedTick / midIndex;
-                if (keyIndex < round * keysPerShade) {
-                    self.keys[midIndex + keyIndex] = dimmedKeyState(self.keys[midIndex + keyIndex],
-                                                                    lightsUp,
-                                                                    unpressedKeyState);
-                    self.keys[midIndex - keyIndex] = dimmedKeyState(self.keys[midIndex - keyIndex],
-                                                                    lightsUp,
-                                                                    unpressedKeyState);
-                }
-            }
-            if (tick < rainbowTick)  {
-                // Fade into rainbow.
-                const unsigned int keysPerShade = 4;
-                const unsigned long round = tick / midIndex;
-                if (keyIndex < round * keysPerShade) {
-                    // FIXME: This is MK2 specific and needs and update for MK1!
-                    self.keys[keyIndex] = dimmedKeyState(self.keys[keyIndex],
-                                                         YES,
-                                                         (self.keys[keyIndex] & 0xfc) | rainbowIntensity);
-                    // FIXME: This is MK2 specific and needs and update for MK1!
-                    self.keys[(self.keyCount - 1) - keyIndex] = dimmedKeyState(self.keys[(self.keyCount - 1) - keyIndex],
-                                                                               YES,
-                                                                               (self.keys[(self.keyCount - 1) - keyIndex] & 0xfc) | rainbowIntensity);
-                }
-            }
-            // Don't touch lights that reached final state.
-            if ((self.keys[keyIndex] != unpressedKeyState && tick < fadeOutTick) && self.keys[keyIndex] > 0x00) {
-                // Rainbow scrolling.
-                const unsigned long round = tick / midIndex;
-                const unsigned int keysPerColor = 4;
-                const unsigned int rollStepsPerRound = 4;
-                const unsigned long phase = (keyIndex + (round * rollStepsPerRound)) / keysPerColor;
-                // Exclude the last color in the palette, white.
-                const unsigned int colorIndex = phase % (kKompleteKontrolColorCount - 1);
-                unsigned int colorCode = (colorIndex + 1) << 2;
-                colorCode = MIN(colorCode, kKompleteKontrolColorMask);
-                const unsigned int intensity = self.keys[keyIndex] & kKompleteKontrolIntensityMask;
-                // FIXME: This is MK2 specific and needs and update for MK1!
-                self.keys[keyIndex] = colorCode | intensity;
-                // FIXME: This is MK2 specific and needs and update for MK1!
-                self.keys[(self.keyCount - 1) - keyIndex] = colorCode | intensity;
-            }
-            // Once we are starting a new round of shading, we can display the old one.
-            if (keyIndex == 0) {
-                [self updateLightGuideMap:nil];
-                [NSThread sleepForTimeInterval:kLightsSwooshTick];
-            }
-        }
-        // FIXME: This shouldnt be needed - but it is right now.
-        // Assert final state on all keys - if the above left some garbage.
-        [self lightKeysWithColor:unpressedKeyState];
+      // Depending on the users selection for the unpressed key state color, we need
+      // to ramp up or down the intensity for the fade into the final key state color.
+      const BOOL lightsUp = (unpressedKeyState & kKompleteKontrolIntensityMask) >= rainbowIntensity;
 
-        atomic_fetch_and(&self->swooshActive, 0);
+      // Animate!
+      for (unsigned long int tick = 0; tick < lastTick; tick++) {
+          const unsigned int keyIndex = tick % (midIndex + 1);
+          if (tick >= fadeOutTick) {
+              // Fade into final state.
+              const unsigned int keysPerShade = 4;
+              const unsigned long normalizedTick = tick - fadeOutTick;
+              const unsigned long round = normalizedTick / midIndex;
+              if (keyIndex < round * keysPerShade) {
+                  self.keys[midIndex + keyIndex] =
+                      dimmedKeyState(self.keys[midIndex + keyIndex], lightsUp, unpressedKeyState);
+                  self.keys[midIndex - keyIndex] =
+                      dimmedKeyState(self.keys[midIndex - keyIndex], lightsUp, unpressedKeyState);
+              }
+          }
+          if (tick < rainbowTick) {
+              // Fade into rainbow.
+              const unsigned int keysPerShade = 4;
+              const unsigned long round = tick / midIndex;
+              if (keyIndex < round * keysPerShade) {
+                  // FIXME: This is MK2 specific and needs and update for MK1!
+                  self.keys[keyIndex] =
+                      dimmedKeyState(self.keys[keyIndex], YES, (self.keys[keyIndex] & 0xfc) | rainbowIntensity);
+                  // FIXME: This is MK2 specific and needs and update for MK1!
+                  self.keys[(self.keyCount - 1) - keyIndex] =
+                      dimmedKeyState(self.keys[(self.keyCount - 1) - keyIndex], YES,
+                                     (self.keys[(self.keyCount - 1) - keyIndex] & 0xfc) | rainbowIntensity);
+              }
+          }
+          // Don't touch lights that reached final state.
+          if ((self.keys[keyIndex] != unpressedKeyState && tick < fadeOutTick) && self.keys[keyIndex] > 0x00) {
+              // Rainbow scrolling.
+              const unsigned long round = tick / midIndex;
+              const unsigned int keysPerColor = 4;
+              const unsigned int rollStepsPerRound = 4;
+              const unsigned long phase = (keyIndex + (round * rollStepsPerRound)) / keysPerColor;
+              // Exclude the last color in the palette, white.
+              const unsigned int colorIndex = phase % (kKompleteKontrolColorCount - 1);
+              unsigned int colorCode = (colorIndex + 1) << 2;
+              colorCode = MIN(colorCode, kKompleteKontrolColorMask);
+              const unsigned int intensity = self.keys[keyIndex] & kKompleteKontrolIntensityMask;
+              // FIXME: This is MK2 specific and needs and update for MK1!
+              self.keys[keyIndex] = colorCode | intensity;
+              // FIXME: This is MK2 specific and needs and update for MK1!
+              self.keys[(self.keyCount - 1) - keyIndex] = colorCode | intensity;
+          }
+          // Once we are starting a new round of shading, we can display the old one.
+          if (keyIndex == 0) {
+              [self updateLightGuideMap:nil];
+              [NSThread sleepForTimeInterval:kLightsSwooshTick];
+          }
+      }
+      // FIXME: This shouldnt be needed - but it is right now.
+      // Assert final state on all keys - if the above left some garbage.
+      [self lightKeysWithColor:unpressedKeyState];
+
+      atomic_fetch_and(&self->swooshActive, 0);
     });
 }
 
 - (BOOL)updateButtonLightMap:(NSError**)error
 {
-    return [self setReport:buttonLightingUpdateMessage
-                    length:sizeof(buttonLightingUpdateMessage)
-                     error:error];
+    return [self setReport:buttonLightingUpdateMessage length:sizeof(buttonLightingUpdateMessage) error:error];
 }
 
 - (void)lightButton:(int)button color:(unsigned char)color

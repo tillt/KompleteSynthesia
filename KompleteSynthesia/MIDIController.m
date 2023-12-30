@@ -34,7 +34,7 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
 + (NSString*)readableNote:(unsigned char)note
 {
     int octave = ((int)note / 12) - 1;
-    NSArray* noteNames = @[@"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B"];
+    NSArray* noteNames = @[ @"C", @"C#", @"D", @"D#", @"E", @"F", @"F#", @"G", @"G#", @"A", @"A#", @"B" ];
     NSString* readable = [NSString stringWithFormat:@"%@%d", noteNames[note % 12], octave];
     NSString* output = @"   ";
     return [output stringByReplacingCharactersInRange:NSMakeRange(0, readable.length) withString:readable];
@@ -46,14 +46,14 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     NSString* message;
 
     // See if it appears to be a 4-char-code.
-    *(UInt32 *)(fourcc + 1) = CFSwapInt32HostToBig(status);
+    *(UInt32*)(fourcc + 1) = CFSwapInt32HostToBig(status);
     if (isprint(fourcc[1]) && isprint(fourcc[2]) && isprint(fourcc[3]) && isprint(fourcc[4])) {
         fourcc[0] = fourcc[5] = '\'';
         fourcc[6] = '\0';
         message = [NSString stringWithCString:(const char*)fourcc encoding:NSStringEncodingConversionAllowLossy];
     } else {
         // Otherwise try to get a human readable string from the NSError constructor.
-        NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
+        NSError* error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
         message = error.localizedFailureReason;
     }
 
@@ -76,70 +76,72 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     portLight = 0;
     portKeyboard = 0;
 
-    OSStatus status = MIDIClientCreateWithBlock((CFStringRef)@"KompleteSynthesia",
-                                                &client,
-                                                ^(const MIDINotification * _Nonnull message) {
-        if (message->messageID == kMIDIMsgSetupChanged) {
-            if (![weakSelf rescanMIDI]) {
-                NSLog(@"failed to create midi client interface connections");
-            }
-        }
-    });
+    OSStatus status = MIDIClientCreateWithBlock((CFStringRef) @"KompleteSynthesia", &client,
+                                                ^(const MIDINotification* _Nonnull message) {
+                                                  if (message->messageID == kMIDIMsgSetupChanged) {
+                                                      if (![weakSelf rescanMIDI]) {
+                                                          NSLog(@"failed to create midi client interface connections");
+                                                      }
+                                                  }
+                                                });
     if (status != 0) {
         NSLog(@"MIDIClientCreate: %d", status);
         if (error != nil) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
-                NSLocalizedRecoverySuggestionErrorKey: @"Try switching it off and on again."
+            NSDictionary* userInfo = @{
+                NSLocalizedDescriptionKey :
+                    [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
+                NSLocalizedRecoverySuggestionErrorKey : @"Try switching it off and on again."
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:status
+                                     userInfo:userInfo];
         }
         return NO;
     }
-    MIDIReceiveBlock receiveBlockLightLoopback = ^void (const MIDIEventList *evtlist, void *srcConRef) {
-        [weakSelf receivedMIDIEvents:evtlist interface:kMIDIConnectionInterfaceLightLoopback];
+    MIDIReceiveBlock receiveBlockLightLoopback = ^void(const MIDIEventList* evtlist, void* srcConRef) {
+      [weakSelf receivedMIDIEvents:evtlist interface:kMIDIConnectionInterfaceLightLoopback];
     };
 
     // MIDIInputPortCreateWithProtocol does not exist on macOS 10.15. We could replace this
     // logic with `MIDIInputPortCreateWithBlock` which works based on MIDIPackets and not
     // MIDIEvents - that in turn makes the parser a more complex and prone to failurea. But
     // it would give us 10.15 (catalina) compatiblity.
-    status = MIDIInputPortCreateWithProtocol(client,
-                                             (__bridge CFStringRef)kMIDIInputInterfaceLightLoopback,
-                                             kMIDIProtocol_1_0,
-                                             &portLight,
-                                             receiveBlockLightLoopback);
+    status = MIDIInputPortCreateWithProtocol(client, (__bridge CFStringRef)kMIDIInputInterfaceLightLoopback,
+                                             kMIDIProtocol_1_0, &portLight, receiveBlockLightLoopback);
     if (status != 0) {
         NSLog(@"MIDIInputPortCreate: %d", status);
         if (error != nil) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
-                NSLocalizedRecoverySuggestionErrorKey: @"Try to restart this application."
+            NSDictionary* userInfo = @{
+                NSLocalizedDescriptionKey :
+                    [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
+                NSLocalizedRecoverySuggestionErrorKey : @"Try to restart this application."
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:status
+                                     userInfo:userInfo];
         }
         return NO;
     }
 
     // It was so nice, we do it twice...
 
-    MIDIReceiveBlock receiveBlockKeyboard = ^void (const MIDIEventList *evtlist, void *srcConRef) {
-        [weakSelf receivedMIDIEvents:evtlist interface:kMIDIConnectionInterfaceKeyboard];
+    MIDIReceiveBlock receiveBlockKeyboard = ^void(const MIDIEventList* evtlist, void* srcConRef) {
+      [weakSelf receivedMIDIEvents:evtlist interface:kMIDIConnectionInterfaceKeyboard];
     };
 
-    status = MIDIInputPortCreateWithProtocol(client,
-                                             (__bridge CFStringRef)kMIDIInputInterfaceKeyboard,
-                                             kMIDIProtocol_1_0,
-                                             &portKeyboard,
-                                             receiveBlockKeyboard);
+    status = MIDIInputPortCreateWithProtocol(client, (__bridge CFStringRef)kMIDIInputInterfaceKeyboard,
+                                             kMIDIProtocol_1_0, &portKeyboard, receiveBlockKeyboard);
     if (status != 0) {
         NSLog(@"MIDIInputPortCreate: %d", status);
         if (error != nil) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
-                NSLocalizedRecoverySuggestionErrorKey: @"Try to restart this application."
+            NSDictionary* userInfo = @{
+                NSLocalizedDescriptionKey :
+                    [NSString stringWithFormat:@"MIDI Error: %@", [MIDIController OSStatusString:status]],
+                NSLocalizedRecoverySuggestionErrorKey : @"Try to restart this application."
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:status userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:status
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -147,13 +149,15 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     if ([self rescanMIDI] == NO) {
         NSLog(@"MIDI interfaces ports not found");
         if (error != nil) {
-            NSDictionary *userInfo = @{
-                NSLocalizedDescriptionKey: [NSString stringWithFormat:@"MIDI interface ports \'%@\' and \'%@' not found",
-                                            kMIDIInputInterfaceLightLoopback,
-                                            kMIDIInputInterfaceKeyboard],
-                NSLocalizedRecoverySuggestionErrorKey: @"Make sure you setup the interface port as documented."
+            NSDictionary* userInfo = @{
+                NSLocalizedDescriptionKey :
+                    [NSString stringWithFormat:@"MIDI interface ports \'%@\' and \'%@' not found",
+                                               kMIDIInputInterfaceLightLoopback, kMIDIInputInterfaceKeyboard],
+                NSLocalizedRecoverySuggestionErrorKey : @"Make sure you setup the interface port as documented."
             };
-            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier] code:-1 userInfo:userInfo];
+            *error = [NSError errorWithDomain:[[NSBundle bundleForClass:[self class]] bundleIdentifier]
+                                         code:-1
+                                     userInfo:userInfo];
         }
         return NO;
     }
@@ -242,8 +246,7 @@ const int kMIDIConnectionInterfaceKeyboard = 1;
     for (unsigned i = 0; i < eventList->numPackets; ++i) {
         for (unsigned w = 0; w < packet->wordCount; ++w) {
             unsigned char cvStatus = (packet->words[w] & 0x00F00000) >> 20;
-            if (cvStatus == kMIDICVStatusNoteOn ||
-                cvStatus == kMIDICVStatusNoteOff ||
+            if (cvStatus == kMIDICVStatusNoteOn || cvStatus == kMIDICVStatusNoteOff ||
                 cvStatus == kMIDICVStatusControlChange) {
                 unsigned char channel = (packet->words[w] & 0x000F0000) >> 16;
                 unsigned char param1 = (packet->words[w] & 0x0000FF00) >> 8;

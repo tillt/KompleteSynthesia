@@ -13,7 +13,7 @@ extern NSString* kAppDefaultCheckForUpdate;
 
 @interface UpdateManager : NSObject
 
-+ (void)UpdateCheckWithCompletion:(void(^)(NSString* status))completion;
++ (void)UpdateCheckWithCompletion:(void (^)(NSString* status))completion;
 + (BOOL)CheckForUpdates;
 
 @end

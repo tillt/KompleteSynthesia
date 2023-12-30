@@ -11,12 +11,11 @@
 
 /// Provides a collection of workspace application queries and commands.
 
-static NSString *const KVO_CONTEXT_TERMINATED_CHANGED = @"KVO_CONTEXT_TERMINATED_CHANGED";
+static NSString* const KVO_CONTEXT_TERMINATED_CHANGED = @"KVO_CONTEXT_TERMINATED_CHANGED";
 const NSTimeInterval kShutdownTimeout = 5.0;
 
-@implementation ApplicationObserver
-{
-    NSMutableDictionary<NSString*,NSDictionary*>* observedApplications;
+@implementation ApplicationObserver {
+    NSMutableDictionary<NSString*, NSDictionary*>* observedApplications;
 }
 
 - (id)init
@@ -50,7 +49,7 @@ const NSTimeInterval kShutdownTimeout = 5.0;
     if (app == nil || app.isTerminated == YES || app.bundleIdentifier == nil) {
         return NO;
     }
-    
+
     return [app.bundleIdentifier compare:bundleIdentifier] == NSOrderedSame;
 }
 
@@ -65,7 +64,7 @@ const NSTimeInterval kShutdownTimeout = 5.0;
     return YES;
 }
 
-- (BOOL)terminateApplication:(NSString*)bundleIdentifier completion:(void(^)(BOOL))completion
+- (BOOL)terminateApplication:(NSString*)bundleIdentifier completion:(void (^)(BOOL))completion
 {
     NSRunningApplication* app = [ApplicationObserver runningApplicationWithBundleIdentifier:bundleIdentifier];
 
@@ -74,28 +73,28 @@ const NSTimeInterval kShutdownTimeout = 5.0;
     }
 
     NSLog(@"found %@ and trying to kill %@ ...", bundleIdentifier, app.localizedName);
-    
-    NSTimer* timer = [NSTimer scheduledTimerWithTimeInterval:kShutdownTimeout repeats:NO block:^(NSTimer* timer){
-        if ([self->observedApplications objectForKey:bundleIdentifier] == nil) {
-            // Application seems gone, we are done.
-            return;
-        }
 
-        // Seems like that application was still running, give up!
-        NSLog(@"timeout when trying to kill %@", bundleIdentifier);
-        NSDictionary* dict = self->observedApplications[bundleIdentifier];
-        void(^completion)(BOOL) = dict[@"completion"];
-        
-        [dict[@"application"] removeObserver:self forKeyPath:@"isTerminated"];
-        [self->observedApplications removeObjectForKey:bundleIdentifier];
-        
-        completion(NO);
-    }];
-    
-    observedApplications[bundleIdentifier] = @{
-        @"application": app,
-        @"completion": completion,
-        @"timer": timer };
+    NSTimer* timer =
+        [NSTimer scheduledTimerWithTimeInterval:kShutdownTimeout
+                                        repeats:NO
+                                          block:^(NSTimer* timer) {
+                                            if ([self->observedApplications objectForKey:bundleIdentifier] == nil) {
+                                                // Application seems gone, we are done.
+                                                return;
+                                            }
+
+                                            // Seems like that application was still running, give up!
+                                            NSLog(@"timeout when trying to kill %@", bundleIdentifier);
+                                            NSDictionary* dict = self->observedApplications[bundleIdentifier];
+                                            void (^completion)(BOOL) = dict[@"completion"];
+
+                                            [dict[@"application"] removeObserver:self forKeyPath:@"isTerminated"];
+                                            [self->observedApplications removeObjectForKey:bundleIdentifier];
+
+                                            completion(NO);
+                                          }];
+
+    observedApplications[bundleIdentifier] = @{@"application" : app, @"completion" : completion, @"timer" : timer};
 
     [app addObserver:self
           forKeyPath:@"isTerminated"
@@ -122,7 +121,7 @@ const NSTimeInterval kShutdownTimeout = 5.0;
             assert(app == dict[@"application"]);
 
             NSTimer* timer = dict[@"timer"];
-            void(^completion)(BOOL) = dict[@"completion"];
+            void (^completion)(BOOL) = dict[@"completion"];
 
             [timer invalidate];
             [observedApplications removeObjectForKey:app.bundleIdentifier];
