@@ -98,9 +98,9 @@ const int kHeaderHeight = 26;
             osdView.layer.backgroundColor = [[NSColor blackColor] colorWithAlphaComponent:0.90].CGColor;
 
             NSTextField* tf = [[NSTextField alloc] initWithFrame:NSMakeRect(20.0,
-                                                                50.0,
-                                                                160,
-                                                                32.0)];
+                                                                            50.0,
+                                                                            160,
+                                                                            32.0)];
             tf.editable = NO;
             tf.font = [NSFont systemFontOfSize:21.0];
             tf.drawsBackground = NO;
@@ -158,9 +158,8 @@ const int kHeaderHeight = 26;
 - (void)teardown
 {
     [self stopUpdatingAndWait:YES];
-    [self clearScreen:0 error:nil];
-    if (_screenCount > 1) {
-        [self clearScreen:1 error:nil];
+    for (int i=0; i < _screenCount; i++) {
+        [self clearScreen:i error:nil];
     }
 }
 
@@ -210,15 +209,10 @@ const int kHeaderHeight = 26;
 
         [self beginEncoding];
 
-        [self encodeCGImage:cgi
-                     screen:0
-                          x:0
-                          y:0
-           skipHeaderHeight:0];
-
-        if (_screenCount > 1) {
+        // Show the default image on all screens available.
+        for (int i=0; i < self->_screenCount; i++) {
             [self encodeCGImage:cgi
-                         screen:1
+                         screen:i
                               x:0
                               y:0
                skipHeaderHeight:0];
@@ -273,7 +267,18 @@ const int kHeaderHeight = 26;
         };
 
     doneUpdating:
-        [self clearScreen:0 error:nil];
+        [self beginEncoding];
+
+        // Show the default image on all screens available.
+        for (int i=0; i < self->_screenCount; i++) {
+            [self encodeCGImage:cgi
+                         screen:i
+                              x:0
+                              y:0
+               skipHeaderHeight:0];
+        }
+
+        [self sendStreamWithError:nil];
 
         atomic_fetch_and(&self->screenUpdateActive, 0);
         
