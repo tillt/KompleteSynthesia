@@ -169,12 +169,6 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
                                                               hidController:_hidController
                                                              midiController:_midiController
                                                                    delegate:self];
-    if (_midi2hidController == nil) {
-        [[NSAlert alertWithError:error] runModal];
-        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
-        return;
-    }
-    
     if ([_midi2hidController resetWithError:&error] == NO) {
         [[NSAlert alertWithError:error] runModal];
         [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
