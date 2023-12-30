@@ -15,7 +15,7 @@
 {
     AudioDeviceID   outputDeviceID = kAudioObjectUnknown;
 
-    // Get output device device
+    // Get default output device.
     UInt32 propertySize = 0;
     OSStatus status = noErr;
     AudioObjectPropertyAddress propertyAOPA;
