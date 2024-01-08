@@ -73,6 +73,8 @@ const uint8_t kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kK
 const uint8_t kCommandInit = 0xA0;
 const uint8_t kKompleteKontrolInit[] = {kCommandInit, 0x00, 0x00};
 
+const uint8_t kKompleteKontrolInitMK3[] = {0x06, 0x00, 0x00, 0x00, 0x93, 0x02, 0xcd, 0x01, 0x2c, 0x90};
+
 const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
 const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
 
@@ -503,8 +505,9 @@ static void HIDInputCallback(void* context,
     IOHIDDeviceRegisterInputReportCallback(device, inputBuffer, sizeof(inputBuffer), HIDInputCallback,
                                            (__bridge void*)self);
 
-    ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, kKompleteKontrolInit[0], kKompleteKontrolInit,
-                               sizeof(kKompleteKontrolInit));
+    const uint8_t* init = _mk == 3 ? kKompleteKontrolInitMK3 : kKompleteKontrolInit;
+    size_t length = _mk == 3 ? sizeof(kKompleteKontrolInitMK3) : sizeof(kKompleteKontrolInit);
+    ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, *init, init, length);
     if (ret != kIOReturnSuccess) {
         if (error != nil) {
             NSDictionary* userInfo = @{
@@ -553,6 +556,10 @@ static void HIDInputCallback(void* context,
 
 - (BOOL)updateLightGuideMap:(NSError**)error
 {
+    if (_mk == 3) {
+        // FIXME: We dont know yet how to specifically update the lightguide.
+        return true;
+    }
     return [self setReport:lightGuideUpdateMessage length:sizeof(lightGuideUpdateMessage) error:error];
 }
 
@@ -708,6 +715,11 @@ static unsigned char dimmedKeyState(unsigned char keyState, BOOL lightUp, unsign
 
 - (BOOL)updateButtonLightMap:(NSError**)error
 {
+    if (_mk == 3) {
+        // FIXME: We dont know yet how to specifically update the button lighting.
+        return true;
+    }
+
     return [self setReport:buttonLightingUpdateMessage length:sizeof(buttonLightingUpdateMessage) error:error];
 }
 
