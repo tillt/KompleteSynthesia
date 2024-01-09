@@ -18,7 +18,7 @@ NSString* kProject = @"KompleteSynthesia";
 
 @implementation UpdateManager
 
-+ (NSString*)LatestReleaseTag:(NSArray*)releases
++ (NSString*)LatestReleaseTag:(NSArray*)releases forPreReleases:(BOOL)pre
 {
     // GitHub returns the tags in chronological order. That means we can pass through
     // the returned tags and find the first one that is not a pre-release to find the
@@ -28,7 +28,7 @@ NSString* kProject = @"KompleteSynthesia";
     for (NSDictionary* release in releases) {
         NSString* tag = [release objectForKey:@"name"];
         unsigned long dots = [[tag componentsSeparatedByString:@"."] count] - 1;
-        if (dots != 1) {
+        if (pre == NO && dots != 1) {
             NSLog(@"skipping %@ as it is not a release", tag);
             continue;
         }
@@ -56,11 +56,12 @@ NSString* kProject = @"KompleteSynthesia";
                          id object = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
                          if ([object isKindOfClass:[NSArray class]]) {
                              NSArray* results = object;
-                             tag = [UpdateManager LatestReleaseTag:results];
-                             // FIXME: we are including pre-release tags and alike!
                              NSString* version =
                                  [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
                              NSString* versionTag = [NSString stringWithFormat:@"v%@", version];
+                             unsigned long dots = [[version componentsSeparatedByString:@"."] count] - 1;
+                             BOOL runningPreRelease = dots != 1;
+                             tag = [UpdateManager LatestReleaseTag:results forPreReleases:runningPreRelease];
                              if ([tag compare:versionTag] != NSOrderedSame) {
                                  NSLog(@"there is a different version available");
                                  status = @"update available";
