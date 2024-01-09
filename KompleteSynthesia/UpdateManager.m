@@ -60,6 +60,8 @@ NSString* kProject = @"KompleteSynthesia";
                                  [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleShortVersionString"];
                              NSString* versionTag = [NSString stringWithFormat:@"v%@", version];
                              unsigned long dots = [[version componentsSeparatedByString:@"."] count] - 1;
+                             // If we were running a pre-release, we would be interested in
+                             // pre-release updates.
                              BOOL runningPreRelease = dots != 1;
                              tag = [UpdateManager LatestReleaseTag:results forPreReleases:runningPreRelease];
                              if ([tag compare:versionTag] != NSOrderedSame) {
