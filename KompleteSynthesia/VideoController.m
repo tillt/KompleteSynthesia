@@ -26,6 +26,8 @@ const double kRefreshDelay = 1.0 / 40.0;
 
 const double kTimeoutDelay = 0.1;
 
+const uint8_t kCommandScreenUpdateMK2 = 0x84;
+
 // FIXME: This smells too magic -- try to find that size from a system function!
 const int kHeaderHeight = 26;
 
@@ -391,7 +393,7 @@ const int kHeaderHeight = 26;
 
 - (void)encodeImage:(NIImage*)image screen:(uint8_t)screen x:(unsigned int)x y:(unsigned int)y
 {
-    const unsigned char commandBlob1[] = {0x84, 0x00, screen, 0x60, 0x00, 0x00, 0x00, 0x00};
+    const unsigned char commandBlob1[] = {kCommandScreenUpdateMK2, 0x00, screen, 0x60, 0x00, 0x00, 0x00, 0x00};
     [stream appendBytes:commandBlob1 length:sizeof(commandBlob1)];
 
     const uint16_t rect[] = {htons(x), htons(y), htons(image->width), htons(image->height)};
