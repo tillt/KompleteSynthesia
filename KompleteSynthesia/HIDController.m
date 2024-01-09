@@ -73,6 +73,8 @@ const uint8_t kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kK
 const uint8_t kCommandInit = 0xA0;
 const uint8_t kKompleteKontrolInit[] = {kCommandInit, 0x00, 0x00};
 
+// FIXME: This likely is not be enough to get the MK3 controller fully initialized. It is what
+// FIXME: Komplete Kontrol sends on an 8 second interval to the controller.
 const uint8_t kKompleteKontrolInitMK3[] = {0x06, 0x00, 0x00, 0x00, 0x93, 0x02, 0xcd, 0x01, 0x2c, 0x90};
 
 const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
