@@ -134,7 +134,9 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
 - (void)swoosh
 {
-    [hid lightsSwooshTo:colorMap[kColorMapUnpressed]];
+    if (hid.mk == 2) {
+        [hid lightsSwooshTo:colorMap[kColorMapUnpressed]];
+    }
 }
 
 - (void)teardown
@@ -205,6 +207,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
     if (key < 0 || key > hid.keyCount) {
         NSLog(@"unexpected note lighting requested for key %d", key);
+        [self->log logLine:[NSString stringWithFormat:@"unexpected note lighting requested for key %d", key]];
         return;
     }
     switch (interface) {
