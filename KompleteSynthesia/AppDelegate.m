@@ -22,6 +22,7 @@
 @property (nonatomic, strong) MIDI2HIDController* midi2hidController;
 @property (nonatomic, strong) VideoController* videoController;
 @property (nonatomic, strong) HIDController* hidController;
+@property (nonatomic, strong) USBController* usbController;
 @property (nonatomic, strong) MIDIController* midiController;
 @property (nonatomic, strong) LogViewController* log;
 @property (nonatomic, strong) SynthesiaController* synthesia;
@@ -163,7 +164,13 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 {
     NSError* error = nil;
 
-    _hidController = [[HIDController alloc] initWithLogViewController:_log];
+    _usbController = [[USBController alloc] initWithLogViewController:_log];
+    // Try to open a USB device interface for bulk transfer.
+    if ([_usbController setupWithError:&error] == NO) {
+        usbAvailable = NO;
+    }
+
+    _hidController = [[HIDController alloc] initWithUSBController:_usbController logViewController:_log];
 
     _midiController = [[MIDIController alloc] initWithLogViewController:_log];
 
@@ -177,36 +184,30 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
         return;
     }
 
-    // We won't need any bulk USB access for MK1 controllers - they have no screens.
-    if (_hidController.mk == 1) {
-        usbAvailable = NO;
-    }
-
-    // FIXME: Actively disable USB bulk transfer on MK3 until further notice...
-    if (_hidController.mk == 3) {
-        usbAvailable = NO;
-    }
-
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
 
     [userDefaults registerDefaults:@{kAppDefaultActivateSynthesia : @(YES)}];
     _midi2hidController.forwardButtonsToSynthesiaOnly = [userDefaults boolForKey:kAppDefaultActivateSynthesia];
 
     if (usbAvailable == YES) {
-        _videoController = [[VideoController alloc] initWithLogViewController:_log error:&error];
-        if (_videoController == nil) {
-            [[NSAlert alertWithError:error] runModal];
-            [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
-            return;
-        }
+        if (_hidController.mk == 2) {
+            _videoController = [[VideoController alloc] initWithUSBController:_usbController
+                                                            logViewController:_log
+                                                                        error:&error];
+            if (_videoController == nil) {
+                [[NSAlert alertWithError:error] runModal];
+                [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+                return;
+            }
 
-        [userDefaults registerDefaults:@{kAppDefaultMirrorSynthesia : @(YES)}];
-        _videoController.mirrorSynthesiaApplicationWindow = [userDefaults boolForKey:kAppDefaultMirrorSynthesia];
+            [userDefaults registerDefaults:@{kAppDefaultMirrorSynthesia : @(YES)}];
+            _videoController.mirrorSynthesiaApplicationWindow = [userDefaults boolForKey:kAppDefaultMirrorSynthesia];
 
-        if (![_videoController reset:&error]) {
-            [[NSAlert alertWithError:error] runModal];
-            [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
-            return;
+            if (![_videoController reset:&error]) {
+                [[NSAlert alertWithError:error] runModal];
+                [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+                return;
+            }
         }
     }
 

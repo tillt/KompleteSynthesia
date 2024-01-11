@@ -143,9 +143,12 @@ static void HIDDeviceRemovedCallback(void* context, IOReturn result, void* sende
 
 @implementation HIDController {
     LogViewController* log;
+    USBController* usb;
 
     size_t lightGuideUpdateMessageSize;
     unsigned char* lightGuideUpdateMessage;
+    NSMutableData* lightGuideStreamMK3;
+
     unsigned char buttonLightingFeedback[kKompleteKontrolButtonsMessageSize];
     unsigned char buttonLightingUpdateMessage[kKompleteKontrolButtonsMessageSize];
 
@@ -178,11 +181,13 @@ static void HIDDeviceRemovedCallback(void* context, IOReturn result, void* sende
                            alpha:1.0f];
 }
 
-- (id)initWithLogViewController:(LogViewController*)lc
+- (id)initWithUSBController:(USBController*)uc logViewController:(LogViewController*)lc;
 {
     self = [super init];
     if (self) {
         log = lc;
+        usb = uc;
+
         lastVolumeKnobValue = INTMAX_C(16);
         atomic_fetch_and(&swooshActive, 0);
         swooshQueue = dispatch_queue_create("KompleteSynthesia.SwooshQueue", NULL);
@@ -468,21 +473,25 @@ static void HIDInputCallback(void* context,
 
             lightGuideUpdateMessageSize =
                 _mk == 3 ? kKompleteKontrolLightGuideMessageSizeMK3 : kKompleteKontrolLightGuideMessageSize;
-            lightGuideUpdateMessage = calloc(lightGuideUpdateMessageSize, 1);
 
-            switch (_mk) {
-                case 1:
-                    lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK1;
-                    break;
-                case 2:
-                    lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK2;
-                    break;
-                case 3:
-                    *(unsigned long*)lightGuideUpdateMessage = lightGuideUpdateMessageSize - 4;
-                    memcpy(lightGuideUpdateMessage + 4, kKompleteKontrolLightGuidePrefixMK3,
-                           sizeof(kKompleteKontrolLightGuidePrefixMK3));
-                    break;
+            lightGuideStreamMK3 = nil;
+
+            if (_mk == 3) {
+                lightGuideStreamMK3 = [[NSMutableData alloc] initWithCapacity:lightGuideUpdateMessageSize];
+                unsigned int length = (unsigned int)lightGuideUpdateMessageSize - 4;
+                [lightGuideStreamMK3 appendBytes:&length length:sizeof(length)];
+                [lightGuideStreamMK3 appendBytes:&kKompleteKontrolLightGuidePrefixMK3
+                                          length:sizeof(kKompleteKontrolLightGuidePrefixMK3)];
+                for (int i = 0; i < 128; i++) {
+                    unsigned char entry[] = {0x92, 0x00, 0x00};
+                    [lightGuideStreamMK3 appendBytes:entry length:sizeof(entry)];
+                }
+                lightGuideUpdateMessage = (unsigned char*)lightGuideStreamMK3.bytes;
+            } else {
+                lightGuideUpdateMessage = calloc(lightGuideUpdateMessageSize, 1);
+                lightGuideUpdateMessage[0] = _mk == 1 ? kCommandLightGuideUpdateMK1 : kCommandLightGuideUpdateMK2;
             }
+
             // FIXME: This is likely wrong for MK1 devices!
             buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
             _deviceName =
@@ -588,6 +597,13 @@ static void HIDInputCallback(void* context,
 
 - (BOOL)updateLightGuideMap:(NSError**)error
 {
+    extern const double kTimeoutDelay;
+
+    if (_mk == 3) {
+        BOOL ret = [usb bulkWriteData:lightGuideStreamMK3 error:error];
+        [usb waitForBulkTransfer:kTimeoutDelay];
+        return ret;
+    }
     return [self setReport:lightGuideUpdateMessage length:lightGuideUpdateMessageSize error:error];
 }
 
@@ -625,6 +641,7 @@ static void HIDInputCallback(void* context,
             memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
             break;
         case 3:
+
             for (unsigned int i = 0; i < 128; i++) {
                 _keys[i * 3 + 0] = kCommandLightGuideKeyCommandMK3;
                 _keys[i * 3 + 1] = i;

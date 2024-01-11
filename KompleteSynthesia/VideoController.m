@@ -53,7 +53,7 @@ const int kHeaderHeight = 26;
     BOOL showValue;
 }
 
-- (id)initWithLogViewController:(LogViewController*)lc error:(NSError**)error
+- (id)initWithUSBController:(USBController*)uc logViewController:(LogViewController*)lc error:(NSError**)error
 {
     self = [super init];
     if (self) {
@@ -69,12 +69,7 @@ const int kHeaderHeight = 26;
         imageConversionScaleBuffer = NULL;
 
         log = lc;
-
-        usb = [[USBController alloc] initWithError:error];
-        if (usb == nil) {
-            return nil;
-        }
-        [log logLine:[NSString stringWithFormat:@"detected %@ USB device", usb.deviceName]];
+        usb = uc;
 
         if (usb.mk > 1) {
             _screenCount = usb.mk == 2 ? 2 : 1;

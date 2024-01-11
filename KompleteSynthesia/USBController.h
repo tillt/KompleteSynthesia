@@ -28,6 +28,8 @@ extern const uint32_t kPID_S49MK3;
 extern const uint32_t kPID_S61MK3;
 extern const uint32_t kPID_S88MK3;
 
+@class LogViewController;
+
 @interface USBController : NSObject
 
 @property (nonatomic, copy) NSString* deviceName;
@@ -41,7 +43,8 @@ extern const uint32_t kPID_S88MK3;
 
 + (NSString*)descriptionWithIOReturn:(IOReturn)code;
 
-- (id)initWithError:(NSError**)error;
+- (id)initWithLogViewController:(LogViewController*)lc;
+- (BOOL)setupWithError:(NSError**)error;
 - (BOOL)bulkWriteData:(NSData*)data error:(NSError**)error;
 - (BOOL)waitForBulkTransfer:(NSTimeInterval)timeout;
 - (void)teardown;

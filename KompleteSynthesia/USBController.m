@@ -13,6 +13,8 @@
 #import <IOKit/IOKitLib.h>
 #import <IOKit/usb/IOUSBLib.h>
 
+#import "LogViewController.h"
+
 /// Detects a Komplete Kontrol S-series USB controller. Supports USB bulk write for transmitting large amounts of data
 /// as needed for graphics data transfer to the LCD screens.
 
@@ -34,8 +36,12 @@ const uint32_t kPID_S49MK3 = 0x2100; // FIXME: NO IDEA - THESE ARE PLACEHOLDERS 
 const uint32_t kPID_S61MK3 = 0x2110; // Confirmed, thanks to @Bounga.
 const uint32_t kPID_S88MK3 = 0x2120; // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
 
-const uint32_t kUSBDeviceInterface = 0x03;         // FIXME: Possibly MK2 specific.
-const uint32_t kUSBDeviceInterfaceEndpoint = 0x03; // FIXME: Possibly MK2 specific.
+// Bulk transfer interface specifications.
+const uint32_t kUSBDeviceInterfaceMK2 = 0x03;
+const uint32_t kUSBDeviceInterfaceEndpointMK2 = 0x03;
+
+const uint32_t kUSBDeviceInterfaceMK3 = 0x04;
+const uint32_t kUSBDeviceInterfaceEndpointMK3 = 0x04;
 
 @implementation USBController {
     IOUSBDeviceInterface942** device;
@@ -43,6 +49,7 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03; // FIXME: Possibly MK2 specif
     uint8_t endpointCount;
     uint8_t endpointAddresses[32];
     dispatch_semaphore_t transfers;
+    LogViewController* log;
 }
 
 + (NSString*)descriptionWithIOReturn:(IOReturn)err
@@ -50,23 +57,30 @@ const uint32_t kUSBDeviceInterfaceEndpoint = 0x03; // FIXME: Possibly MK2 specif
     return [NSString stringWithCString:mach_error_string(err) encoding:NSStringEncodingConversionAllowLossy];
 }
 
-- (id)initWithError:(NSError**)error
+- (id)initWithLogViewController:(LogViewController*)lc
 {
     self = [super init];
     if (self) {
         _connected = NO;
-        _deviceInterfaceEndpoint = kUSBDeviceInterfaceEndpoint;
+        log = lc;
         transfers = dispatch_semaphore_create(0);
-        if ([self detectDevice:error] == NULL) {
-            return nil;
-        }
-        NSLog(@"detected %@ USB device", _deviceName);
-        if ([self openDevice:error] == NO) {
-            return nil;
-        }
-        NSLog(@"USB controller fully connected - up and running");
     }
     return self;
+}
+
+- (BOOL)setupWithError:(NSError**)error
+{
+    _connected = NO;
+    if ([self detectDevice:error] == NULL) {
+        return NO;
+    }
+    [log logLine:[NSString stringWithFormat:@"detected %@ USB device", _deviceName]];
+
+    if ([self openDevice:error] == NO) {
+        return NO;
+    }
+    NSLog(@"USB controller fully connected - up and running");
+    return YES;
 }
 
 - (void)dealloc
@@ -430,7 +444,9 @@ static void asyncCallback(void* refcon, IOReturn result, void* arg0)
         return NO;
     }
 
-    ret = [self openDeviceInterface:kUSBDeviceInterface];
+    _deviceInterfaceEndpoint = _mk == 2 ? kUSBDeviceInterfaceEndpointMK2 : kUSBDeviceInterfaceEndpointMK3;
+
+    ret = [self openDeviceInterface:_mk == 2 ? kUSBDeviceInterfaceMK2 : kUSBDeviceInterfaceMK3];
     if (ret != kIOReturnSuccess) {
         if (error) {
             NSDictionary* userInfo = @{

@@ -105,6 +105,7 @@ enum {
 };
 
 @class LogViewController;
+@class USBController;
 
 @protocol HIDControllerDelegate <NSObject>
 - (void)receivedEvent:(const int)event value:(int)value;
@@ -123,7 +124,7 @@ enum {
 
 + (NSColor*)colorWithKeyState:(const unsigned char)keyState;
 
-- (id)initWithLogViewController:(LogViewController*)lc;
+- (id)initWithUSBController:(USBController*)uc logViewController:(LogViewController*)lc;
 
 - (BOOL)setupWithError:(NSError**)error;
 

@@ -29,7 +29,7 @@ typedef struct {
 
 @property (nonatomic, strong) NSTextField* volumeValue;
 
-- (id)initWithLogViewController:(LogViewController*)lc error:(NSError**)error;
+- (id)initWithUSBController:(USBController*)uc logViewController:(LogViewController*)lc error:(NSError**)error;
 - (BOOL)reset:(NSError**)error;
 - (void)teardown;
 - (void)showOSD;
