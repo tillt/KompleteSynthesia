@@ -82,7 +82,14 @@ const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
 
 // FIXME: This appears to be wrong for MK3 devices -- instead of lighting keys, we are
 // FIXME: lighting the touchstrip with 0x81.
-const uint8_t kCommandLightGuideUpdateMK3 = 0x81;
+// const uint8_t kCommandLightGuideUpdateMK3 = 0x81;
+
+// See https://github.com/tillt/KompleteSynthesia/discussions/29#discussioncomment-8089141
+const uint8_t kKompleteKontrolLightGuidePrefixMK3[] = {0x93, 0x02, 0xCD, 0x01, 0x16, 0x92, 0xCD, 0x01,
+                                                       0x51, 0x81, 0xCC, 0xFC, 0xDC, 0x00, 0x80};
+const uint8_t kCommandLightGuideKeyCommandMK3 = 0x92;
+
+const size_t kKompleteKontrolLightGuideMessageSizeMK3 = 403;
 
 const size_t kKompleteKontrolLightGuideMessageSize = 250;
 const size_t kKompleteKontrolLightGuideKeyMapSize = kKompleteKontrolLightGuideMessageSize - 1;
@@ -137,7 +144,8 @@ static void HIDDeviceRemovedCallback(void* context, IOReturn result, void* sende
 @implementation HIDController {
     LogViewController* log;
 
-    unsigned char lightGuideUpdateMessage[kKompleteKontrolLightGuideMessageSize];
+    size_t lightGuideUpdateMessageSize;
+    unsigned char* lightGuideUpdateMessage;
     unsigned char buttonLightingFeedback[kKompleteKontrolButtonsMessageSize];
     unsigned char buttonLightingUpdateMessage[kKompleteKontrolButtonsMessageSize];
 
@@ -198,7 +206,12 @@ static void HIDDeviceRemovedCallback(void* context, IOReturn result, void* sende
         return NO;
     }
 
-    _keys = &lightGuideUpdateMessage[1];
+    if (_mk == 3) {
+        // TODO: Make this less magic. Consider abstracting away from this direct buffer access.
+        _keys = lightGuideUpdateMessage + 4 + sizeof(kKompleteKontrolLightGuidePrefixMK3);
+    } else {
+        _keys = &lightGuideUpdateMessage[1];
+    }
 
     [self lightKeysWithColor:kKeyColorUnpressed];
 
@@ -452,7 +465,24 @@ static void HIDInputCallback(void* context,
             _keyCount = [supportedDevices[@(product)][@"keys"] intValue];
             _mk = [supportedDevices[@(product)][@"mk"] intValue];
             _keyOffset = [supportedDevices[@(product)][@"offset"] intValue];
-            lightGuideUpdateMessage[0] = _mk == 1 ? kCommandLightGuideUpdateMK1 : kCommandLightGuideUpdateMK2;
+
+            lightGuideUpdateMessageSize =
+                _mk == 3 ? kKompleteKontrolLightGuideMessageSizeMK3 : kKompleteKontrolLightGuideMessageSize;
+            lightGuideUpdateMessage = calloc(lightGuideUpdateMessageSize, 1);
+
+            switch (_mk) {
+                case 1:
+                    lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK1;
+                    break;
+                case 2:
+                    lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK2;
+                    break;
+                case 3:
+                    *(unsigned long*)lightGuideUpdateMessage = lightGuideUpdateMessageSize - 4;
+                    memcpy(lightGuideUpdateMessage + 4, kKompleteKontrolLightGuidePrefixMK3,
+                           sizeof(kKompleteKontrolLightGuidePrefixMK3));
+                    break;
+            }
             // FIXME: This is likely wrong for MK1 devices!
             buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
             _deviceName =
@@ -558,19 +588,23 @@ static void HIDInputCallback(void* context,
 
 - (BOOL)updateLightGuideMap:(NSError**)error
 {
-    if (_mk == 3) {
-        // FIXME: We dont know yet how to specifically update the lightguide.
-        return true;
-    }
-    return [self setReport:lightGuideUpdateMessage length:sizeof(lightGuideUpdateMessage) error:error];
+    return [self setReport:lightGuideUpdateMessage length:lightGuideUpdateMessageSize error:error];
 }
 
 - (void)lightKey:(int)key color:(unsigned char)color
 {
-    if (_mk != 1) {
-        _keys[key] = color;
-    } else {
-        setMk1ColorWithMk2ColorCode(color, &_keys[key * 3]);
+    switch (_mk) {
+        case 1:
+            setMk1ColorWithMk2ColorCode(color, &_keys[key * 3]);
+            break;
+        case 2:
+            _keys[key] = color;
+            break;
+        case 3:
+            _keys[key * 3 + 0] = kCommandLightGuideKeyCommandMK3;
+            _keys[key * 3 + 1] = key;
+            _keys[key * 3 + 2] = color;
+            break;
     }
     [self updateLightGuideMap:nil];
 }
@@ -580,13 +614,25 @@ static void HIDInputCallback(void* context,
     if (_keys == NULL) {
         return;
     }
-    if (_mk != 1) {
-        memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
-    } else {
-        for (unsigned int i = 0; i < kKompleteKontrolLightGuideKeyMapSize; i += 3) {
-            setMk1ColorWithMk2ColorCode(color, &_keys[i]);
-        }
+
+    switch (_mk) {
+        case 1:
+            for (unsigned int i = 0; i < kKompleteKontrolLightGuideKeyMapSize; i += 3) {
+                setMk1ColorWithMk2ColorCode(color, &_keys[i]);
+            }
+            break;
+        case 2:
+            memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
+            break;
+        case 3:
+            for (unsigned int i = 0; i < 128; i++) {
+                _keys[i * 3 + 0] = kCommandLightGuideKeyCommandMK3;
+                _keys[i * 3 + 1] = i;
+                _keys[i * 3 + 2] = color;
+            }
+            break;
     }
+
     [self updateLightGuideMap:nil];
 }
 
