@@ -241,6 +241,8 @@ static void asyncCallback(void* refcon, IOReturn result, void* arg0)
 - (BOOL)bulkWriteData:(NSData*)data error:(NSError**)error
 {
     assert(data.length > 0);
+
+    // Get a pipe reference for the endpoint chosen.
     uint8_t pipeRef;
     if ([self endpoint:_deviceInterfaceEndpoint pipeRef:&pipeRef] == NO) {
         NSLog(@"endpoint doesnt exist");
@@ -256,6 +258,8 @@ static void asyncCallback(void* refcon, IOReturn result, void* arg0)
         return NO;
     }
 
+    // For additional footgun safety, get the properties of the pipe making sure it actually
+    // does support bulk transfer and that the data to send fits into the max packet size.
     uint8_t transferType, direction, number, interval;
     uint16_t maxPacketSize;
     IOReturn ret =
@@ -279,6 +283,7 @@ static void asyncCallback(void* refcon, IOReturn result, void* arg0)
     assert(transferType == kUSBBulk);
     assert(data.length % maxPacketSize);
 
+    // Now send that data.
     ret = (*interface)
               ->WritePipeAsyncTO(interface, pipeRef, (void*)data.bytes, (UInt32)data.length, 0, 0, asyncCallback,
                                  (__bridge void*)transfers);
