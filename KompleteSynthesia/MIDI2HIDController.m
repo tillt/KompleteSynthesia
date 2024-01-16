@@ -211,7 +211,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
         return;
     }
     switch (interface) {
-        case 0: {
+        case kMIDIConnectionInterfaceLightLoopback: {
             unsigned char state = kKeyStateMaskOn;
             unsigned char hand = kKeyStateRight;
             if (channel == 0) {
@@ -247,7 +247,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             }
             break;
         }
-        case 1:
+        case kMIDIConnectionInterfaceKeyboard:
             if (status == kMIDICVStatusNoteOn && velocity > 0) {
                 keyStates[key] |= kKeyStateMaskOn | kKeyStateMaskUser;
             } else if (status == kMIDICVStatusNoteOff || velocity == 0) {
