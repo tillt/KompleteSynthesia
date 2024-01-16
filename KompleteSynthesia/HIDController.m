@@ -609,7 +609,6 @@ static void HIDInputCallback(void* context,
             memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
             break;
         case 3:
-
             for (unsigned int i = 0; i < 128; i++) {
                 _keys[i * 3 + 0] = kCommandLightGuideKeyCommandMK3;
                 _keys[i * 3 + 1] = i;
