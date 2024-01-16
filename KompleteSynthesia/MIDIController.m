@@ -238,23 +238,36 @@ NSString* kMIDIInputInterfaceKeyboard = @"Port 1";
 
 - (void)receivedMIDIEvents:(const MIDIEventList*)eventList interface:(unsigned char)interface
 {
+    const unsigned int kUMPStatusMask = 0x00F00000;
+    const unsigned int kUMPStatusShift = 20;
+
+    const unsigned int kUMPChannelMask = 0x000F0000;
+    const unsigned int kUMPChannelShift = 16;
+
+    const unsigned int kUMPParam1Mask = 0x0000FF00;
+    const unsigned int kUMPParam1Shift = 8;
+
+    const unsigned int kUMPParam2Mask = 0x000000FF;
+    const unsigned int kUMPParam2Shift = 0;
+
     const MIDIEventPacket* packet = &eventList->packet[0];
 
-    for (unsigned i = 0; i < eventList->numPackets; ++i) {
-        for (unsigned w = 0; w < packet->wordCount; ++w) {
-            unsigned char cvStatus = (packet->words[w] & 0x00F00000) >> 20;
-            if (cvStatus == kMIDICVStatusNoteOn || cvStatus == kMIDICVStatusNoteOff ||
-                cvStatus == kMIDICVStatusControlChange) {
-                unsigned char channel = (packet->words[w] & 0x000F0000) >> 16;
-                unsigned char param1 = (packet->words[w] & 0x0000FF00) >> 8;
-                unsigned char param2 = packet->words[w] & 0x000000FF;
+    for (unsigned int i = 0; i < eventList->numPackets; i++) {
+        for (unsigned int w = 0; w < packet->wordCount; w++) {
+            unsigned char cvStatus = (packet->words[w] & kUMPStatusMask) >> kUMPStatusShift;
 
-                [self.delegate receivedMIDIEvent:cvStatus
-                                         channel:channel
-                                          param1:param1
-                                          param2:param2
-                                       interface:interface];
+            // Skip packets with a status that we are not interested in.
+            if (cvStatus != kMIDICVStatusNoteOn && cvStatus != kMIDICVStatusNoteOff &&
+                cvStatus != kMIDICVStatusControlChange) {
+                continue;
             }
+
+            // Fully parse note-on/off & control change packets and pass them on to the delegate.
+            unsigned char channel = (packet->words[w] & kUMPChannelMask) >> kUMPChannelShift;
+            unsigned char param1 = (packet->words[w] & kUMPParam1Mask) >> kUMPParam1Shift;
+            unsigned char param2 = (packet->words[w] & kUMPParam2Mask) >> kUMPParam2Shift;
+
+            [self.delegate receivedMIDIEvent:cvStatus channel:channel param1:param1 param2:param2 interface:interface];
         }
         packet = MIDIEventPacketNext(packet);
     }
