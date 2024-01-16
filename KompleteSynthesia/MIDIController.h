@@ -9,8 +9,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern const int kMIDIConnectionInterfaceLightLoopback;
-extern const int kMIDIConnectionInterfaceKeyboard;
+typedef NS_ENUM(int, ConnectionInterface) {
+    kMIDIConnectionInterfaceLightLoopback = 0,
+    kMIDIConnectionInterfaceKeyboard = 1
+};
 
 @class LogViewController;
 

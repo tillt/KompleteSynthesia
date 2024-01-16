@@ -31,40 +31,8 @@ const uint8_t kKompleteKontrolButtonLightOff = 0x00;
 const size_t kKompleteKontrolColorCount = 17;
 const size_t kKompleteKontrolColorIntensityLevelCount = 4;
 
-const uint8_t kKompleteKontrolColorRed = 0x04;
-const uint8_t kKompleteKontrolColorOrange = 0x08;
-const uint8_t kKompleteKontrolColorYellow = 0x10;
-const uint8_t kKompleteKontrolColorGreen = 0x1C;
-const uint8_t kKompleteKontrolColorBlue = 0x2C;
-const uint8_t kKompleteKontrolColorPurple = 0x34;
-const uint8_t kKompleteKontrolColorPink = 0x38;
-const uint8_t kKompleteKontrolColorWhite = 0x44;
-
 const uint8_t kKompleteKontrolColorMask = 0xFC;
 const uint8_t kKompleteKontrolIntensityMask = 0x03;
-
-const uint8_t kKompleteKontrolIntensityLow = 0x00;
-const uint8_t kKompleteKontrolIntensityMedium = 0x01;
-const uint8_t kKompleteKontrolIntensityHigh = 0x02;
-const uint8_t kKompleteKontrolIntensityBright = 0x03;
-
-const uint8_t kKompleteKontrolColorLightBlue = kKompleteKontrolColorBlue | kKompleteKontrolIntensityHigh;
-const uint8_t kKompleteKontrolColorBrightBlue = kKompleteKontrolColorBlue | kKompleteKontrolIntensityBright;
-
-const uint8_t kKompleteKontrolColorLightGreen = kKompleteKontrolColorGreen | kKompleteKontrolIntensityHigh;
-const uint8_t kKompleteKontrolColorBrightGreen = kKompleteKontrolColorGreen | kKompleteKontrolIntensityBright;
-
-const uint8_t kKompleteKontrolColorMediumYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityMedium;
-const uint8_t kKompleteKontrolColorLightYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityHigh;
-const uint8_t kKompleteKontrolColorBrightYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityBright;
-
-const uint8_t kKompleteKontrolColorMediumOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityMedium;
-const uint8_t kKompleteKontrolColorLightOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityHigh;
-const uint8_t kKompleteKontrolColorBrightOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityBright;
-
-const uint8_t kKompleteKontrolColorMediumWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityMedium;
-const uint8_t kKompleteKontrolColorLightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityHigh;
-const uint8_t kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityBright;
 
 // Quote from https://www.native-instruments.com/forum/threads/programming-the-guide-lights.320806/
 // By @jasonbrent:

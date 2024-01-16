@@ -14,9 +14,6 @@
 NSString* kMIDIInputInterfaceLightLoopback = @"LoopBe";
 NSString* kMIDIInputInterfaceKeyboard = @"Port 1";
 
-const int kMIDIConnectionInterfaceLightLoopback = 0;
-const int kMIDIConnectionInterfaceKeyboard = 1;
-
 /// Listens on the "IAC Driver LoopBe" and the "Komplete Kontrol Sx MKx Port 1" interfaces and forwards
 /// note on/off events as well as control change events to its delegate.
 

@@ -20,22 +20,6 @@
 
 const uint32_t kVendorID_NativeInstruments = 0x17CC;
 
-// MK1 controllers.
-const uint32_t kPID_S25MK1 = 0x1340;
-const uint32_t kPID_S49MK1 = 0x1350;
-const uint32_t kPID_S61MK1 = 0x1360;
-const uint32_t kPID_S88MK1 = 0x1410;
-
-// MK2 controllers.
-const uint32_t kPID_S49MK2 = 0x1610;
-const uint32_t kPID_S61MK2 = 0x1620;
-const uint32_t kPID_S88MK2 = 0x1630;
-
-// MK3 controllers.
-const uint32_t kPID_S49MK3 = 0x2100; // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
-const uint32_t kPID_S61MK3 = 0x2110; // Confirmed, thanks to @Bounga.
-const uint32_t kPID_S88MK3 = 0x2120; // FIXME: NO IDEA - THESE ARE PLACEHOLDERS SO FAR
-
 // Bulk transfer interface specifications.
 const uint32_t kUSBDeviceInterfaceMK2 = 0x03;
 const uint32_t kUSBDeviceInterfaceEndpointMK2 = 0x03;
