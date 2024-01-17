@@ -11,11 +11,7 @@
 
 #import <AppKit/AppKit.h>
 #import <Foundation/Foundation.h>
-
 #import <IOKit/IOKitLib.h>
-#import <IOKit/hid/IOHIDKeys.h>
-#import <IOKit/hid/IOHIDManager.h>
-#import <IOKit/usb/IOUSBLib.h>
 
 #import "LogViewController.h"
 #import "USBController.h"

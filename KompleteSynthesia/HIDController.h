@@ -18,6 +18,8 @@ extern const uint8_t kKompleteKontrolButtonLightOff;
 extern const size_t kKompleteKontrolColorCount;
 extern const size_t kKompleteKontrolColorIntensityLevelCount;
 
+extern const uint8_t kKompleteKontrolIntensityMask;
+
 typedef NS_ENUM(uint8_t, ColorIntensity) {
     kKompleteKontrolIntensityLow = 0x00,
     kKompleteKontrolIntensityMedium = 0x01,

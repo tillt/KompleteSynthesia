@@ -10,9 +10,8 @@
 #include <stdatomic.h>
 
 #import <Accelerate/Accelerate.h>
-#import <CoreImage/CoreImage.h>
-
 #import <AppKit/AppKit.h>
+#import <CoreImage/CoreImage.h>
 
 #import "LogViewController.h"
 #import "SynthesiaController.h"
@@ -21,12 +20,12 @@
 /// Makes use of a detected Synthesia instance by streaming the application window onto the first LCD screen of a
 /// detected Komplete Kontrol S-series USB controller.
 
-// Note that this is only used when mirroring isnt active.
-const double kRefreshDelay = 1.0 / 40.0;
-
 const double kTimeoutDelay = 0.1;
 
-const uint8_t kCommandScreenUpdateMK2 = 0x84;
+// Note that this is only used when mirroring isnt active.
+static const double kRefreshDelay = 1.0 / 40.0;
+
+static const uint8_t kCommandScreenUpdateMK2 = 0x84;
 
 // FIXME: This smells too magic -- try to find that size from a system function!
 const int kHeaderHeight = 26;
