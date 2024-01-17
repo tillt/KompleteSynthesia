@@ -16,10 +16,10 @@
 - (void)drawRect:(NSRect)dirtyRect
 {
     [super drawRect:dirtyRect];
-    
+
     NSGraphicsContext* currentContext = [NSGraphicsContext currentContext];
     [currentContext saveGraphicsState];
-    
+
     if (self.isHighlighted) {
         [self.pushedColor setFill];
     } else {
@@ -29,12 +29,16 @@
     NSBezierPath* rectanglePath = nil;
 
     if (_rounded) {
-        rectanglePath = [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(0, 0, self.frame.size.width, self.frame.size.height) xRadius:7.0f yRadius:7.0f];
+        rectanglePath =
+            [NSBezierPath bezierPathWithRoundedRect:NSMakeRect(0, 0, self.frame.size.width, self.frame.size.height)
+                                            xRadius:7.0f
+                                            yRadius:7.0f];
     } else {
-        rectanglePath = [NSBezierPath bezierPathWithRect:NSMakeRect(0, 0, self.frame.size.width, self.frame.size.height)];
+        rectanglePath =
+            [NSBezierPath bezierPathWithRect:NSMakeRect(0, 0, self.frame.size.width, self.frame.size.height)];
     }
     [rectanglePath fill];
-    
+
     [currentContext restoreGraphicsState];
 }
 

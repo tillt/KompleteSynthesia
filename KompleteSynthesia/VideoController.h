@@ -5,9 +5,9 @@
 //  Created by Till Toenshoff on 02.02.23.
 //
 
-#import <Foundation/Foundation.h>
 #import <Cocoa/Cocoa.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -29,7 +29,7 @@ typedef struct {
 
 @property (nonatomic, strong) NSTextField* volumeValue;
 
-- (id)initWithLogViewController:(LogViewController*)lc error:(NSError**)error;
+- (id)initWithUSBController:(USBController*)uc logViewController:(LogViewController*)lc error:(NSError**)error;
 - (BOOL)reset:(NSError**)error;
 - (void)teardown;
 - (void)showOSD;

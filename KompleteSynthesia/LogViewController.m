@@ -25,22 +25,23 @@
 - (void)logLine:(NSString*)l
 {
     NSLog(@"%@", l);
-    
+
     // Assert the view is loaded.
     NSView* view = self.view;
     // Avoid unused variable.
     view = nil;
 
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    NSDateFormatter* dateFormatter = [[NSDateFormatter alloc] init];
     [dateFormatter setDateFormat:@"hh:mm:ss:SSS"];
     NSString* t = [dateFormatter stringFromDate:[NSDate date]];
-    
-    NSDictionary *attributes = @{
-        NSFontAttributeName: [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightLight],
-        NSForegroundColorAttributeName: NSColor.textColor
+
+    NSDictionary* attributes = @{
+        NSFontAttributeName : [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightLight],
+        NSForegroundColorAttributeName : NSColor.textColor
     };
-    NSAttributedString *attrstr = [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@ %@\n", t, l] attributes:attributes];
+    NSAttributedString* attrstr =
+        [[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@ %@\n", t, l] attributes:attributes];
     [self.textView.textStorage appendAttributedString:attrstr];
-    [self.textView scrollRangeToVisible: NSMakeRange(self.textView.string.length, 0)];
+    [self.textView scrollRangeToVisible:NSMakeRange(self.textView.string.length, 0)];
 }
 @end

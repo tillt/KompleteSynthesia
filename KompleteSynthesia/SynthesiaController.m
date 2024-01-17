@@ -6,9 +6,11 @@
 //
 
 #import "SynthesiaController.h"
+
 #import <AppKit/AppKit.h>
-#import "LogViewController.h"
+
 #import "ApplicationObserver.h"
+#import "LogViewController.h"
 
 NSString* kSynthesiaApplicationName = @"Synthesia";
 NSString* kSynthesiaApplicationBundleIdentifier = @"com.synthesiallc.synthesia";
@@ -36,21 +38,18 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
 
 + (int)synthesiaWindowNumber
 {
-    CFArrayRef list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly,kCGNullWindowID);
+    CFArrayRef list = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly, kCGNullWindowID);
     NSArray* windows = (__bridge NSArray*)list;
-    for(NSDictionary* window in windows)
-    {
+    for (NSDictionary* window in windows) {
         NSString* currentWindowTitle = window[(NSString*)kCGWindowOwnerName];
         CGRect currentBounds;
         CGRectMakeWithDictionaryRepresentation((CFDictionaryRef)window[(NSString*)kCGWindowBounds], &currentBounds);
-        
+
         if ([currentWindowTitle compare:@"Synthesia"] != NSOrderedSame) {
             continue;
         }
-        NSLog(@"\"%s\" size=%gx%g id=%d\n", currentWindowTitle.UTF8String,
-                                            currentBounds.size.width,
-                                            currentBounds.size.height,
-                                            [window[(NSString *)kCGWindowNumber] intValue]);
+        NSLog(@"\"%s\" size=%gx%g id=%d\n", currentWindowTitle.UTF8String, currentBounds.size.width,
+              currentBounds.size.height, [window[(NSString*)kCGWindowNumber] intValue]);
         CFRelease(list);
         return [window[(NSString*)kCGWindowNumber] intValue];
     }
@@ -68,22 +67,23 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
     return [ApplicationObserver applicationHasFocus:kSynthesiaApplicationBundleIdentifier];
 }
 
-+ (void)runSynthesiaWithCompletion:(void(^)(void))completion
++ (void)runSynthesiaWithCompletion:(void (^)(void))completion
 {
     NSWorkspaceOpenConfiguration* configuration = [NSWorkspaceOpenConfiguration new];
-    [configuration setPromptsUserIfNeeded: YES];
+    [configuration setPromptsUserIfNeeded:YES];
     [[NSWorkspace sharedWorkspace] openApplicationAtURL:[NSURL fileURLWithPath:kSynthesiaApplicationPath]
                                           configuration:configuration
-                                      completionHandler:^(NSRunningApplication* app, NSError* error){
-        dispatch_async(dispatch_get_main_queue(), ^{
-            completion();
-        });
-    }];
+                                      completionHandler:^(NSRunningApplication* app, NSError* error) {
+                                        dispatch_async(dispatch_get_main_queue(), ^{
+                                          completion();
+                                        });
+                                      }];
 }
 
 + (BOOL)activateSynthesia
 {
-    NSRunningApplication* app = [ApplicationObserver runningApplicationWithBundleIdentifier:kSynthesiaApplicationBundleIdentifier];
+    NSRunningApplication* app =
+        [ApplicationObserver runningApplicationWithBundleIdentifier:kSynthesiaApplicationBundleIdentifier];
 
     if (app == nil || app.isTerminated == YES) {
         return NO;
@@ -102,7 +102,7 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
         log = logViewController;
         dataFormatExpected = NO;
         needsConfigurationPatch = YES;
-        
+
         [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
                                                                selector:@selector(synthesiaMayHaveChangedStatus:)
                                                                    name:NSWorkspaceDidActivateApplicationNotification
@@ -124,8 +124,8 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
 - (BOOL)cachedAssertSynthesiaConfiguration
 {
     // If not done before, assert that Synthesia is configured the way we need it.
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    [userDefaults registerDefaults:@{kDefaultsKeyInitialSynthesiaAssertDone: @(NO)}];
+    NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults registerDefaults:@{kDefaultsKeyInitialSynthesiaAssertDone : @(NO)}];
 
     if ([userDefaults boolForKey:kDefaultsKeyInitialSynthesiaAssertDone] == NO) {
         [log logLine:@"Synthesia configuration needs to get validated"];
@@ -151,23 +151,27 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
     return YES;
 }
 
-- (BOOL)assertMultiDeviceConfig:(NSError**)error message:(NSString*_Nullable *_Nullable)message
+- (BOOL)assertMultiDeviceConfig:(NSError**)error message:(NSString* _Nullable* _Nullable)message
 {
     // Assert that Synthesia is configured the way we need it.
     NSOpenPanel* panel = [NSOpenPanel openPanel];
     panel.title = @"Locate Synthesia configuration file";
-    panel.message = @"Please locate and select the Synthesia 'multiDevice.xml' configuration file and activate 'Open' below!";
-    panel.directoryURL = [NSURL fileURLWithFileSystemRepresentation:"~/Library/Application Support/Synthesia" isDirectory:YES relativeToURL:nil];
+    panel.message =
+        @"Please locate and select the Synthesia 'multiDevice.xml' configuration file and activate 'Open' below!";
+    panel.directoryURL = [NSURL fileURLWithFileSystemRepresentation:"~/Library/Application Support/Synthesia"
+                                                        isDirectory:YES
+                                                      relativeToURL:nil];
     if ([panel runModal] != NSModalResponseOK) {
         *message = @"User canceled the file selection.";
         NSLog(@"%@", *message);
         return NO;
     }
 
-    NSData* data = [NSData dataWithContentsOfFile:[NSString stringWithCString:panel.URL.fileSystemRepresentation encoding:NSStringEncodingConversionAllowLossy]
+    NSData* data = [NSData dataWithContentsOfFile:[NSString stringWithCString:panel.URL.fileSystemRepresentation
+                                                                     encoding:NSStringEncodingConversionAllowLossy]
                                           options:NSDataReadingUncached
                                             error:error];
-    if(*error) {
+    if (*error) {
         NSLog(@"Error %@", *error);
         return NO;
     }
@@ -176,7 +180,7 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
 
     NSXMLParser* parser = [[NSXMLParser alloc] initWithData:data];
     [parser setDelegate:self];
-    
+
     if ([parser parse] == NO) {
         *error = [parser parserError];
         NSLog(@"Error %@", *error);
@@ -188,7 +192,7 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
         [log logLine:*message];
         return NO;
     }
-    
+
     if (!needsConfigurationPatch) {
         *message = @"Synthesia configuration file seems fine as is, no patch needed.";
         [log logLine:*message];
@@ -196,39 +200,37 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
     }
 
     NSString* kSynthesiaConfigDeviceHead = @"<OutputDevice version=\"1\" name=\"IAC Driver LoopBe\"";
-    NSString* kSynthesiaConfigDeviceTail = @" enabled=\"1\" userNotes=\"0\" backgroundNotes=\"0\" metronome=\"0\" percussion=\"0\" lightChannel=\"-2\" />";
+    NSString* kSynthesiaConfigDeviceTail =
+        @" enabled=\"1\" userNotes=\"0\" backgroundNotes=\"0\" metronome=\"0\" percussion=\"0\" lightChannel=\"-2\" />";
     NSString* kSynthesiaConfigListTail = @"</DeviceInfoList>";
 
-    NSString* configurationText = [NSString stringWithCString:data.bytes
-                                                     encoding:NSStringEncodingConversionAllowLossy];
+    NSString* configurationText = [NSString stringWithCString:data.bytes encoding:NSStringEncodingConversionAllowLossy];
 
     NSArray<NSString*>* configurationLines = [configurationText componentsSeparatedByString:@"\n"];
-    
+
     NSMutableArray<NSString*>* patchedConfigurationLines = [NSMutableArray array];
-    
+
     for (NSString* line in configurationLines) {
         if ([line rangeOfString:kSynthesiaConfigDeviceHead].location == NSNotFound) {
             [patchedConfigurationLines addObject:line];
         }
     }
-    
+
     for (int i = 0; i < patchedConfigurationLines.count; i++) {
         if ([patchedConfigurationLines[i] rangeOfString:kSynthesiaConfigListTail].location != NSNotFound) {
-            NSString* expected = [NSString stringWithFormat:@"\t%@%@", kSynthesiaConfigDeviceHead, kSynthesiaConfigDeviceTail];
+            NSString* expected =
+                [NSString stringWithFormat:@"\t%@%@", kSynthesiaConfigDeviceHead, kSynthesiaConfigDeviceTail];
             [patchedConfigurationLines insertObject:expected atIndex:i];
             break;
         }
     }
-    
+
     NSString* output = [patchedConfigurationLines componentsJoinedByString:@"\n"];
 
     NSString* filename = [NSString stringWithCString:panel.URL.fileSystemRepresentation
                                             encoding:NSStringEncodingConversionAllowLossy];
 
-    if ([output writeToFile:filename
-                 atomically:YES
-                   encoding:NSNonLossyASCIIStringEncoding
-                      error:error] == NO) {
+    if ([output writeToFile:filename atomically:YES encoding:NSNonLossyASCIIStringEncoding error:error] == NO) {
         NSLog(@"Error %@", *error);
         return NO;
     }
@@ -241,7 +243,11 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
 
 #pragma mark - NSXMLParser Delegate
 
-- (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName attributes:(NSDictionary *)attributeDict
+- (void)parser:(NSXMLParser*)parser
+    didStartElement:(NSString*)elementName
+       namespaceURI:(NSString*)namespaceURI
+      qualifiedName:(NSString*)qName
+         attributes:(NSDictionary*)attributeDict
 {
     if ([elementName isEqualToString:@"OutputDevice"]) {
         // We have parsed a valid XML file and that does contain an element called "OutputDevice".
@@ -254,7 +260,8 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
         if ([attributeDict[@"name"] compare:@"IAC Driver LoopBe"] == NSOrderedSame) {
             if ([attributeDict objectForKey:@"enabled"] == nil || [attributeDict[@"enabled"] boolValue] != YES) {
                 NSLog(@"device is not enabled, we need to patch!");
-            } else if ([attributeDict objectForKey:@"lightChannel"] == nil || [attributeDict[@"lightChannel"] compare:@"-2"] != NSOrderedSame) {
+            } else if ([attributeDict objectForKey:@"lightChannel"] == nil ||
+                       [attributeDict[@"lightChannel"] compare:@"-2"] != NSOrderedSame) {
                 NSLog(@"key lights setup not matching, we need to patch!");
             } else {
                 needsConfigurationPatch = NO;
@@ -263,11 +270,14 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
     }
 }
 
-- (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string
+- (void)parser:(NSXMLParser*)parser foundCharacters:(NSString*)string
 {
 }
 
-- (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName
+- (void)parser:(NSXMLParser*)parser
+    didEndElement:(NSString*)elementName
+     namespaceURI:(NSString*)namespaceURI
+    qualifiedName:(NSString*)qName
 {
 }
 

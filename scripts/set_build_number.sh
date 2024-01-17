@@ -2,6 +2,9 @@
 
 git=$(sh /etc/profile; which git)
 git_release_version=$("$git" describe --tags --abbrev=0)
+
+dots="${git_release_version//[^s|.]}"
+
 number_commits_since_release_version=$("$git" rev-list $git_release_version..HEAD --count)
 
 target_plist="$TARGET_BUILD_DIR/$INFOPLIST_PATH"

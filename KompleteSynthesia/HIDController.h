@@ -5,31 +5,10 @@
 //  Created by Till Toenshoff on 06.01.23.
 //
 
-#import <Foundation/Foundation.h>
 #import <Appkit/Appkit.h>
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
-
-extern const uint8_t kKompleteKontrolColorBlue;
-extern const uint8_t kKompleteKontrolColorLightBlue;
-extern const uint8_t kKompleteKontrolColorBrightBlue;
-extern const uint8_t kKompleteKontrolColorGreen;
-extern const uint8_t kKompleteKontrolColorLightGreen;
-extern const uint8_t kKompleteKontrolColorBrightGreen;
-extern const uint8_t kKompleteKontrolColorBrightWhite;
-extern const uint8_t kKompleteKontrolColorRed;
-
-extern const uint8_t kKompleteKontrolColorWhite;
-extern const uint8_t kKompleteKontrolColorMediumWhite;
-extern const uint8_t kKompleteKontrolColorBrightWhite;
-
-extern const uint8_t kKompleteKontrolColorOrange;
-extern const uint8_t kKompleteKontrolColorMediumOrange;
-extern const uint8_t kKompleteKontrolColorBrightOrange;
-
-extern const uint8_t kKompleteKontrolColorYellow;
-extern const uint8_t kKompleteKontrolColorMediumYellow;
-extern const uint8_t kKompleteKontrolColorBrightYellow;
 
 extern const uint8_t kKeyColorUnpressed;
 extern const uint8_t kKeyColorPressed;
@@ -38,6 +17,39 @@ extern const uint8_t kKompleteKontrolButtonLightOff;
 
 extern const size_t kKompleteKontrolColorCount;
 extern const size_t kKompleteKontrolColorIntensityLevelCount;
+
+extern const uint8_t kKompleteKontrolIntensityMask;
+
+typedef NS_ENUM(uint8_t, ColorIntensity) {
+    kKompleteKontrolIntensityLow = 0x00,
+    kKompleteKontrolIntensityMedium = 0x01,
+    kKompleteKontrolIntensityHigh = 0x02,
+    kKompleteKontrolIntensityBright = 0x03
+};
+
+typedef NS_ENUM(uint8_t, ColorCode) {
+    kKompleteKontrolColorRed = 0x04,
+    kKompleteKontrolColorOrange = 0x08,
+    kKompleteKontrolColorMediumOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityMedium,
+    kKompleteKontrolColorLightOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityHigh,
+    kKompleteKontrolColorBrightOrange = kKompleteKontrolColorOrange | kKompleteKontrolIntensityBright,
+    kKompleteKontrolColorYellow = 0x10,
+    kKompleteKontrolColorMediumYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityMedium,
+    kKompleteKontrolColorLightYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityHigh,
+    kKompleteKontrolColorBrightYellow = kKompleteKontrolColorYellow | kKompleteKontrolIntensityBright,
+    kKompleteKontrolColorGreen = 0x1C,
+    kKompleteKontrolColorLightGreen = kKompleteKontrolColorGreen | kKompleteKontrolIntensityHigh,
+    kKompleteKontrolColorBrightGreen = kKompleteKontrolColorGreen | kKompleteKontrolIntensityBright,
+    kKompleteKontrolColorBlue = 0x2C,
+    kKompleteKontrolColorLightBlue = kKompleteKontrolColorBlue | kKompleteKontrolIntensityHigh,
+    kKompleteKontrolColorBrightBlue = kKompleteKontrolColorBlue | kKompleteKontrolIntensityBright,
+    kKompleteKontrolColorPurple = 0x34,
+    kKompleteKontrolColorPink = 0x38,
+    kKompleteKontrolColorWhite = 0x44,
+    kKompleteKontrolColorMediumWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityMedium,
+    kKompleteKontrolColorLightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityHigh,
+    kKompleteKontrolColorBrightWhite = kKompleteKontrolColorWhite | kKompleteKontrolIntensityBright
+};
 
 // Carefully chosen IDs - the first 68 are reflecting the button lighting map index.
 enum {
@@ -104,6 +116,9 @@ enum {
     kKompleteKontrolButtonIdJogScroll = 99,
 };
 
+@class LogViewController;
+@class USBController;
+
 @protocol HIDControllerDelegate <NSObject>
 - (void)receivedEvent:(const int)event value:(int)value;
 - (void)deviceRemoved;
@@ -121,6 +136,8 @@ enum {
 
 + (NSColor*)colorWithKeyState:(const unsigned char)keyState;
 
+- (id)initWithUSBController:(USBController*)uc logViewController:(LogViewController*)lc;
+
 - (BOOL)setupWithError:(NSError**)error;
 
 - (void)lightButton:(int)button color:(unsigned char)color;
@@ -130,7 +147,6 @@ enum {
 - (void)lightKeysWithColor:(unsigned char)color;
 - (void)lightsSwooshTo:(unsigned char)color;
 - (BOOL)swooshIsActive;
-- (void)receivedReport:(unsigned char*)report;
 - (BOOL)updateButtonLightMap:(NSError**)error;
 
 - (void)deviceRemoved;

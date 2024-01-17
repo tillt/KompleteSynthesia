@@ -5,8 +5,8 @@
 //  Created by Till Toenshoff on 13.01.23.
 //
 
-#import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <Foundation/Foundation.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -23,14 +23,14 @@ NS_ASSUME_NONNULL_BEGIN
 + (BOOL)synthesiaRunning;
 + (BOOL)synthesiaHasFocus;
 + (BOOL)activateSynthesia;
-+ (void)runSynthesiaWithCompletion:(void(^)(void))completion;
++ (void)runSynthesiaWithCompletion:(void (^)(void))completion;
 + (int)synthesiaWindowNumber;
 
 + (NSString*)status;
 
 - (id)initWithLogViewController:(LogViewController*)logViewController delegate:(id)delegate;
 
-- (BOOL)assertMultiDeviceConfig:(NSError**)error message:(NSString*_Nullable *_Nullable)message;
+- (BOOL)assertMultiDeviceConfig:(NSError**)error message:(NSString* _Nullable* _Nullable)message;
 - (BOOL)cachedAssertSynthesiaConfiguration;
 
 @end

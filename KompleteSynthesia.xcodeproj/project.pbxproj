@@ -54,6 +54,7 @@
 		BB49B3C2295CC91000D18605 /* LogViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LogViewController.xib; sourceTree = "<group>"; };
 		BB5C2E992AF6E96A0043F444 /* VirtualEvent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VirtualEvent.h; sourceTree = "<group>"; };
 		BB5C2E9A2AF6E96A0043F444 /* VirtualEvent.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VirtualEvent.m; sourceTree = "<group>"; };
+		BB61731C2B40C8DD003F0737 /* KompleteSynthesia_Screens.psd */ = {isa = PBXFileReference; lastKnownFileType = file; name = KompleteSynthesia_Screens.psd; path = KompleteSynthesia/KompleteSynthesia_Screens.psd; sourceTree = "<group>"; };
 		BB76A1A1297B333D00A869D8 /* PreferencesWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PreferencesWindowController.h; sourceTree = "<group>"; };
 		BB76A1A2297B333D00A869D8 /* PreferencesWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PreferencesWindowController.m; sourceTree = "<group>"; };
 		BB76A1A3297B333D00A869D8 /* PreferencesWindowController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PreferencesWindowController.xib; sourceTree = "<group>"; };
@@ -108,6 +109,7 @@
 				BB49B3AF295CC8AE00D18605 /* KompleteSynthesia */,
 				BB49B3AE295CC8AE00D18605 /* Products */,
 				BBE086C02989965900DC59B3 /* Frameworks */,
+				BB61731D2B40C8E8003F0737 /* Resources */,
 				BB34BC1C2B081E35004CF123 /* Scripts */,
 			);
 			sourceTree = "<group>";
@@ -123,13 +125,13 @@
 		BB49B3AF295CC8AE00D18605 /* KompleteSynthesia */ = {
 			isa = PBXGroup;
 			children = (
+				BB7AB64429807A980081B05E /* Documentation */,
+				BB7AB6452981E1680081B05E /* UI */,
 				BB31821A2967C85F005EB410 /* Info.plist */,
 				BB49B3B0295CC8AE00D18605 /* AppDelegate.h */,
 				BB49B3B1295CC8AE00D18605 /* AppDelegate.m */,
 				BBDC7FA52B3B99C600C9E30D /* CoreAudioTools.h */,
 				BBDC7FA62B3B99C600C9E30D /* CoreAudioTools.m */,
-				BB7AB64429807A980081B05E /* Documentation */,
-				BB7AB6452981E1680081B05E /* UI */,
 				BBA0166729611D1D0018B2DB /* MIDI2HIDController.h */,
 				BBA0166829611D1D0018B2DB /* MIDI2HIDController.m */,
 				BB3182172967A037005EB410 /* HIDController.h */,
@@ -152,6 +154,14 @@
 				BB5C2E9A2AF6E96A0043F444 /* VirtualEvent.m */,
 			);
 			path = KompleteSynthesia;
+			sourceTree = "<group>";
+		};
+		BB61731D2B40C8E8003F0737 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BB61731C2B40C8DD003F0737 /* KompleteSynthesia_Screens.psd */,
+			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
 		BB7AB64429807A980081B05E /* Documentation */ = {

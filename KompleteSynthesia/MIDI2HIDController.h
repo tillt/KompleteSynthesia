@@ -6,10 +6,11 @@
 //
 
 #import <Foundation/Foundation.h>
+
 #import "HIDController.h"
-#import "USBController.h"
 #import "MIDIController.h"
 #import "SynthesiaController.h"
+#import "USBController.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -32,7 +33,7 @@ typedef enum colorMapState {
 - (void)preferences:(id)sender;
 - (void)reset:(id)sender;
 - (void)toggleMirror:(id)sender;
-- (void)bootstrapSynthesia:(id)sender withCompletion:(void(^)(void))completion;
+- (void)bootstrapSynthesia:(id)sender withCompletion:(void (^)(void))completion;
 - (void)updateVolume:(id)sender;
 @end
 

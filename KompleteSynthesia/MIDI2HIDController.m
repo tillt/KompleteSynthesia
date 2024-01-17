@@ -7,10 +7,10 @@
 
 #import "MIDI2HIDController.h"
 
+#import <Carbon/Carbon.h>
 #import <CoreFoundation/CoreFoundation.h>
 #import <CoreMIDI/CoreMIDI.h>
 #import <CoreServices/CoreServices.h>
-#import <Carbon/Carbon.h>
 
 #import "LogViewController.h"
 #import "VirtualEvent.h"
@@ -34,15 +34,16 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
 ///
 /// Detects a Native Instruments keyboard controller HID device. Listens on the "LoopBe" MIDI input interface port.
-/// Notes received are forwarded to the keyboard controller HID device as key lighting requests adhering to the Synthesia
-/// protocol.
+/// Notes received are forwarded to the keyboard controller HID device as key lighting requests adhering to the
+/// Synthesia protocol.
 ///
 /// The initial approach and implementation was closely following a neat little Python project called
 /// https://github.com/ojacques/SynthesiaKontrol
 /// Kudos to you Olivier Jacques for sharing!
 ///
-/// The inspiration for re-implementing this as a native macOS appllication struck me when I had a bit of a hard time getting
-/// that original Python project to build on a recent system as it would not run on anything beyond Python 3.7 for me.
+/// The inspiration for re-implementing this as a native macOS appllication struck me when I had a bit of a hard time
+/// getting that original Python project to build on a recent system as it would not run on anything beyond Python 3.7
+/// for me.
 ///
 
 @implementation MIDI2HIDController {
@@ -54,47 +55,50 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     unsigned char colorMap[kColorMapSize];
 }
 
-- (id)initWithLogController:(LogViewController*)lc hidController:(HIDController*)hc midiController:(MIDIController*)mc delegate:(id)delegate
+- (id)initWithLogController:(LogViewController*)lc
+              hidController:(HIDController*)hc
+             midiController:(MIDIController*)mc
+                   delegate:(id)delegate
 {
     self = [super init];
     if (self) {
         log = lc;
         _delegate = delegate;
 
-        NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+        NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
 
         // FIXME: Not a great spot for application logic - this should be done in the application delegate instead
-        [userDefaults registerDefaults:@{@"kColorMapUnpressed": @(kKeyColorUnpressed)}];
+        [userDefaults registerDefaults:@{@"kColorMapUnpressed" : @(kKeyColorUnpressed)}];
         colorMap[kColorMapUnpressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapUnpressed"];
 
-        [userDefaults registerDefaults:@{@"kColorMapPressed": @(kKeyColorPressed)}];
+        [userDefaults registerDefaults:@{@"kColorMapPressed" : @(kKeyColorPressed)}];
         colorMap[kColorMapPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapPressed"];
 
-        [userDefaults registerDefaults:@{@"kColorMapLeft": @(kKompleteKontrolColorBlue)}];
+        [userDefaults registerDefaults:@{@"kColorMapLeft" : @(kKompleteKontrolColorBlue)}];
         colorMap[kColorMapLeft] = (unsigned char)[userDefaults integerForKey:@"kColorMapLeft"];
 
-        [userDefaults registerDefaults:@{@"kColorMapLeftThumb": @(kKompleteKontrolColorLightBlue)}];
+        [userDefaults registerDefaults:@{@"kColorMapLeftThumb" : @(kKompleteKontrolColorLightBlue)}];
         colorMap[kColorMapLeftThumb] = (unsigned char)[userDefaults integerForKey:@"kColorMapLeftThumb"];
 
-        [userDefaults registerDefaults:@{@"kColorMapLeftPressed": @(kKompleteKontrolColorBrightBlue)}];
+        [userDefaults registerDefaults:@{@"kColorMapLeftPressed" : @(kKompleteKontrolColorBrightBlue)}];
         colorMap[kColorMapLeftPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapLeftPressed"];
 
-        [userDefaults registerDefaults:@{@"kColorMapRight": @(kKompleteKontrolColorGreen)}];
+        [userDefaults registerDefaults:@{@"kColorMapRight" : @(kKompleteKontrolColorGreen)}];
         colorMap[kColorMapRight] = (unsigned char)[userDefaults integerForKey:@"kColorMapRight"];
 
-        [userDefaults registerDefaults:@{@"kColorMapRightThumb": @(kKompleteKontrolColorLightGreen)}];
+        [userDefaults registerDefaults:@{@"kColorMapRightThumb" : @(kKompleteKontrolColorLightGreen)}];
         colorMap[kColorMapRightThumb] = (unsigned char)[userDefaults integerForKey:@"kColorMapRightThumb"];
 
-        [userDefaults registerDefaults:@{@"kColorMapRightPressed": @(kKompleteKontrolColorBrightGreen)}];
+        [userDefaults registerDefaults:@{@"kColorMapRightPressed" : @(kKompleteKontrolColorBrightGreen)}];
         colorMap[kColorMapRightPressed] = (unsigned char)[userDefaults integerForKey:@"kColorMapRightPressed"];
-        
+
         hid = hc;
         hid.delegate = self;
-        
+
         midi = mc;
         midi.delegate = self;
     }
-    
+
     return self;
 }
 
@@ -130,7 +134,9 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
 - (void)swoosh
 {
-    [hid lightsSwooshTo:colorMap[kColorMapUnpressed]];
+    if (hid.mk == 2) {
+        [hid lightsSwooshTo:colorMap[kColorMapUnpressed]];
+    }
 }
 
 - (void)teardown
@@ -201,11 +207,11 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 
     if (key < 0 || key > hid.keyCount) {
         NSLog(@"unexpected note lighting requested for key %d", key);
+        [self->log logLine:[NSString stringWithFormat:@"unexpected note lighting requested for key %d", key]];
         return;
     }
-    switch(interface) {
-        case 0:
-        {
+    switch (interface) {
+        case kMIDIConnectionInterfaceLightLoopback: {
             unsigned char state = kKeyStateMaskOn;
             unsigned char hand = kKeyStateRight;
             if (channel == 0) {
@@ -241,7 +247,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             }
             break;
         }
-        case 1:
+        case kMIDIConnectionInterfaceKeyboard:
             if (status == kMIDICVStatusNoteOn && velocity > 0) {
                 keyStates[key] |= kKeyStateMaskOn | kKeyStateMaskUser;
             } else if (status == kMIDICVStatusNoteOff || velocity == 0) {
@@ -249,17 +255,17 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             }
             break;
     }
-    
+
     [hid lightKey:key color:[self lightColorWithState:keyStates[key]]];
 }
 
 #pragma mark MIDIControllerDelegate
 
--(void)receivedMIDIEvent:(unsigned char)cv
-                 channel:(unsigned char)channel
-                  param1:(unsigned char)param1
-                  param2:(unsigned char)param2
-               interface:(unsigned char)interface;
+- (void)receivedMIDIEvent:(unsigned char)cv
+                  channel:(unsigned char)channel
+                   param1:(unsigned char)param1
+                   param2:(unsigned char)param2
+                interface:(unsigned char)interface;
 {
     if (cv != kMIDICVStatusNoteOn && cv != kMIDICVStatusNoteOff && cv != kMIDICVStatusControlChange) {
         return;
@@ -274,26 +280,24 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     // Logging (UI related) has to happen on the main thread and this callback is invoked
     // on a CoreMidi thread.
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (cv == kMIDICVStatusNoteOn || cv == kMIDICVStatusNoteOff) {
-            [self->log logLine:[NSString stringWithFormat:@"%@ - note %-3s - channel %02d - note %@ - velocity %d",
-                          interface == 0 ? @"synthesia " : @"user plays",
-                          cv == kMIDICVStatusNoteOn ? "on " : "off" ,
-                          channel + 1,
-                          [MIDIController readableNote:param1],
-                          param2]];
-        } else if (cv == kMIDICVStatusControlChange) {
-            if (channel == 0x00 && param1 == 0x10) {
-                if (param2 & 0x04) {
-                    [self->log logLine:@"user is playing"];
-                }
-                if (param2 & 0x01) {
-                    [self->log logLine:@"playing right hand"];
-                }
-                if (param2 & 0x02) {
-                    [self->log logLine:@"playing left hand"];
-                }
-            }
-        }
+      if (cv == kMIDICVStatusNoteOn || cv == kMIDICVStatusNoteOff) {
+          [self->log logLine:[NSString stringWithFormat:@"%@ - note %-3s - channel %02d - note %@ - velocity %d",
+                                                        interface == 0 ? @"synthesia " : @"user plays",
+                                                        cv == kMIDICVStatusNoteOn ? "on " : "off", channel + 1,
+                                                        [MIDIController readableNote:param1], param2]];
+      } else if (cv == kMIDICVStatusControlChange) {
+          if (channel == 0x00 && param1 == 0x10) {
+              if (param2 & 0x04) {
+                  [self->log logLine:@"user is playing"];
+              }
+              if (param2 & 0x01) {
+                  [self->log logLine:@"playing right hand"];
+              }
+              if (param2 & 0x02) {
+                  [self->log logLine:@"playing left hand"];
+              }
+          }
+      }
     });
 }
 
@@ -302,7 +306,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 - (void)deviceRemoved
 {
     [log logLine:@"HID device removed"];
-    
+
     NSError* error = nil;
     if ([self resetWithError:&error] == NO) {
         [[NSAlert alertWithError:error] runModal];
@@ -315,7 +319,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
 {
     // These buttons shall work in all cases as it they do not intended to control Synthesia
     // but KompleteSynthesia.
-    switch(event) {
+    switch (event) {
         case kKompleteKontrolButtonIdSetup:
             [log logLine:@"SETUP -> opening setup"];
             [_delegate preferences:self];
@@ -326,9 +330,10 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             break;
         case kKompleteKontrolButtonIdScene: {
             [log logLine:@"SCENE -> starting Synthesia"];
-            [_delegate bootstrapSynthesia:self withCompletion:^(){
-                [self->_delegate reset:self];
-            }];
+            [_delegate bootstrapSynthesia:self
+                           withCompletion:^() {
+                             [self->_delegate reset:self];
+                           }];
             break;
         }
         case kKompleteKontrolButtonIdFunction5:
@@ -337,14 +342,14 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             break;
     }
 
-    if  (_forwardButtonsToSynthesiaOnly) {
+    if (_forwardButtonsToSynthesiaOnly) {
         if ([SynthesiaController activateSynthesia] == NO) {
             NSLog(@"synthesia not active");
             return;
         }
     }
 
-    switch(event) {
+    switch (event) {
         case kKompleteKontrolButtonIdPlay:
             [log logLine:@"PLAY button -> sending SPACE key"];
             [VirtualEvent triggerKeyEvents:kVK_Space];
