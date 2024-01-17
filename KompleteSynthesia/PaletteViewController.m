@@ -9,6 +9,7 @@
 #import <CoreGraphics/CoreGraphics.h>
 
 #import "ColorField.h"
+#import "HIDController.h"
 
 /// Provides the functionality of a palette selector.
 
@@ -24,20 +25,24 @@ const CGFloat kBorderSize = 7.0;
 {
     [super viewDidLoad];
 
-    const int tileCountHorizontal = 4;
-    const int tileCountVertical = 18;
+    // All those colors.
+    const size_t tileCountVertical = kKompleteKontrolColorCount;
+    // All those intensities.
+    const size_t tileCountHorizontal = kKompleteKontrolColorIntensityLevelCount;
+    // We want to show an additional row for lights-off/black.
+    const size_t totalTileCountVertical = tileCountVertical + 1;
 
     const CGFloat width = self.view.frame.size.width - (kBorderSize * 2);
     const CGFloat height = self.view.frame.size.height - (kBorderSize * 2);
-    CGSize tileSize = CGSizeMake(floorf(width / tileCountHorizontal), floorf(height / tileCountVertical));
 
-    // Last row is occupied by Lights-Off.
+    CGSize tileSize = CGSizeMake(floorf(width / tileCountHorizontal), floorf(height / totalTileCountVertical));
+
     unsigned char index = 0;
-    for (int h = 0; h < tileCountVertical - 1; h++) {
+    for (int h = 0; h < tileCountVertical; h++) {
         for (int w = 0; w < tileCountHorizontal; w++) {
-            const unsigned char keyIntensity = index & 0x03;
-            const unsigned char keyColor = (index / 4) + 1;
-            assert(keyColor <= 17);
+            const unsigned char keyIntensity = index & kKompleteKontrolIntensityMask;
+            const unsigned char keyColor = (index / kKompleteKontrolColorIntensityLevelCount) + 1;
+            assert(keyColor <= kKompleteKontrolColorCount);
             const unsigned char selectableKeyState = (keyColor << 2) | keyIntensity;
             ColorField* colorField = [[ColorField alloc]
                 initWithFrame:CGRectMake(self.view.frame.size.width - (((w + 1) * tileSize.width) + kBorderSize),
@@ -52,6 +57,7 @@ const CGFloat kBorderSize = 7.0;
         }
     }
 
+    // Last row is occupied by lights-off/black.
     ColorField* colorField =
         [[ColorField alloc] initWithFrame:CGRectMake(kBorderSize, kBorderSize, tileSize.width, tileSize.height)];
     colorField.keyState = 0;
