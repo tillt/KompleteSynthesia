@@ -13,6 +13,7 @@
 #import "LogViewController.h"
 #import "MIDI2HIDController.h"
 #import "PreferencesWindowController.h"
+#import "SetupWindowController.h"
 #import "UpdateManager.h"
 #import "VideoController.h"
 
@@ -27,6 +28,7 @@
 @property (nonatomic, strong) LogViewController* log;
 @property (nonatomic, strong) SynthesiaController* synthesia;
 @property (nonatomic, strong) PreferencesWindowController* preferences;
+@property (nonatomic, strong) SetupWindowController* setup;
 @property (nonatomic, strong) ApplicationObserver* observer;
 
 @property (nonatomic, strong) NSPopover* popover;
@@ -60,6 +62,12 @@ NSString* kAppDefaultActivateSynthesia = @"forward_buttons_to_synthesia_only";
 NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 
 - (void)applicationDidFinishLaunching:(NSNotification*)aNotification
+{
+    // Check if we ever ran the setup window and if not, show it!
+    [self showSetupWindow:nil];
+}
+
+- (void)applicationDidFinishLaunchingAfterSetup:(NSNotification*)aNotification
 {
     usbAvailable = NO;
 
@@ -226,7 +234,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     [menu addItemWithTitle:_midi2hidController.hidStatus action:nil keyEquivalent:@""];
     [menu addItemWithTitle:[SynthesiaController status] action:nil keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
-    [menu addItemWithTitle:@"Settings" action:@selector(preferences:) keyEquivalent:@""];
+    [menu addItemWithTitle:@"Settings" action:@selector(showPreferencesWindow:) keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
     [menu addItemWithTitle:@"Reset" action:@selector(reset:) keyEquivalent:@""];
     [menu addItemWithTitle:@"Show Log" action:@selector(showLog:) keyEquivalent:@""];
@@ -249,7 +257,26 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     }
 }
 
-- (void)preferences:(id)sender
+- (void)showSetupWindow:(id)sender
+{
+    if (_setup == nil) {
+        _setup = [[SetupWindowController alloc] initWithWindowNibName:@"SetupWindowController"];
+    }
+
+    [_setup.window makeKeyAndOrderFront:self];
+
+    //    NSWindow* window = [_setup window];
+
+    // We need to do some trickery here as the Application itself has no window. Not sure
+    // if this really works in all cases but it does for me, so far.
+    //    [window makeMainWindow];
+    //
+    //    [window makeKeyAndOrderFront:sender];
+    //    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    //    [[NSApplication sharedApplication] activateIgnoringOtherApps:NO];
+}
+
+- (void)showPreferencesWindow:(id)sender
 {
     if (_preferences == nil) {
         _preferences = [[PreferencesWindowController alloc] initWithWindowNibName:@"PreferencesWindowController"];

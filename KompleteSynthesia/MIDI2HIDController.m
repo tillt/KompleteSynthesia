@@ -322,7 +322,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     switch (event) {
         case kKompleteKontrolButtonIdSetup:
             [log logLine:@"SETUP -> opening setup"];
-            [_delegate preferences:self];
+            [_delegate showPreferencesWindow:self];
             break;
         case kKompleteKontrolButtonIdClear:
             [log logLine:@"CLEAR -> reset"];

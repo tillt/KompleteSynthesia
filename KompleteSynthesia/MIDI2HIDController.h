@@ -30,7 +30,7 @@ typedef enum colorMapState {
 @class SynthesiaController;
 
 @protocol MIDI2HIDControllerDelegate <NSObject>
-- (void)preferences:(id)sender;
+- (void)showPreferencesWindow:(id)sender;
 - (void)reset:(id)sender;
 - (void)toggleMirror:(id)sender;
 - (void)bootstrapSynthesia:(id)sender withCompletion:(void (^)(void))completion;
