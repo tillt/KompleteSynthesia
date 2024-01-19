@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BB1A48DC2B5B152A00BCB863 /* FuzzingWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB1A48DA2B5B152A00BCB863 /* FuzzingWindowController.m */; };
+		BB1A48DD2B5B152A00BCB863 /* FuzzingWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = BB1A48DB2B5B152A00BCB863 /* FuzzingWindowController.xib */; };
 		BB229913299040C500CFFB7C /* ApplicationObserver.m in Sources */ = {isa = PBXBuildFile; fileRef = BB229912299040C500CFFB7C /* ApplicationObserver.m */; };
 		BB31821629679983005EB410 /* MIDIController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB31821529679983005EB410 /* MIDIController.m */; };
 		BB3182192967A037005EB410 /* HIDController.m in Sources */ = {isa = PBXBuildFile; fileRef = BB3182182967A037005EB410 /* HIDController.m */; };
@@ -33,6 +35,9 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		BB1A48D92B5B152A00BCB863 /* FuzzingWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FuzzingWindowController.h; sourceTree = "<group>"; };
+		BB1A48DA2B5B152A00BCB863 /* FuzzingWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = FuzzingWindowController.m; sourceTree = "<group>"; };
+		BB1A48DB2B5B152A00BCB863 /* FuzzingWindowController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = FuzzingWindowController.xib; sourceTree = "<group>"; };
 		BB229911299040C500CFFB7C /* ApplicationObserver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ApplicationObserver.h; sourceTree = "<group>"; };
 		BB229912299040C500CFFB7C /* ApplicationObserver.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ApplicationObserver.m; sourceTree = "<group>"; };
 		BB31821429679983005EB410 /* MIDIController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MIDIController.h; sourceTree = "<group>"; };
@@ -189,6 +194,9 @@
 				BB7AB64129807A700081B05E /* PaletteViewController.xib */,
 				BB7AB63C298042520081B05E /* ColorField.h */,
 				BB7AB63D298042530081B05E /* ColorField.m */,
+				BB1A48D92B5B152A00BCB863 /* FuzzingWindowController.h */,
+				BB1A48DA2B5B152A00BCB863 /* FuzzingWindowController.m */,
+				BB1A48DB2B5B152A00BCB863 /* FuzzingWindowController.xib */,
 			);
 			name = UI;
 			sourceTree = "<group>";
@@ -265,6 +273,7 @@
 				BB49B3B4295CC8AF00D18605 /* Assets.xcassets in Resources */,
 				BB7AB64329807A700081B05E /* PaletteViewController.xib in Resources */,
 				BB49B3B7295CC8AF00D18605 /* MainMenu.xib in Resources */,
+				BB1A48DD2B5B152A00BCB863 /* FuzzingWindowController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -314,6 +323,7 @@
 				BB76A1A4297B333D00A869D8 /* PreferencesWindowController.m in Sources */,
 				BB5C2E9B2AF6E96A0043F444 /* VirtualEvent.m in Sources */,
 				BBA0166929611D1D0018B2DB /* MIDI2HIDController.m in Sources */,
+				BB1A48DC2B5B152A00BCB863 /* FuzzingWindowController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -34,12 +34,17 @@ const uint8_t kKompleteKontrolIntensityMask = 0x03;
 // By @jasonbrent:
 // Seems to be overall device state/Mode Sending just 0xa0 initializes the
 // device and keyboard light control works.
+//
+// Confirmed that this is the way KompleteKontrol initializes the controller by capturing
+// the USB traffic.
 const uint8_t kCommandInit = 0xA0;
 const uint8_t kKompleteKontrolInit[] = {kCommandInit, 0x00, 0x00};
 
+/*
 // FIXME: This likely is not be enough to get the MK3 controller fully initialized. It is what
 // FIXME: Komplete Kontrol sends on an 8 second interval to the controller.
 const uint8_t kKompleteKontrolInitMK3[] = {0x06, 0x00, 0x00, 0x00, 0x93, 0x02, 0xcd, 0x01, 0x2c, 0x90};
+*/
 
 const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
 const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
@@ -109,8 +114,6 @@ static void HIDDeviceRemovedCallback(void* context, IOReturn result, void* sende
     LogViewController* log;
     USBController* usb;
 
-    size_t lightGuideUpdateMessageSize;
-    unsigned char* lightGuideUpdateMessage;
     NSMutableData* lightGuideStreamMK3;
 
     unsigned char buttonLightingFeedback[kKompleteKontrolButtonsMessageSize];
@@ -171,16 +174,22 @@ static void HIDDeviceRemovedCallback(void* context, IOReturn result, void* sende
         return NO;
     }
 
+    if ([self registerKeyboardController:error] == NO) {
+        return NO;
+    }
     if ([self initKeyboardController:error] == NO) {
         return NO;
     }
 
+    /*
     if (_mk == 3) {
         // TODO: Make this less magic. Consider abstracting away from this direct buffer access.
         _keys = lightGuideUpdateMessage + 4 + sizeof(kKompleteKontrolLightGuidePrefixMK3);
     } else {
         _keys = &lightGuideUpdateMessage[1];
     }
+     */
+    _keys = &_lightGuideUpdateMessage[1];
 
     [self lightKeysWithColor:kKeyColorUnpressed];
 
@@ -435,12 +444,13 @@ static void HIDInputCallback(void* context,
             _mk = [supportedDevices[@(product)][@"mk"] intValue];
             _keyOffset = [supportedDevices[@(product)][@"offset"] intValue];
 
-            lightGuideUpdateMessageSize =
-                _mk == 3 ? kKompleteKontrolLightGuideMessageSizeMK3 : kKompleteKontrolLightGuideMessageSize;
+            /*
+             _lightGuideUpdateMessageSize =
+                 _mk == 3 ? kKompleteKontrolLightGuideMessageSizeMK3 : kKompleteKontrolLightGuideMessageSize;
 
-            lightGuideStreamMK3 = nil;
-
+             lightGuideStreamMK3 = nil;
             if (_mk == 3) {
+                // Nice try but doesnt work at all :(
                 lightGuideStreamMK3 = [[NSMutableData alloc] initWithCapacity:lightGuideUpdateMessageSize];
                 unsigned int length = (unsigned int)lightGuideUpdateMessageSize - 4;
                 [lightGuideStreamMK3 appendBytes:&length length:sizeof(length)];
@@ -454,7 +464,19 @@ static void HIDInputCallback(void* context,
             } else {
                 lightGuideUpdateMessage = calloc(lightGuideUpdateMessageSize, 1);
                 lightGuideUpdateMessage[0] = _mk == 1 ? kCommandLightGuideUpdateMK1 : kCommandLightGuideUpdateMK2;
+
+                _initialCommand = kKompleteKontrolInit;
+                _initialCommandLength = sizeof(kKompleteKontrolInit);
             }
+            */
+
+            _lightGuideUpdateMessageSize = kKompleteKontrolLightGuideMessageSize;
+
+            _lightGuideUpdateMessage = calloc(_lightGuideUpdateMessageSize, sizeof(uint8_t));
+            _lightGuideUpdateMessage[0] = _mk == 1 ? kCommandLightGuideUpdateMK1 : kCommandLightGuideUpdateMK2;
+
+            _initialCommand = kKompleteKontrolInit;
+            _initialCommandLength = sizeof(kKompleteKontrolInit);
 
             // FIXME: This is likely wrong for MK1 devices!
             buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
@@ -484,7 +506,7 @@ static void HIDInputCallback(void* context,
     return NULL;
 }
 
-- (BOOL)initKeyboardController:(NSError**)error
+- (BOOL)registerKeyboardController:(NSError**)error
 {
     IOHIDDeviceRegisterRemovalCallback(device, HIDDeviceRemovedCallback, (__bridge void*)self);
 
@@ -510,9 +532,16 @@ static void HIDInputCallback(void* context,
     IOHIDDeviceRegisterInputReportCallback(device, inputBuffer, sizeof(inputBuffer), HIDInputCallback,
                                            (__bridge void*)self);
 
-    const uint8_t* init = _mk == 3 ? kKompleteKontrolInitMK3 : kKompleteKontrolInit;
-    size_t length = _mk == 3 ? sizeof(kKompleteKontrolInitMK3) : sizeof(kKompleteKontrolInit);
-    ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, *init, init, length);
+    return YES;
+}
+
+- (BOOL)initKeyboardController:(NSError**)error
+{
+    //     // This was guessing from captured USB traffic. It does however not really do anything, it seems.
+    //    const uint8_t* init = _mk == 3 ? kKompleteKontrolInitMK3 : kKompleteKontrolInit;
+    //    size_t length = _mk == 3 ? sizeof(kKompleteKontrolInitMK3) : sizeof(kKompleteKontrolInit);
+    IOReturn ret =
+        IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, *_initialCommand, _initialCommand, _initialCommandLength);
     if (ret != kIOReturnSuccess) {
         if (error != nil) {
             NSDictionary* userInfo = @{
@@ -563,12 +592,15 @@ static void HIDInputCallback(void* context,
 {
     extern const double kTimeoutDelay;
 
+    /*
     if (_mk == 3) {
+        // Initial attempt - does nothing even though it looked promising from when reversing.
         BOOL ret = [usb bulkWriteData:lightGuideStreamMK3 error:error];
         [usb waitForBulkTransfer:kTimeoutDelay];
         return ret;
     }
-    return [self setReport:lightGuideUpdateMessage length:lightGuideUpdateMessageSize error:error];
+     */
+    return [self setReport:_lightGuideUpdateMessage length:_lightGuideUpdateMessageSize error:error];
 }
 
 - (void)lightKey:(int)key color:(unsigned char)color
@@ -581,9 +613,13 @@ static void HIDInputCallback(void* context,
             _keys[key] = color;
             break;
         case 3:
+            /*
+            // Initial attempt - does nothing even though it looked promising from when reversing.
             _keys[key * 3 + 0] = kCommandLightGuideKeyCommandMK3;
             _keys[key * 3 + 1] = key;
             _keys[key * 3 + 2] = color;
+             */
+            _keys[key] = color;
             break;
     }
     [self updateLightGuideMap:nil];
@@ -602,15 +638,19 @@ static void HIDInputCallback(void* context,
             }
             break;
         case 2:
+        case 3:
             memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
             break;
+            /*
         case 3:
+            // Initial attempt - does nothing even though it looked promising from when reversing.
             for (unsigned int i = 0; i < 128; i++) {
                 _keys[i * 3 + 0] = kCommandLightGuideKeyCommandMK3;
                 _keys[i * 3 + 1] = i;
                 _keys[i * 3 + 2] = color;
             }
             break;
+             */
     }
 
     [self updateLightGuideMap:nil];

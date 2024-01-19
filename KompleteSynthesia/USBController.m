@@ -24,6 +24,8 @@ const uint32_t kVendorID_NativeInstruments = 0x17CC;
 const uint32_t kUSBDeviceInterfaceMK2 = 0x03;
 const uint32_t kUSBDeviceInterfaceEndpointMK2 = 0x03;
 
+// FIXME: While this appears to be the interface and endpoint KompleteKontrol is using when
+// FIXME: communicating with the controller, it also does nothing in my attempts so far.
 const uint32_t kUSBDeviceInterfaceMK3 = 0x04;
 const uint32_t kUSBDeviceInterfaceEndpointMK3 = 0x04;
 
