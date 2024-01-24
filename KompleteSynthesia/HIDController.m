@@ -48,23 +48,27 @@ const uint8_t kKompleteKontrolInitMK3[] = {0x06, 0x00, 0x00, 0x00, 0x93, 0x02, 0
 
 const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
 const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
+const uint8_t kCommandLightGuideUpdateMK3 = 0x83;
 
 // FIXME: This appears to be wrong for MK3 devices -- instead of lighting keys, we are
 // FIXME: lighting the touchstrip with 0x81.
 // const uint8_t kCommandLightGuideUpdateMK3 = 0x81;
 
 // See https://github.com/tillt/KompleteSynthesia/discussions/29#discussioncomment-8089141
-const uint8_t kKompleteKontrolLightGuidePrefixMK3[] = {0x93, 0x02, 0xCD, 0x01, 0x16, 0x92, 0xCD, 0x01,
-                                                       0x51, 0x81, 0xCC, 0xFC, 0xDC, 0x00, 0x80};
-const uint8_t kCommandLightGuideKeyCommandMK3 = 0x92;
+// const uint8_t kKompleteKontrolLightGuidePrefixMK3[] = {0x93, 0x02, 0xCD, 0x01, 0x16, 0x92, 0xCD, 0x01,
+//                                                       0x51, 0x81, 0xCC, 0xFC, 0xDC, 0x00, 0x80};
+// const uint8_t kCommandLightGuideKeyCommandMK3 = 0x92;
 
-const size_t kKompleteKontrolLightGuideMessageSizeMK3 = 403;
+// const size_t kKompleteKontrolLightGuideMessageSizeMK3 = 403;
 
 const size_t kKompleteKontrolLightGuideMessageSize = 250;
 const size_t kKompleteKontrolLightGuideKeyMapSize = kKompleteKontrolLightGuideMessageSize - 1;
 
-// This buttons lighting message likely is MK2 specific.
-const uint8_t kCommandButtonLightsUpdate = 0x80;
+const uint8_t kCommandButtonLightsUpdateMK1 =
+    0x80; // FIXME: Noone ever confirmed if this was working as intended so far.
+const uint8_t kCommandButtonLightsUpdateMK2 = 0x80;
+const uint8_t kCommandButtonLightsUpdateMK3 = 0x82; // TODO: Validate this with user feedback.
+
 const size_t kKompleteKontrolButtonsMessageSize = 80;
 const size_t kKompleteKontrolButtonsMapSize = kKompleteKontrolButtonsMessageSize - 1;
 
@@ -473,13 +477,25 @@ static void HIDInputCallback(void* context,
             _lightGuideUpdateMessageSize = kKompleteKontrolLightGuideMessageSize;
 
             _lightGuideUpdateMessage = calloc(_lightGuideUpdateMessageSize, sizeof(uint8_t));
-            _lightGuideUpdateMessage[0] = _mk == 1 ? kCommandLightGuideUpdateMK1 : kCommandLightGuideUpdateMK2;
 
             _initialCommand = kKompleteKontrolInit;
             _initialCommandLength = sizeof(kKompleteKontrolInit);
 
             // FIXME: This is likely wrong for MK1 devices!
-            buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
+            switch (_mk) {
+                case 1:
+                    buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdateMK1;
+                    _lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK1;
+                    break;
+                case 2:
+                    buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdateMK2;
+                    _lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK2;
+                    break;
+                case 3:
+                    buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdateMK3;
+                    _lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK3;
+                    break;
+            }
             _deviceName =
                 [NSString stringWithFormat:@"%@Kontrol S%d MK%d", _mk != 3 ? @"Komplete " : @"", _keyCount, _mk];
             return devices[i];
