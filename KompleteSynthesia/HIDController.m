@@ -34,32 +34,41 @@ const uint8_t kKompleteKontrolIntensityMask = 0x03;
 // By @jasonbrent:
 // Seems to be overall device state/Mode Sending just 0xa0 initializes the
 // device and keyboard light control works.
+//
+// Confirmed that this is the way KompleteKontrol initializes the controller by capturing
+// the USB traffic.
 const uint8_t kCommandInit = 0xA0;
-const uint8_t kKompleteKontrolInit[] = {kCommandInit, 0x00, 0x00};
+uint8_t kKompleteKontrolInit[] = {kCommandInit, 0x00, 0x00};
 
+/*
 // FIXME: This likely is not be enough to get the MK3 controller fully initialized. It is what
 // FIXME: Komplete Kontrol sends on an 8 second interval to the controller.
 const uint8_t kKompleteKontrolInitMK3[] = {0x06, 0x00, 0x00, 0x00, 0x93, 0x02, 0xcd, 0x01, 0x2c, 0x90};
+*/
 
 const uint8_t kCommandLightGuideUpdateMK1 = 0x82;
 const uint8_t kCommandLightGuideUpdateMK2 = 0x81;
+const uint8_t kCommandLightGuideUpdateMK3 = 0x83;
 
 // FIXME: This appears to be wrong for MK3 devices -- instead of lighting keys, we are
 // FIXME: lighting the touchstrip with 0x81.
 // const uint8_t kCommandLightGuideUpdateMK3 = 0x81;
 
 // See https://github.com/tillt/KompleteSynthesia/discussions/29#discussioncomment-8089141
-const uint8_t kKompleteKontrolLightGuidePrefixMK3[] = {0x93, 0x02, 0xCD, 0x01, 0x16, 0x92, 0xCD, 0x01,
-                                                       0x51, 0x81, 0xCC, 0xFC, 0xDC, 0x00, 0x80};
-const uint8_t kCommandLightGuideKeyCommandMK3 = 0x92;
+// const uint8_t kKompleteKontrolLightGuidePrefixMK3[] = {0x93, 0x02, 0xCD, 0x01, 0x16, 0x92, 0xCD, 0x01,
+//                                                       0x51, 0x81, 0xCC, 0xFC, 0xDC, 0x00, 0x80};
+// const uint8_t kCommandLightGuideKeyCommandMK3 = 0x92;
 
-const size_t kKompleteKontrolLightGuideMessageSizeMK3 = 403;
+// const size_t kKompleteKontrolLightGuideMessageSizeMK3 = 403;
 
 const size_t kKompleteKontrolLightGuideMessageSize = 250;
 const size_t kKompleteKontrolLightGuideKeyMapSize = kKompleteKontrolLightGuideMessageSize - 1;
 
-// This buttons lighting message likely is MK2 specific.
-const uint8_t kCommandButtonLightsUpdate = 0x80;
+const uint8_t kCommandButtonLightsUpdateMK1 =
+    0x80; // FIXME: Noone ever confirmed if this was working as intended so far.
+const uint8_t kCommandButtonLightsUpdateMK2 = 0x80;
+const uint8_t kCommandButtonLightsUpdateMK3 = 0x82; // TODO: Validate this with user feedback.
+
 const size_t kKompleteKontrolButtonsMessageSize = 80;
 const size_t kKompleteKontrolButtonsMapSize = kKompleteKontrolButtonsMessageSize - 1;
 
@@ -109,8 +118,6 @@ static void HIDDeviceRemovedCallback(void* context, IOReturn result, void* sende
     LogViewController* log;
     USBController* usb;
 
-    size_t lightGuideUpdateMessageSize;
-    unsigned char* lightGuideUpdateMessage;
     NSMutableData* lightGuideStreamMK3;
 
     unsigned char buttonLightingFeedback[kKompleteKontrolButtonsMessageSize];
@@ -171,16 +178,22 @@ static void HIDDeviceRemovedCallback(void* context, IOReturn result, void* sende
         return NO;
     }
 
+    if ([self registerKeyboardController:error] == NO) {
+        return NO;
+    }
     if ([self initKeyboardController:error] == NO) {
         return NO;
     }
 
+    /*
     if (_mk == 3) {
         // TODO: Make this less magic. Consider abstracting away from this direct buffer access.
         _keys = lightGuideUpdateMessage + 4 + sizeof(kKompleteKontrolLightGuidePrefixMK3);
     } else {
         _keys = &lightGuideUpdateMessage[1];
     }
+     */
+    _keys = &_lightGuideUpdateMessage[1];
 
     [self lightKeysWithColor:kKeyColorUnpressed];
 
@@ -301,10 +314,14 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     for (int i = 0; i < length; i++) {
         [hex appendFormat:@"%02x ", report[i]];
     }
-    NSLog(@"hid report: %@", hex);
-    [log logLine:[NSString stringWithFormat:@"hid report: %@", hex]];
+    NSString* trail = @"";
+    if (report[0] != 0x01) {
+        NSLog(@"ignoring report %02Xh", report[0]);
+        trail = [trail stringByAppendingString:@" (ignored!)"];
+    }
+    [log logLine:[NSString stringWithFormat:@"hid report: %@%@", hex, trail]];
 #endif
-
+    NSLog(@"hid report: %@", hex);
     if (report[0] != 0x01) {
         NSLog(@"ignoring report %02Xh", report[0]);
         return;
@@ -435,12 +452,13 @@ static void HIDInputCallback(void* context,
             _mk = [supportedDevices[@(product)][@"mk"] intValue];
             _keyOffset = [supportedDevices[@(product)][@"offset"] intValue];
 
-            lightGuideUpdateMessageSize =
-                _mk == 3 ? kKompleteKontrolLightGuideMessageSizeMK3 : kKompleteKontrolLightGuideMessageSize;
+            /*
+             _lightGuideUpdateMessageSize =
+                 _mk == 3 ? kKompleteKontrolLightGuideMessageSizeMK3 : kKompleteKontrolLightGuideMessageSize;
 
-            lightGuideStreamMK3 = nil;
-
+             lightGuideStreamMK3 = nil;
             if (_mk == 3) {
+                // Nice try but doesnt work at all :(
                 lightGuideStreamMK3 = [[NSMutableData alloc] initWithCapacity:lightGuideUpdateMessageSize];
                 unsigned int length = (unsigned int)lightGuideUpdateMessageSize - 4;
                 [lightGuideStreamMK3 appendBytes:&length length:sizeof(length)];
@@ -454,10 +472,34 @@ static void HIDInputCallback(void* context,
             } else {
                 lightGuideUpdateMessage = calloc(lightGuideUpdateMessageSize, 1);
                 lightGuideUpdateMessage[0] = _mk == 1 ? kCommandLightGuideUpdateMK1 : kCommandLightGuideUpdateMK2;
+
+                _initialCommand = kKompleteKontrolInit;
+                _initialCommandLength = sizeof(kKompleteKontrolInit);
             }
+            */
+
+            _lightGuideUpdateMessageSize = kKompleteKontrolLightGuideMessageSize;
+
+            _lightGuideUpdateMessage = calloc(_lightGuideUpdateMessageSize, sizeof(uint8_t));
+
+            _initialCommand = kKompleteKontrolInit;
+            _initialCommandLength = sizeof(kKompleteKontrolInit);
 
             // FIXME: This is likely wrong for MK1 devices!
-            buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdate;
+            switch (_mk) {
+                case 1:
+                    buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdateMK1;
+                    _lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK1;
+                    break;
+                case 2:
+                    buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdateMK2;
+                    _lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK2;
+                    break;
+                case 3:
+                    buttonLightingUpdateMessage[0] = kCommandButtonLightsUpdateMK3;
+                    _lightGuideUpdateMessage[0] = kCommandLightGuideUpdateMK3;
+                    break;
+            }
             _deviceName =
                 [NSString stringWithFormat:@"%@Kontrol S%d MK%d", _mk != 3 ? @"Komplete " : @"", _keyCount, _mk];
             return devices[i];
@@ -484,7 +526,7 @@ static void HIDInputCallback(void* context,
     return NULL;
 }
 
-- (BOOL)initKeyboardController:(NSError**)error
+- (BOOL)registerKeyboardController:(NSError**)error
 {
     IOHIDDeviceRegisterRemovalCallback(device, HIDDeviceRemovedCallback, (__bridge void*)self);
 
@@ -510,9 +552,16 @@ static void HIDInputCallback(void* context,
     IOHIDDeviceRegisterInputReportCallback(device, inputBuffer, sizeof(inputBuffer), HIDInputCallback,
                                            (__bridge void*)self);
 
-    const uint8_t* init = _mk == 3 ? kKompleteKontrolInitMK3 : kKompleteKontrolInit;
-    size_t length = _mk == 3 ? sizeof(kKompleteKontrolInitMK3) : sizeof(kKompleteKontrolInit);
-    ret = IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, *init, init, length);
+    return YES;
+}
+
+- (BOOL)initKeyboardController:(NSError**)error
+{
+    //     // This was guessing from captured USB traffic. It does however not really do anything, it seems.
+    //    const uint8_t* init = _mk == 3 ? kKompleteKontrolInitMK3 : kKompleteKontrolInit;
+    //    size_t length = _mk == 3 ? sizeof(kKompleteKontrolInitMK3) : sizeof(kKompleteKontrolInit);
+    IOReturn ret =
+        IOHIDDeviceSetReport(device, kIOHIDReportTypeOutput, *_initialCommand, _initialCommand, _initialCommandLength);
     if (ret != kIOReturnSuccess) {
         if (error != nil) {
             NSDictionary* userInfo = @{
@@ -563,12 +612,15 @@ static void HIDInputCallback(void* context,
 {
     extern const double kTimeoutDelay;
 
+    /*
     if (_mk == 3) {
+        // Initial attempt - does nothing even though it looked promising from when reversing.
         BOOL ret = [usb bulkWriteData:lightGuideStreamMK3 error:error];
         [usb waitForBulkTransfer:kTimeoutDelay];
         return ret;
     }
-    return [self setReport:lightGuideUpdateMessage length:lightGuideUpdateMessageSize error:error];
+     */
+    return [self setReport:_lightGuideUpdateMessage length:_lightGuideUpdateMessageSize error:error];
 }
 
 - (void)lightKey:(int)key color:(unsigned char)color
@@ -581,9 +633,13 @@ static void HIDInputCallback(void* context,
             _keys[key] = color;
             break;
         case 3:
+            /*
+            // Initial attempt - does nothing even though it looked promising from when reversing.
             _keys[key * 3 + 0] = kCommandLightGuideKeyCommandMK3;
             _keys[key * 3 + 1] = key;
             _keys[key * 3 + 2] = color;
+             */
+            _keys[key] = color;
             break;
     }
     [self updateLightGuideMap:nil];
@@ -602,15 +658,19 @@ static void HIDInputCallback(void* context,
             }
             break;
         case 2:
+        case 3:
             memset(_keys, color, kKompleteKontrolLightGuideKeyMapSize);
             break;
+            /*
         case 3:
+            // Initial attempt - does nothing even though it looked promising from when reversing.
             for (unsigned int i = 0; i < 128; i++) {
                 _keys[i * 3 + 0] = kCommandLightGuideKeyCommandMK3;
                 _keys[i * 3 + 1] = i;
                 _keys[i * 3 + 2] = color;
             }
             break;
+             */
     }
 
     [self updateLightGuideMap:nil];

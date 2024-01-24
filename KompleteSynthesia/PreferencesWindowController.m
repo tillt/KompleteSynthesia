@@ -81,12 +81,6 @@
 {
     NSLog(@"picked key state %02Xh for map index %d", keyState, index);
 
-    assert(index < kColorMapSize);
-    _midi2hid.colors[index] = keyState;
-    if (index == 0) {
-        [_midi2hid lightsDefault];
-    }
-
     assert(controls.count > index);
     ColorField* colorField = controls[index];
     colorField.keyState = keyState;

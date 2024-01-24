@@ -9,6 +9,7 @@
 
 #import "ApplicationObserver.h"
 #import "CoreAudioTools.h"
+#import "FuzzingWindowController.h"
 #import "HIDController.h"
 #import "LogViewController.h"
 #import "MIDI2HIDController.h"
@@ -27,6 +28,7 @@
 @property (nonatomic, strong) LogViewController* log;
 @property (nonatomic, strong) SynthesiaController* synthesia;
 @property (nonatomic, strong) PreferencesWindowController* preferences;
+@property (nonatomic, strong) FuzzingWindowController* fuzzing;
 @property (nonatomic, strong) ApplicationObserver* observer;
 
 @property (nonatomic, strong) NSPopover* popover;
@@ -146,6 +148,8 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 - (void)applicationDidFinishInitializingWithUSBHighwayOpen:(BOOL)usbHighwayOpen
 {
     usbAvailable = usbHighwayOpen;
+
+    // Bootstrap Synthesia.
     _synthesia = [[SynthesiaController alloc] initWithLogViewController:_log delegate:self];
     [_synthesia cachedAssertSynthesiaConfiguration];
 
@@ -190,6 +194,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     _midi2hidController.forwardButtonsToSynthesiaOnly = [userDefaults boolForKey:kAppDefaultActivateSynthesia];
 
     if (usbAvailable == YES) {
+        // FIXME: So far we only support MK2 controllers for Synthesia window mirroring.
         if (_hidController.mk == 2) {
             _videoController = [[VideoController alloc] initWithUSBController:_usbController
                                                             logViewController:_log
@@ -231,6 +236,8 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     [menu addItemWithTitle:@"Reset" action:@selector(reset:) keyEquivalent:@""];
     [menu addItemWithTitle:@"Show Log" action:@selector(showLog:) keyEquivalent:@""];
     [menu addItem:[NSMenuItem separatorItem]];
+    [menu addItemWithTitle:@"Fuzzing MK3" action:@selector(showFuzzing:) keyEquivalent:@""];
+    [menu addItem:[NSMenuItem separatorItem]];
     [menu addItemWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
 
     menu.delegate = self;
@@ -260,6 +267,23 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     _preferences.video = _videoController;
 
     NSWindow* window = [_preferences window];
+
+    // We need to do some trickery here as the Application itself has no window. Not sure
+    // if this really works in all cases but it does for me, so far.
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    [window makeKeyAndOrderFront:sender];
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:NO];
+}
+
+- (void)showFuzzing:(id)sender
+{
+    if (_fuzzing == nil) {
+        _fuzzing = [[FuzzingWindowController alloc] initWithWindowNibName:@"FuzzingWindowController"];
+        _fuzzing.delegate = self;
+    }
+    _fuzzing.hidController = _hidController;
+
+    NSWindow* window = [_fuzzing window];
 
     // We need to do some trickery here as the Application itself has no window. Not sure
     // if this really works in all cases but it does for me, so far.
@@ -418,6 +442,12 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 {
     if (self.statusMenu.itemArray.count > 1) {
         NSMenuItem* item = self.statusMenu.itemArray[1];
+        if ([item.title compare:status] == NSOrderedSame) {
+            // Lets avoid useless further UI and controller updates as we are receiving
+            // a lot of state updates for Synthesia.
+            // FIXME: Seems weird that we get flooded by state updates.
+            return;
+        }
         item.title = status;
     }
     [self updateButtonStates];
@@ -453,6 +483,12 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 
     NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setInteger:keyState forKey:userDefaultKeys[index]];
+
+    assert(index < kColorMapSize);
+    _midi2hidController.colors[index] = keyState;
+    if (index == 0) {
+        [_midi2hidController lightsDefault];
+    }
 }
 
 @end

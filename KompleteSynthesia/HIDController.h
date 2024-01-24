@@ -130,9 +130,15 @@ enum {
 @property (nonatomic, assign) int mk;
 @property (nonatomic, assign) int keyOffset;
 @property (nonatomic, assign) unsigned int keyCount;
-@property (assign, nonatomic) unsigned char* keys;
-@property (assign, nonatomic) unsigned char* buttons;
+@property (assign, nonatomic) uint8_t* keys;
+@property (assign, nonatomic) uint8_t* buttons;
 @property (nonatomic, weak) id<HIDControllerDelegate> delegate;
+
+@property (assign, nonatomic) uint8_t* initialCommand;
+@property (assign, nonatomic) size_t initialCommandLength;
+
+@property (assign, nonatomic) uint8_t* lightGuideUpdateMessage;
+@property (assign, nonatomic) size_t lightGuideUpdateMessageSize;
 
 + (NSColor*)colorWithKeyState:(const unsigned char)keyState;
 
@@ -148,6 +154,9 @@ enum {
 - (void)lightsSwooshTo:(unsigned char)color;
 - (BOOL)swooshIsActive;
 - (BOOL)updateButtonLightMap:(NSError**)error;
+
+- (BOOL)registerKeyboardController:(NSError**)error;
+- (BOOL)initKeyboardController:(NSError**)error;
 
 - (void)deviceRemoved;
 - (unsigned char)keyColor:(int)note;
