@@ -20,6 +20,7 @@ static const NSTimeInterval kFuzzTimerDelay = 0.05;
 @implementation FuzzingWindowController {
     NSTimer* commandUpdateTimer;
     NSTimer* fuzzTimer;
+    BOOL paused;
 }
 
 - (NSString*)hexStringFromBinaryData:(unsigned char*)data withLength:(size_t)length
@@ -34,14 +35,26 @@ static const NSTimeInterval kFuzzTimerDelay = 0.05;
     return output;
 }
 
+- (void)binaryDataFromHexString:(NSString*)input withData:(unsigned char*)data withLength:(size_t)length
+{
+    NSArray* hexStringBytes = [input componentsSeparatedByString:@" "];
+    size_t byteCount = MIN(length, hexStringBytes.count);
+    for (size_t i = 0; i < byteCount; i++) {
+        NSString* hex = hexStringBytes[i];
+        const char* chars = [hex UTF8String];
+        data[i] = strtoul(chars, NULL, 16);
+    }
+}
+
 - (void)windowDidLoad
 {
     [super windowDidLoad];
 
-    [_delegate preferencesUpdatedKeyState:0x00 forKeyIndex:0];
-
     _initialCommand.stringValue = [self hexStringFromBinaryData:_hidController.initialCommand
                                                      withLength:_hidController.initialCommandLength];
+    _initialCommand.delegate = self;
+
+    [_delegate preferencesUpdatedKeyState:0x00 forKeyIndex:0];
 
     commandUpdateTimer = [NSTimer
         scheduledTimerWithTimeInterval:kCommandUpdateTimerDelay
@@ -51,20 +64,62 @@ static const NSTimeInterval kFuzzTimerDelay = 0.05;
                                        [self hexStringFromBinaryData:self->_hidController.lightGuideUpdateMessage
                                                           withLength:self->_hidController.lightGuideUpdateMessageSize];
                                  }];
+    paused = NO;
+    [self updateButtonStates];
 }
 
-- (IBAction)stop:(id)sender
+- (void)controlTextDidEndEditing:(NSNotification*)notification
+{
+    NSTextField* textField = [notification object];
+    if (textField != _initialCommand) {
+        return;
+    }
+    [self binaryDataFromHexString:textField.stringValue
+                         withData:_hidController.initialCommand
+                       withLength:_hidController.initialCommandLength];
+}
+
+- (void)updateButtonStates
+{
+    if (paused) {
+        _startButton.enabled = NO;
+        _pauseButton.enabled = YES;
+        _stopButton.enabled = YES;
+    } else {
+        _startButton.enabled = fuzzTimer == nil;
+        _stopButton.enabled = fuzzTimer != nil;
+        _pauseButton.enabled = fuzzTimer != nil;
+    }
+}
+
+- (void)stopTimer
 {
     if (fuzzTimer != nil) {
         [fuzzTimer invalidate];
     }
+    fuzzTimer = nil;
 }
 
-- (IBAction)start:(id)sender
+- (IBAction)stop:(id)sender
 {
-    self->_hidController.lightGuideUpdateMessage[0] = 0x01;
-    [_delegate preferencesUpdatedKeyState:0x06 forKeyIndex:0];
+    [self stopTimer];
+    paused = NO;
+    [self updateButtonStates];
+}
 
+- (IBAction)pause:(id)sender
+{
+    if (fuzzTimer != nil) {
+        paused = YES;
+        [self stopTimer];
+    } else {
+        paused = NO;
+        [self startTimer];
+    }
+}
+
+- (void)startTimer
+{
     if (fuzzTimer != nil) {
         [fuzzTimer invalidate];
     }
@@ -81,6 +136,16 @@ static const NSTimeInterval kFuzzTimerDelay = 0.05;
                                                              forKeyIndex:0];
                                    self->_hidController.lightGuideUpdateMessage[0]++;
                                  }];
+}
+
+- (IBAction)start:(id)sender
+{
+    _hidController.lightGuideUpdateMessage[0] = 0x01;
+    [_delegate preferencesUpdatedKeyState:0x06 forKeyIndex:0];
+
+    [self startTimer];
+    paused = NO;
+    [self updateButtonStates];
 }
 
 @end

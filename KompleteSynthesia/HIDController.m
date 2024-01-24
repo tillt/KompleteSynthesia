@@ -38,7 +38,7 @@ const uint8_t kKompleteKontrolIntensityMask = 0x03;
 // Confirmed that this is the way KompleteKontrol initializes the controller by capturing
 // the USB traffic.
 const uint8_t kCommandInit = 0xA0;
-const uint8_t kKompleteKontrolInit[] = {kCommandInit, 0x00, 0x00};
+uint8_t kKompleteKontrolInit[] = {kCommandInit, 0x00, 0x00};
 
 /*
 // FIXME: This likely is not be enough to get the MK3 controller fully initialized. It is what
@@ -314,10 +314,14 @@ static void setMk1ColorWithMk2ColorCode(unsigned char mk2ColorCode, unsigned cha
     for (int i = 0; i < length; i++) {
         [hex appendFormat:@"%02x ", report[i]];
     }
-    NSLog(@"hid report: %@", hex);
-    [log logLine:[NSString stringWithFormat:@"hid report: %@", hex]];
+    NSString* trail = @"";
+    if (report[0] != 0x01) {
+        NSLog(@"ignoring report %02Xh", report[0]);
+        trail = [trail stringByAppendingString:@" (ignored!)"];
+    }
+    [log logLine:[NSString stringWithFormat:@"hid report: %@%@", hex, trail]];
 #endif
-
+    NSLog(@"hid report: %@", hex);
     if (report[0] != 0x01) {
         NSLog(@"ignoring report %02Xh", report[0]);
         return;

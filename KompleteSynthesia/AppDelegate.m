@@ -442,6 +442,12 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
 {
     if (self.statusMenu.itemArray.count > 1) {
         NSMenuItem* item = self.statusMenu.itemArray[1];
+        if ([item.title compare:status] == NSOrderedSame) {
+            // Lets avoid useless further UI and controller updates as we are receiving
+            // a lot of state updates for Synthesia.
+            // FIXME: Seems weird that we get flooded by state updates.
+            return;
+        }
         item.title = status;
     }
     [self updateButtonStates];

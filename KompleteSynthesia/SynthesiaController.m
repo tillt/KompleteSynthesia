@@ -103,15 +103,15 @@ NSString* kDefaultsKeyInitialSynthesiaAssertDone = @"initial_synthesia_config_as
         dataFormatExpected = NO;
         needsConfigurationPatch = YES;
 
-        [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
-                                                               selector:@selector(synthesiaMayHaveChangedStatus:)
-                                                                   name:NSWorkspaceDidActivateApplicationNotification
-                                                                 object:nil];
-
-        [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
-                                                               selector:@selector(synthesiaMayHaveChangedStatus:)
-                                                                   name:NSWorkspaceDidTerminateApplicationNotification
-                                                                 object:nil];
+        NSWorkspace* workspace = [NSWorkspace sharedWorkspace];
+        [[workspace notificationCenter] addObserver:self
+                                           selector:@selector(synthesiaMayHaveChangedStatus:)
+                                               name:NSWorkspaceDidActivateApplicationNotification
+                                             object:nil];
+        [[workspace notificationCenter] addObserver:self
+                                           selector:@selector(synthesiaMayHaveChangedStatus:)
+                                               name:NSWorkspaceDidTerminateApplicationNotification
+                                             object:nil];
     }
     return self;
 }
