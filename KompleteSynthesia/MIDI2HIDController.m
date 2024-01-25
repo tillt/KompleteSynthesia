@@ -259,7 +259,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     [hid lightKey:key color:[self lightColorWithState:keyStates[key]]];
 }
 
-#pragma mark MIDIControllerDelegate
+#pragma mark - MIDIControllerDelegate
 
 - (void)receivedMIDIEvent:(unsigned char)cv
                   channel:(unsigned char)channel
@@ -301,7 +301,7 @@ const unsigned char kKeyStateMaskMusic = 0x20;
     });
 }
 
-#pragma mark HIDControllerDelegate
+#pragma mark - HIDControllerDelegate
 
 - (void)deviceRemoved
 {
@@ -414,7 +414,5 @@ const unsigned char kKeyStateMaskMusic = 0x20;
             break;
     }
 }
-
-#pragma mark HIDControllerDelegate
 
 @end

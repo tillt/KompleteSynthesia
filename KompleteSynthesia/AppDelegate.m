@@ -249,94 +249,10 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     }
 }
 
-- (void)preferences:(id)sender
-{
-    if (_preferences == nil) {
-        _preferences = [[PreferencesWindowController alloc] initWithWindowNibName:@"PreferencesWindowController"];
-        _preferences.delegate = self;
-    }
-    _preferences.synthesia = _synthesia;
-    _preferences.midi2hid = _midi2hidController;
-    _preferences.video = _videoController;
-
-    NSWindow* window = [_preferences window];
-
-    // We need to do some trickery here as the Application itself has no window. Not sure
-    // if this really works in all cases but it does for me, so far.
-    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
-    [window makeKeyAndOrderFront:sender];
-    [[NSApplication sharedApplication] activateIgnoringOtherApps:NO];
-}
-
 - (void)showStatusMenu:(id)sender
 {
     self.statusItem.menu = self.statusMenu;
     [self.statusItem.button performClick:nil];
-}
-
-- (void)reset:(id)sender
-{
-    NSError* error = nil;
-
-    if ([_midi2hidController swooshIsActive]) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-          [self->_log logLine:@"ignoring reset request as we are still swooshing"];
-        });
-        return;
-    }
-
-    if (usbAvailable) {
-        if ([_videoController reset:&error] == NO) {
-            [[NSAlert alertWithError:error] runModal];
-        }
-    }
-
-    if ([_midi2hidController resetWithError:&error] == NO) {
-        [[NSAlert alertWithError:error] runModal];
-        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
-    }
-
-    [self updateButtonStates];
-
-    [_midi2hidController swoosh];
-}
-
-- (void)updateVolume:(id)sender
-{
-    _videoController.volumeValue.stringValue = [NSString stringWithFormat:@"%f", [CoreAudioTools volume]];
-    [_videoController showOSD];
-}
-
-- (void)toggleMirror:(id)sender
-{
-    _videoController.mirrorSynthesiaApplicationWindow = !_videoController.mirrorSynthesiaApplicationWindow;
-    [_videoController reset:nil];
-    [self preferencesUpdatedMirror];
-}
-
-- (void)bootstrapSynthesia:(id)sender withCompletion:(void (^)(void))completion
-{
-    [SynthesiaController runSynthesiaWithCompletion:^{
-      // This should really not be done via polling.... instead use KVO on RunningApplication.
-      dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
-        // Wait for the Synthesia window to come up.
-        // TODO: I wonder if it was good enough to use KVO on application.hasLaunched -
-        // if that was good for asserting a Window was there, that would be cleaner.
-        int timeoutMs = 5000;
-        while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
-            [NSThread sleepForTimeInterval:0.01f];
-            timeoutMs -= 10;
-        };
-        if (timeoutMs <= 0) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-              [self->_log logLine:@"timeout waiting for Synthesia's application window"];
-            });
-        }
-        dispatch_async(dispatch_get_main_queue(), ^{
-          completion();
-        });
-      });
-    }];
 }
 
 - (void)showLog:(id)sender
@@ -412,7 +328,93 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     [_midi2hidController.hid updateButtonLightMap:nil];
 }
 
-#pragma mark SynthesiaControllerDelegate
+#pragma mark - MIDI2HIDControllerDelegate
+
+- (void)preferences:(id)sender
+{
+    if (_preferences == nil) {
+        _preferences = [[PreferencesWindowController alloc] initWithWindowNibName:@"PreferencesWindowController"];
+        _preferences.delegate = self;
+    }
+    _preferences.synthesia = _synthesia;
+    _preferences.midi2hid = _midi2hidController;
+    _preferences.video = _videoController;
+
+    NSWindow* window = [_preferences window];
+
+    // We need to do some trickery here as the Application itself has no window. Not sure
+    // if this really works in all cases but it does for me, so far.
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    [window makeKeyAndOrderFront:sender];
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:NO];
+}
+
+- (void)reset:(id)sender
+{
+    NSError* error = nil;
+
+    if ([_midi2hidController swooshIsActive]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+          [self->_log logLine:@"ignoring reset request as we are still swooshing"];
+        });
+        return;
+    }
+
+    if (usbAvailable) {
+        if ([_videoController reset:&error] == NO) {
+            [[NSAlert alertWithError:error] runModal];
+        }
+    }
+
+    if ([_midi2hidController resetWithError:&error] == NO) {
+        [[NSAlert alertWithError:error] runModal];
+        [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+    }
+
+    [self updateButtonStates];
+
+    [_midi2hidController swoosh];
+}
+
+- (void)toggleMirror:(id)sender
+{
+    _videoController.mirrorSynthesiaApplicationWindow = !_videoController.mirrorSynthesiaApplicationWindow;
+    [_videoController reset:nil];
+    [self preferencesUpdatedMirror];
+}
+
+- (void)bootstrapSynthesia:(id)sender withCompletion:(void (^)(void))completion
+{
+    [SynthesiaController runSynthesiaWithCompletion:^{
+      // This should really not be done via polling.... instead use KVO on RunningApplication.
+      dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        // Wait for the Synthesia window to come up.
+        // TODO: I wonder if it was good enough to use KVO on application.hasLaunched
+        // TODO: if that was good for asserting a Window was there, that would be cleaner.
+        int timeoutMs = 5000;
+        while (![SynthesiaController synthesiaWindowNumber] && timeoutMs) {
+            [NSThread sleepForTimeInterval:0.01f];
+            timeoutMs -= 10;
+        };
+        if (timeoutMs <= 0) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+              [self->_log logLine:@"timeout waiting for Synthesia's application window"];
+            });
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+          completion();
+        });
+      });
+    }];
+}
+
+- (void)updateVolume:(id)sender
+{
+    _videoController.volumeValue.stringValue = [NSString stringWithFormat:@"%f", [CoreAudioTools volume]];
+    [_videoController showOSD];
+}
+
+#pragma mark - SynthesiaControllerDelegate
 
 - (void)synthesiaStateUpdate:(NSString*)status
 {
@@ -423,7 +425,7 @@ NSString* kAppDefaultMirrorSynthesia = @"mirror_synthesia_to_controller_screen";
     [self updateButtonStates];
 }
 
-#pragma mark PreferencesDelegate
+#pragma mark - PreferencesDelegate
 
 - (void)preferencesUpdatedActivate
 {
